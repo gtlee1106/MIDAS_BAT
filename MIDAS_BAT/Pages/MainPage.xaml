@@ -1,0 +1,19 @@
+﻿<Page
+    x:Class="MIDAS_BAT.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MIDAS_BAT"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel x:Name="main" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="Brief Agaphia Test" FontSize="36"/>
+            <Button Name="startTest" Content="Start Test" Margin ="10" HorizontalAlignment="Center" Click="startTest_Click"/>
+            <Button Name="viewResult" Content="View Result" Margin = "10" HorizontalAlignment="Center" Click="viewResult_Click"/>
+            <Button Name="configTest" Content="Set-up Test" Margin = "10" HorizontalAlignment="Center" Click="configTest_Click"/>
+        </StackPanel>
+
+    </Grid>
+</Page>
