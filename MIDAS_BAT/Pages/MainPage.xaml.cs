@@ -29,6 +29,8 @@ namespace MIDAS_BAT
 
             char[] testSet = Util.GenerateSequence('학');
             int[] tt = Util.GetSingleCharStrokeCnt('학'); 
+
+
             int a = 0;
             
         }
