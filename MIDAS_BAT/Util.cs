@@ -28,7 +28,22 @@ namespace MIDAS_BAT
 
             return numbers;
         }
+        public static char[] GetSplitStrokeStr(string targetWord)
+        {
+            char[] ret = new char[targetWord.Length * 3];
+            for (int i = 0; i < targetWord.Length; ++i)
+            {
+                char ch = targetWord.ElementAt(i);
+                char[] seq = GenerateSequence(ch);
 
+                for (int j = 0; j < seq.Length; ++j)
+                {
+                    ret[i * 3 + j] = seq[j];
+                }
+            }
+
+            return ret;
+        }
         public static char[] GenerateSequence(char ch)
         {
             char[] ret = new char[3];

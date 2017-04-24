@@ -8,44 +8,25 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-
-        <!-- 설명 / 이름 / 성별 / 생일 / 학력 / 확인버튼-->
-        <TextBlock HorizontalAlignment="Right" Grid.ColumnSpan="2" Text="설명"/>
-
-        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0"  Text="이름"/>
-        <TextBox x:Name="name" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1"/>
-
-        <TextBlock HorizontalAlignment="Right" Grid.Row="2" Text="성별"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1">
-            <RadioButton x:Name="radioButton1" Content="남자" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <RadioButton x:Name="radioButton2" Content="여자" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <StackPanel>
+            <TextBlock Text="Test Result"/>
+            <ListView x:Name="testExecListView" ItemsSource="{x:Bind TestExecList, Mode=OneWay}" IsItemClickEnabled="True" >
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:TestSet">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding TesterName}" FontSize="36" />
+                            <Button x:Name="saveBtn" Tag="{Binding}" Content="저장하기" FontSize="36" Grid.Column="1" Click="saveBtn_Click"/>
+                            <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" FontSize="36" Grid.Column="2" Click="deleteBtn_Click"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <Button x:Name="backBtn" Content="뒤로 돌아가기" Click="backBtn_Click"/>
         </StackPanel>
-        <TextBlock HorizontalAlignment="Right" Grid.Row="3" Text="생일"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1">
-            <TextBox x:Name="year" />
-            <TextBlock Text="년"/>
-            <TextBox x:Name="month" />
-            <TextBlock Text="월"/>
-            <TextBox x:Name="day" />
-            <TextBlock Text="일"/>
-        </StackPanel>
-        <TextBlock HorizontalAlignment="Right" Text="학력" Grid.Row="4"/>
-        <TextBox x:Name="education" HorizontalAlignment="Left" Grid.Row="4" Grid.Column="1"/>
-
-        <Button x:Name="startTest" Content="검사 시작하기" Click="startTest_Click" Grid.Row="5" Grid.ColumnSpan="3" HorizontalAlignment="center"/>
     </Grid>
 </Page>

@@ -43,6 +43,22 @@ namespace MIDAS_BAT
             return list;
         }
 
+        internal Tester GetTester(int testerId)
+        {
+            IEnumerable<Tester> results = conn.Query<Tester>("SELECT * FROM Tester WHERE Id= '" + testerId + "'";
+            if (results.Count() != 1)
+                return null;
+
+            return results.ElementAt(0);
+        }
+
+        internal List<TestExec> GetTextExecs()
+        {
+            TableQuery<TestExec> tb = conn.Table<TestExec>();
+            List<TestExec> list = tb.ToList<TestExec>();
+            return list;
+        }
+
         internal TestSet GetActiveTestSet()
         {
             IEnumerable<TestSet> results = conn.Query<TestSet>("SELECT * FROM TestSet WHERE Active = '1'");
@@ -109,6 +125,11 @@ namespace MIDAS_BAT
             }
             selectedTestSet.Active = true;
             conn.Update(selectedTestSet);
+        }
+
+        internal void InserTestExecResult(TestExecResult result)
+        {
+            throw new NotImplementedException();
         }
     }
 }
