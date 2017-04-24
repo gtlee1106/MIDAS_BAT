@@ -45,7 +45,7 @@ namespace MIDAS_BAT
 
         internal Tester GetTester(int testerId)
         {
-            IEnumerable<Tester> results = conn.Query<Tester>("SELECT * FROM Tester WHERE Id= '" + testerId + "'";
+            IEnumerable<Tester> results = conn.Query<Tester>("SELECT * FROM Tester WHERE Id= '" + testerId + "'");
             if (results.Count() != 1)
                 return null;
 
@@ -129,7 +129,7 @@ namespace MIDAS_BAT
 
         internal void InserTestExecResult(TestExecResult result)
         {
-            throw new NotImplementedException();
+            conn.Insert(result);
         }
     }
 }
