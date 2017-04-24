@@ -10,7 +10,7 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel>
             <TextBlock Text="Test Result"/>
-            <ListView x:Name="testExecListView" ItemsSource="{x:Bind TestExecList, Mode=OneWay}" IsItemClickEnabled="True" >
+            <ListView x:Name="testExecListView" ItemsSource="{x:Bind TestExecList, Mode=OneWay}" IsItemClickEnabled="True" ItemClick="testExecListView_ItemClick">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="local:TestSet">
                         <Grid>

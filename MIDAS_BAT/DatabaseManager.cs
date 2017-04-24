@@ -52,11 +52,42 @@ namespace MIDAS_BAT
             return results.ElementAt(0);
         }
 
+        internal List<TestExecResult> GetTextExecResults(int id)
+        {
+            string query = "SELECT * FROM TestExecResult WHERE TestExecId = '" + id + "'";
+            IEnumerable<TestExecResult> results = conn.Query<TestExecResult>(query);
+            List<TestExecResult> list = new List<TestExecResult>(results);
+            return list;
+        }
+
+        internal TestExec GetTestExec(int id)
+        {
+            IEnumerable<TestExec> results = conn.Query<TestExec>("SELECT * FROM TestExec WHERE Id= '" + id + "'");
+            if (results.Count() != 1)
+                return null;
+
+            return results.ElementAt(0);
+        }
+
         internal List<TestExec> GetTextExecs()
         {
             TableQuery<TestExec> tb = conn.Table<TestExec>();
             List<TestExec> list = tb.ToList<TestExec>();
             return list;
+        }
+
+        internal TestSetItem GetTestSetItem(int testSetItemId)
+        {
+            IEnumerable<TestSetItem> results = conn.Query<TestSetItem>("SELECT * FROM TestSetItem WHERE Id = '" + testSetItemId +  "'");
+            if (results.Count() != 1)
+                return null;
+
+            return results.ElementAt(0);
+        }
+
+        internal void InsertTestExec(TestExec testExec)
+        {
+            conn.Insert(testExec);
         }
 
         internal TestSet GetActiveTestSet()

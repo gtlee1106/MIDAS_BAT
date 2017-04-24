@@ -26,13 +26,6 @@ namespace MIDAS_BAT
         {
             this.InitializeComponent();
 
-
-            char[] testSet = Util.GenerateSequence('학');
-            int[] tt = Util.GetSingleCharStrokeCnt('학'); 
-
-
-            int a = 0;
-            
         }
 
         private void startTest_Click(object sender, RoutedEventArgs e)

@@ -52,6 +52,7 @@ namespace MIDAS_BAT
                 TestSetId = testSet.Id,
                 Datetime = System.DateTime.Now.ToString("yyyyMMdd_hhmmss")
             };
+            dbManager.InsertTestExec(testExec);
 
             this.Frame.Navigate(typeof(TestPage), testExec);
         }

@@ -31,6 +31,7 @@ namespace MIDAS_BAT
             get { return testExecList; }
             set { testExecList = value;  }
         }
+
         public ViewResultPage()
         {
             this.InitializeComponent();
@@ -49,8 +50,12 @@ namespace MIDAS_BAT
                     TestSetId = item.TestSetId,
                     Datetime = item.Datetime
                 };
+
+                testExecList.Add(data);
             }
         }
+
+
 
         private void deleteBtn_Click(object sender, RoutedEventArgs e)
         {
@@ -59,12 +64,12 @@ namespace MIDAS_BAT
 
         private void saveBtn_Click(object sender, RoutedEventArgs e)
         {
-
+            
         }
 
         private void backBtn_Click(object sender, RoutedEventArgs e)
         {
-
+            this.Frame.GoBack();
         }
 
 
@@ -75,6 +80,12 @@ namespace MIDAS_BAT
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
+        }
+
+        private void testExecListView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            TestExecData item = e.ClickedItem as TestExecData;
+            this.Frame.Navigate(typeof(ViewResultDetailPage), item);
         }
     }
 
