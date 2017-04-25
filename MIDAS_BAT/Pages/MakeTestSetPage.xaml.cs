@@ -76,10 +76,10 @@ namespace MIDAS_BAT
             // data 추가
             DatabaseManager databaseManager = DatabaseManager.Instance;
 
-            TestSet set = null;
+            TestSet curSet = null;
             if ( m_updateMode )
             {
-                set = m_targetTestSet;
+                curSet = m_targetTestSet;
 
                 List<TestSetItem> list = databaseManager.GetTestSetItems(m_targetTestSet.Id);
                 foreach (var item in list )
@@ -89,25 +89,32 @@ namespace MIDAS_BAT
             }
             else
             {
-                set = new TestSet() { SetName = m_testSet.Title, Active=false };
-                databaseManager.InsertTestSet(set);
+                curSet = new TestSet() { SetName = m_testSet.Title, Active=false };
+                databaseManager.InsertTestSet(curSet);
             }
 
             // 무식하지만...
             TestSetItem[] items = new TestSetItem[10];
-            items[0] = new TestSetItem() { Number = 1, TestSetId = set.Id, Word = m_testSet.Word1 };
-            items[1] = new TestSetItem() { Number = 2, TestSetId = set.Id, Word = m_testSet.Word2 };
-            items[2] = new TestSetItem() { Number = 3, TestSetId = set.Id, Word = m_testSet.Word3 };
-            items[3] = new TestSetItem() { Number = 4, TestSetId = set.Id, Word = m_testSet.Word4 };
-            items[4] = new TestSetItem() { Number = 5, TestSetId = set.Id, Word = m_testSet.Word5 };
-            items[5] = new TestSetItem() { Number = 6, TestSetId = set.Id, Word = m_testSet.Word6 };
-            items[6] = new TestSetItem() { Number = 7, TestSetId = set.Id, Word = m_testSet.Word7 };
-            items[7] = new TestSetItem() { Number = 8, TestSetId = set.Id, Word = m_testSet.Word8 };
-            items[8] = new TestSetItem() { Number = 9, TestSetId = set.Id, Word = m_testSet.Word9 };
-            items[9] = new TestSetItem() { Number = 10, TestSetId = set.Id, Word = m_testSet.Word10 };
+            items[0] = new TestSetItem() { Number = 1, TestSetId = curSet.Id, Word = m_testSet.Word1 };
+            items[1] = new TestSetItem() { Number = 2, TestSetId = curSet.Id, Word = m_testSet.Word2 };
+            items[2] = new TestSetItem() { Number = 3, TestSetId = curSet.Id, Word = m_testSet.Word3 };
+            items[3] = new TestSetItem() { Number = 4, TestSetId = curSet.Id, Word = m_testSet.Word4 };
+            items[4] = new TestSetItem() { Number = 5, TestSetId = curSet.Id, Word = m_testSet.Word5 };
+            items[5] = new TestSetItem() { Number = 6, TestSetId = curSet.Id, Word = m_testSet.Word6 };
+            items[6] = new TestSetItem() { Number = 7, TestSetId = curSet.Id, Word = m_testSet.Word7 };
+            items[7] = new TestSetItem() { Number = 8, TestSetId = curSet.Id, Word = m_testSet.Word8 };
+            items[8] = new TestSetItem() { Number = 9, TestSetId = curSet.Id, Word = m_testSet.Word9 };
+            items[9] = new TestSetItem() { Number = 10, TestSetId = curSet.Id, Word = m_testSet.Word10 };
 
             for (int i = 0; i < 10; ++i)
                 databaseManager.InsertTestSetItem(items[i]);
+
+            // Active 된 TestSet이 없다면 이 set을 active 시킴
+            TestSet activeSet = databaseManager.GetActiveTestSet();
+            if( activeSet == null )
+            {
+                databaseManager.SetActive(curSet);
+            }
 
             this.Frame.GoBack();
         }

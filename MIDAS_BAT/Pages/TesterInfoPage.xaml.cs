@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -42,7 +43,8 @@ namespace MIDAS_BAT
             TestSet testSet = dbManager.GetActiveTestSet();
             if( testSet == null )
             {
-                // 메시지를 띄워야되려나?
+                var dialog = new MessageDialog("활성화된 실험셋이 없습니다. 새로 만들어주세요.");
+                dialog.ShowAsync();
                 return;
             }
 

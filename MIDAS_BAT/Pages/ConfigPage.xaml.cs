@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -62,8 +63,17 @@ namespace MIDAS_BAT
             this.Frame.Navigate(typeof(MakeTestSetPage), selectedTestSet);
         }
 
-        private void deleteBtn_Click(object sender, RoutedEventArgs e)
+        private async void deleteBtn_Click(object sender, RoutedEventArgs e)
         {
+            var dialog = new MessageDialog("정말로 삭제하시겠습니까?");
+            dialog.Title = "삭제";
+            dialog.Commands.Add(new UICommand { Label = "예", Id=0 });
+            dialog.Commands.Add(new UICommand { Label = "아니오", Id=1 });
+
+            var res = await dialog.ShowAsync();
+            if ((int)res.Id != 0)
+                return;
+            
             var selectedTestSet = (sender as FrameworkElement).Tag as TestSet;
 
             DatabaseManager dbManager = DatabaseManager.Instance;

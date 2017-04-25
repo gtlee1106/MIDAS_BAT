@@ -13,30 +13,8 @@
             <StackPanel Orientation="Horizontal">
                 
             </StackPanel>
-            <GridView ItemsSource="{x:Bind TestExecResultList}" Grid.Row="0">
-                <GridView.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Word}" HorizontalAlignment="Center" />
-                            <TextBlock Text="{Binding ChosungTime}" HorizontalAlignment="Center" />
-                            <TextBlock Text="{Binding FirstIdleTIme}" HorizontalAlignment="Center" />
-                            <TextBlock Text="{Binding JoongsungTime}" HorizontalAlignment="Center" />
-                            <TextBlock Text="{Binding SecondIdelTime}" HorizontalAlignment="Center" />
-                            <TextBlock Text="{Binding JongSungTime}" HorizontalAlignment="Center" />
-                        </StackPanel>
-                    </DataTemplate>
-                </GridView.ItemTemplate>
-                <FlyoutBase.AttachedFlyout>
-                    <Flyout>
-                        <StackPanel>
-                            <Button Content="Delete"  />
-                            <TextBox />
-                            <Button Content="Edit" />
-                            <Button Content="Add after this item"  />
-                        </StackPanel>
-                    </Flyout>
-                </FlyoutBase.AttachedFlyout>
-            </GridView>
+            <ListView ItemsSource="{x:Bind TestExecResultList}">
+            </ListView>
 
         </StackPanel>
     </Grid>
