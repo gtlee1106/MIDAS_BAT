@@ -74,10 +74,11 @@ namespace MIDAS_BAT
         public int Id { get; set; }
         public int TestExecId { get; set; }
         public int TestSetItemId { get; set; }
+        public int TestSetItemCharIdx { get; set; }
         public double ChosungTime { get; set; }
         public double FirstIdleTIme { get; set; }
         public double JoongsungTime { get; set; }
         public double SecondIdelTime { get; set; }
-        public double JongSungTime { get; set; }
+        public double JongsungTime { get; set; }
     }
 }

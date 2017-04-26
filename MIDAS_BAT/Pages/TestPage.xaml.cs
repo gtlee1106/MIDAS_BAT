@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -31,6 +32,8 @@ namespace MIDAS_BAT
         TestExec m_testExec;
         string m_targetWord;
         int m_curIdx;
+        List<long> m_Times;
+        
 
         public TestPage()
         {
@@ -42,42 +45,73 @@ namespace MIDAS_BAT
 
             inkCanvas.InkPresenter.StrokesCollected += InkPresenter_StrokesCollected;
 
+            CoreInkIndependentInputSource core = CoreInkIndependentInputSource.Create(inkCanvas.InkPresenter);
+            core.PointerPressing += Core_PointerPressing;
+            core.PointerReleasing += Core_PointerReleasing;
+
             m_curIdx = 0;
             m_targetWord = "";
+            m_Times = new List<long>();
+        }
+
+        private void Core_PointerReleasing(CoreInkIndependentInputSource sender, PointerEventArgs args)
+        {
+            m_Times.Add(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
+            Debug.WriteLine("Added End");
+        }
+
+        private void Core_PointerPressing(CoreInkIndependentInputSource sender, PointerEventArgs args)
+        {
+            m_Times.Add(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
+            Debug.WriteLine("Added Start");
         }
 
         private void InkPresenter_StrokesCollected(InkPresenter sender, InkStrokesCollectedEventArgs args)
         {
-//            Recognize_Stroke();
         }
 
-        private async void Recognize_Stroke()
+        private async Task<int[]> Recognize_Stroke( string chSeq, int startIdx )
         {
-            char[] split_results = Util.GetSplitStrokeStr(m_targetWord);
+            int[] ret = { startIdx, startIdx, startIdx };
+            string[] split_results = CharacterUtil.GetSplitStrokeStr(m_targetWord);
 
             IReadOnlyList<InkStroke> curStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             if (curStrokes.Count < 1)
-                return;
+                return ret;
 
+            int strokeCnt = curStrokes.Count;
+
+            // 다른데 만들어둘까... 
             InkRecognizerContainer inkRecognizerContainer = new InkRecognizerContainer();
             if (inkRecognizerContainer == null)
-                return;
+                return ret;
 
-            IReadOnlyList<InkRecognitionResult> recognitionResults = await inkRecognizerContainer.RecognizeAsync(inkCanvas.InkPresenter.StrokeContainer, InkRecognitionTarget.All);
-            if (recognitionResults.Count < 1)
-                return;
 
-            string str = "";
-            foreach( var result in recognitionResults)
+            foreach (var item in split_results)
             {
-                IReadOnlyList<string> candidates = result.GetTextCandidates();
-                foreach( string candidate in candidates)
+                IReadOnlyList<InkRecognitionResult> recognitionResults = await inkRecognizerContainer.RecognizeAsync(inkCanvas.InkPresenter.StrokeContainer, InkRecognitionTarget.Selected);
+                if (recognitionResults.Count < 1)
+                    return ret;
+
+                bool found = false;
+                foreach (var result in recognitionResults)
                 {
-                    str += candidate + " ";
+                    IReadOnlyList<string> candidates = result.GetTextCandidates();
+                    foreach (string candidate in candidates)
+                    {
+                        if( candidate.Equals(item) )
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found)
+                        break;
                 }
             }
 
-            int a = 0;
+
+            return ret;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -108,25 +142,57 @@ namespace MIDAS_BAT
 
         private async void nextBtn_Click(object sender, RoutedEventArgs e)
         {
-            IReadOnlyList<InkStroke> currentStroke = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
-            if (currentStroke.Count == 0)
+            var currentStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+            if (currentStrokes.Count == 0)
             {  
                 // 다시 시작한다.
                 inkCanvas.InkPresenter.StrokeContainer.Clear();
                 return;
             }
 
-            await saveStroke(currentStroke);
+            DatabaseManager dbManager = DatabaseManager.Instance;
+
+            await saveStroke(currentStrokes);
             await saveResultIntoDB();
+
+            long[] timeDiff = new long[m_Times.Count - 1];
+            for( int i = 0; i < timeDiff.Length; ++i )
+                timeDiff[i] = m_Times[i+1] - m_Times[i];
             
-            // targetWord 의 초성/중성/종성 획수 계산
-            //       Recognize_Stroke();
+            string[] charSeq  = CharacterUtil.GetSplitStrokeStr(m_targetWord);
+            int timeIdx = 0;
+            for (int i = 0; i < m_targetWord.Length; ++i)
+            {
+                int[] charCnt = CharacterUtil.GetSingleCharStrokeCnt(m_targetWord.ElementAt(i));
 
-            // stroke에서 전체 시간 저장 & 초성중성종성 획수 계산
+                long[] duration = new long[charCnt.Length];
+                long[] idleTime = new long[charCnt.Length - 1];
 
-            // stroke 저장
-            // 
+                for (int j = 0; j < charCnt.Length;  ++j)
+                {
+                    duration[j] = 0;
+                    for (int k = 0; k < charCnt[j]*2-1; ++k)
+                        duration[j] += timeDiff[timeIdx++];
 
+                    if( j < charCnt.Length - 1 )
+                        idleTime[j] = timeDiff[timeIdx++];
+                }
+
+                TestExecResult result = new TestExecResult()
+                {
+                    TestExecId = m_testExec.Id,
+                    TestSetItemId = m_wordList[m_curIdx].Id,
+                    TestSetItemCharIdx = i,
+                    ChosungTime = duration[0],
+                    JoongsungTime = duration[1],
+                    JongsungTime = duration[2],
+                    FirstIdleTIme = idleTime[0],
+                    SecondIdelTime = idleTime[1],
+                };
+
+                dbManager.InsertTestExecResult(result);
+            }
+            
             // index 증가
             m_curIdx++;
             if (m_curIdx == m_wordList.Count)
@@ -139,22 +205,12 @@ namespace MIDAS_BAT
             // 새로운 단어 지정 및 전체 초기화.
             SetTargetWord(m_wordList[m_curIdx].Word);
             inkCanvas.InkPresenter.StrokeContainer.Clear();
+            m_Times.Clear();
         }
 
         private async Task saveResultIntoDB()
         {
             DatabaseManager dbManager = DatabaseManager.Instance;
-            TestExecResult result = new TestExecResult()
-            {
-                TestExecId = m_testExec.Id,
-                TestSetItemId = m_wordList.ElementAt(m_curIdx).Id,
-                ChosungTime = 0.1,
-                FirstIdleTIme = 0.1,
-                JoongsungTime = 0.1,
-                SecondIdelTime = 0.1,
-                JongSungTime = 0.1
-            };
-            dbManager.InserTestExecResult(result);
 
             return;
         }

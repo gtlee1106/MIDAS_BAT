@@ -158,7 +158,7 @@ namespace MIDAS_BAT
             conn.Update(selectedTestSet);
         }
 
-        internal void InserTestExecResult(TestExecResult result)
+        internal void InsertTestExecResult(TestExecResult result)
         {
             conn.Insert(result);
         }

@@ -6,14 +6,21 @@ using System.Threading.Tasks;
 
 namespace MIDAS_BAT
 {
-    public class Util
+    public class CharacterUtil
     {
         private static string m_chosungTable = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
         private static string m_joonsungTable = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ";
         private static string m_jongsungTable = " ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ";
         private static int[] m_chosungCntTable = { 1, 2, 1, 2, 4, 3, 3, 4, 8, 2, 4, 1, 2, 4, 3, 2, 3, 4, 3 };
-        private static int[] m_joongsungCntTable = { 2, 3, 3, 4, 2, 3, 4, 2, 4, 5, 3, 3, 2, 4, 5, 3, 3, 1, 2, 1};
-        private static int[] m_jongsungCntTable = { 0, 1, 2, 3, 1, 3, 2, 3, 4, 7, 5, 6, 6, 3, 4, 6, 2, 4, 1, 2, 3, 2, 3, 4, 3 };
+        private static int[] m_joongsungCntTable = { 2, 3, 3, 4, 2, 3, 3, 4, 2, 4, 5, 3, 3, 2, 4, 5, 3, 3, 1, 2, 1};
+        private static int[] m_jongsungCntTable = {
+            0, 1, 2, 3, // ( ) ㄱ ㄲ ㄳ
+            1, 3, 4, 2, // ㄴ ㄵ ㄶ ㄷ
+            3, 4, 6, 7, // ㄹ ㄺ ㄻ ㄼ
+            5, 6, 7, 6, // ㄽ ㄾ ㄿ ㅀ
+            3, 4, 6, 2, // ㅁ ㅂ ㅄ ㅅ
+            4, 1, 2, 3, // ㅆ ㅇ ㅈ ㅊ 
+            2, 3, 4, 3 }; // ㅋ ㅌ ㅍ ㅎ
         private static ushort m_unicodeHangulBase = 0xAC00;
         private static ushort m_unicodeHangulLast = 0xD79F;
 
@@ -28,18 +35,17 @@ namespace MIDAS_BAT
 
             return numbers;
         }
-        public static char[] GetSplitStrokeStr(string targetWord)
+        public static string[] GetSplitStrokeStr(string targetWord)
         {
-            char[] ret = new char[targetWord.Length * 3];
+            string[] ret = new string[targetWord.Length];
             for (int i = 0; i < targetWord.Length; ++i)
             {
+                ret[i] = "";
                 char ch = targetWord.ElementAt(i);
                 char[] seq = GenerateSequence(ch);
 
                 for (int j = 0; j < seq.Length; ++j)
-                {
-                    ret[i * 3 + j] = seq[j];
-                }
+                    ret[i] += seq[j];
             }
 
             return ret;

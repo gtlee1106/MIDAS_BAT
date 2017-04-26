@@ -66,7 +66,7 @@ namespace MIDAS_BAT
                         FirstIdleTIme = result.FirstIdleTIme,
                         JoongsungTime = result.JoongsungTime,
                         SecondIdelTime = result.SecondIdelTime,
-                        JongSungTime = result.JongSungTime
+                        JongSungTime = result.JongsungTime
                     };
 
                     TestExecResultList.Add(data);
