@@ -11,7 +11,9 @@
         <StackPanel>
             <TextBlock Text="Test Result"/>
             <StackPanel Orientation="Horizontal">
-                
+                <Button x:Name="backBtn" Content="뒤로 돌아가기" Click="backBtn_Click"/>
+                <Button x:Name="saveBtn" Tag="{Binding}" Content="저장하기" Click="saveBtn_Click"/>
+                <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" Click="deleteBtn_Click"/>
             </StackPanel>
             <ListView ItemsSource="{x:Bind TestExecResultList}">
             </ListView>

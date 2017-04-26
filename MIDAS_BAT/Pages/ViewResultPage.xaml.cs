@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -37,7 +38,7 @@ namespace MIDAS_BAT
             this.InitializeComponent();
 
             DatabaseManager dbManager = DatabaseManager.Instance;
-            List<TestExec> list = dbManager.GetTextExecs();
+            List<TestExec> list = dbManager.GetTextExecs(true);
             foreach( var item in list)
             {
                 Tester tester = dbManager.GetTester(item.TesterId);
@@ -48,18 +49,30 @@ namespace MIDAS_BAT
                     TesterName = testerStr,
                     TesterId = item.TesterId,
                     TestSetId = item.TestSetId,
-                    Datetime = item.Datetime
+                    Datetime = item.Datetime,
+                    Selected = false
                 };
 
                 testExecList.Add(data);
             }
         }
 
-
-
-        private void deleteBtn_Click(object sender, RoutedEventArgs e)
+        private async void deleteBtn_Click(object sender, RoutedEventArgs e)
         {
+            bool delete = await Util.ShowDeleteAlertDlg();
+            if (!delete)
+                return;
 
+            var selectedTestExecData = (sender as FrameworkElement).Tag as TestExecData;
+
+            DatabaseManager dbManager = DatabaseManager.Instance;
+            dbManager.DeleteTestExec(selectedTestExecData.Id);
+
+            // itemsource 갱신
+            testExecList.Remove(selectedTestExecData);
+
+            //리스트뷰 갱신이 필요함 음...            
+            NotifyPropertyChanged();
         }
 
         private void saveBtn_Click(object sender, RoutedEventArgs e)
@@ -87,12 +100,52 @@ namespace MIDAS_BAT
             TestExecData item = e.ClickedItem as TestExecData;
             this.Frame.Navigate(typeof(ViewResultDetailPage), item);
         }
+
+        private void selectAllBtn_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void saveSelectedBtn_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private async void deleteSelectedBtn_Click(object sender, RoutedEventArgs e)
+        {
+            bool delete = await Util.ShowDeleteAlertDlg();
+            if (!delete)
+                return;
+
+            DatabaseManager dbManager = DatabaseManager.Instance;
+
+            List<TestExecData> delTargets = new List<TestExecData>();
+            foreach(var item in testExecList)
+            {
+                if (item.Selected != true)
+                    continue;
+                dbManager.DeleteTestExec(item.Id);
+                delTargets.Add(item);
+            }
+
+            foreach (var item in delTargets)
+                testExecList.Remove(item);
+            NotifyPropertyChanged();
+
+            //리스트뷰 갱신이 필요함 음...            
+        }
+
+        private void selectChk_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
     public class TestExecData
     {
         public int Id { get; set; }
         public int TesterId { get; set; }
+        public bool? Selected { get; set; }
         public string TesterName { get; set; }
         public int TestSetId { get; set; }
         public string Datetime { get; set; }

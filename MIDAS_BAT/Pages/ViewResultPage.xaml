@@ -10,23 +10,30 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel>
             <TextBlock Text="Test Result"/>
-            <ListView x:Name="testExecListView" ItemsSource="{x:Bind TestExecList, Mode=OneWay}" IsItemClickEnabled="True" ItemClick="testExecListView_ItemClick">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="backBtn" Content="뒤로 돌아가기" Click="backBtn_Click"/>
+                <Button x:Name="selectAllBtn" Content="전체선택" Click="selectAllBtn_Click"/>
+                <Button x:Name="saveSelectedBtn" Content="선택결과 저장하기" Click="saveSelectedBtn_Click"/>
+                <Button x:Name="deleteSelectedBtn" Content="선택결과 삭제하기" Click="deleteSelectedBtn_Click"/>
+            </StackPanel>
+            <ListView x:Name="testExecListView" ItemsSource="{x:Bind TestExecList, Mode=OneWay}" IsItemClickEnabled="True" ItemClick="testExecListView_ItemClick" Height="428">
                 <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="local:TestSet">
+                    <DataTemplate x:DataType="local:TestExecData">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
                                 <ColumnDefinition/>
                                 <ColumnDefinition/>
+                                <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding TesterName}" FontSize="36" />
-                            <Button x:Name="saveBtn" Tag="{Binding}" Content="저장하기" FontSize="36" Grid.Column="1" Click="saveBtn_Click"/>
-                            <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" FontSize="36" Grid.Column="2" Click="deleteBtn_Click"/>
+                            <CheckBox x:Name="selectChk" Content="" IsChecked="{x:Bind Selected, Mode=TwoWay}" Tag="{Binding}" Click="selectChk_Click"/>
+                            <TextBlock Text="{Binding TesterName}" Grid.Column="1"/>
+                            <Button x:Name="saveBtn" Tag="{Binding}" Content="저장하기" Grid.Column="2" Click="saveBtn_Click"/>
+                            <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" Grid.Column="3" Click="deleteBtn_Click"/>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-            <Button x:Name="backBtn" Content="뒤로 돌아가기" Click="backBtn_Click"/>
         </StackPanel>
     </Grid>
 </Page>

@@ -6,8 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -38,7 +40,6 @@ namespace MIDAS_BAT
         {
             this.InitializeComponent();
         }
-
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -81,6 +82,27 @@ namespace MIDAS_BAT
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
+        }
+
+        private void backBtn_Click(object sender, RoutedEventArgs e)
+        {
+            this.Frame.GoBack();
+        }
+
+        private void saveBtn_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private async void deleteBtn_Click(object sender, RoutedEventArgs e)
+        {
+            bool delete = await Util.ShowDeleteAlertDlg();
+            if (!delete )
+                return;
+
+            DatabaseManager dbManager = DatabaseManager.Instance;
+            dbManager.DeleteTestExec(m_testExec);
+
+            this.Frame.GoBack();
         }
     }
 

@@ -69,10 +69,12 @@ namespace MIDAS_BAT
             return results.ElementAt(0);
         }
 
-        internal List<TestExec> GetTextExecs()
+        internal List<TestExec> GetTextExecs( bool reverseOrder)
         {
             TableQuery<TestExec> tb = conn.Table<TestExec>();
             List<TestExec> list = tb.ToList<TestExec>();
+            if( reverseOrder )
+                list.Reverse();
             return list;
         }
 
@@ -83,6 +85,12 @@ namespace MIDAS_BAT
                 return null;
 
             return results.ElementAt(0);
+        }
+
+        internal void DeleteTestExec(int id)
+        {
+            TestExec testExec = GetTestExec(id);
+            conn.Delete(testExec);
         }
 
         internal void InsertTestExec(TestExec testExec)
@@ -107,6 +115,29 @@ namespace MIDAS_BAT
         public void InsertTestSet( TestSet testSet )
         {
             conn.Insert(testSet);
+        }
+
+        internal void DeleteTestExec(TestExec testExec)
+        {
+            List<TestExecResult> results = GetTestExecResults(testExec.Id);
+            foreach (var item in results)
+                DeleteTestExecResult(item);
+
+            conn.Delete(testExec);
+        }
+
+        private List<TestExecResult> GetTestExecResults(int testExecId )
+        {
+            string query = "SELECT * FROM TestExecResult WHERE TestExecId = '" + testExecId + "' ORDER BY Id";
+            IEnumerable<TestExecResult> results = conn.Query<TestExecResult>(query);
+            List<TestExecResult> list = new List<TestExecResult>(results);
+            
+            return list;
+        }
+
+        private void DeleteTestExecResult(TestExecResult item)
+        {
+            conn.Delete(item);
         }
 
         internal void InsertTestSetItem(TestSetItem testSetItem)

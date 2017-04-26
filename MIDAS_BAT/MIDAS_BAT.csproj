@@ -119,6 +119,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TableData.cs" />
+    <Compile Include="CharacterUtil.cs" />
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>

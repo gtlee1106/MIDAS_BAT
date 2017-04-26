@@ -11,6 +11,7 @@ using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Input.Inking;
 using Windows.UI.Input.Inking.Core;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -150,6 +151,28 @@ namespace MIDAS_BAT
                 return;
             }
 
+            int totalCnt = 0;
+            string[] charSeq  = CharacterUtil.GetSplitStrokeStr(m_targetWord);
+            for (int i = 0; i < m_targetWord.Length; ++i)
+            {
+                int[] charCnt = CharacterUtil.GetSingleCharStrokeCnt(m_targetWord.ElementAt(i));
+                for (int j = 0; j < charCnt.Length; ++j)
+                    totalCnt += charCnt[j];
+            }
+            
+            if( totalCnt != currentStrokes.Count )
+            {
+                var dialog = new MessageDialog("인식할 수 없습니다. 정자체로 다시 써주시기바랍니다.");
+                var res = await dialog.ShowAsync();
+
+                inkCanvas.InkPresenter.StrokeContainer.Clear();
+                m_Times.Clear();
+                return;
+            }
+
+ 
+            // 개수 카운트 필요하당
+
             DatabaseManager dbManager = DatabaseManager.Instance;
 
             await saveStroke(currentStrokes);
@@ -159,7 +182,6 @@ namespace MIDAS_BAT
             for( int i = 0; i < timeDiff.Length; ++i )
                 timeDiff[i] = m_Times[i+1] - m_Times[i];
             
-            string[] charSeq  = CharacterUtil.GetSplitStrokeStr(m_targetWord);
             int timeIdx = 0;
             for (int i = 0; i < m_targetWord.Length; ++i)
             {
@@ -221,12 +243,14 @@ namespace MIDAS_BAT
             Windows.Storage.StorageFolder storageFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
             Windows.Storage.StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
 
+            Debug.WriteLine("step1");
             if (file == null)
                 return 1;
 
             Windows.Storage.CachedFileManager.DeferUpdates(file);
             IRandomAccessStream stream = await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite);
 
+            Debug.WriteLine("step2");
             using (IOutputStream outputStream = stream.GetOutputStreamAt(0))
             {
                 await inkCanvas.InkPresenter.StrokeContainer.SaveAsync(outputStream);
@@ -234,11 +258,13 @@ namespace MIDAS_BAT
             }
             stream.Dispose();
 
+            Debug.WriteLine("step3");
             Windows.Storage.Provider.FileUpdateStatus status = await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
 
             if( status == Windows.Storage.Provider.FileUpdateStatus.Complete )
             {
             }
+            Debug.WriteLine("step4");
 
             return 0;
         }
