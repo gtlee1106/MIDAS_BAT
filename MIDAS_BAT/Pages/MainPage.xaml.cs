@@ -30,7 +30,8 @@ namespace MIDAS_BAT
 
         private void startTest_Click(object sender, RoutedEventArgs e)
         {
-            this.Frame.Navigate(typeof(TesterInfoPage));
+            //this.Frame.Navigate(typeof(TesterInfoPage));
+            this.Frame.Navigate(typeof(ViewStroke));
         }
         private void viewResult_Click(object sender, RoutedEventArgs e)
         {

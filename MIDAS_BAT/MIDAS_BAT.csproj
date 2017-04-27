@@ -102,6 +102,9 @@
     <Compile Include="Pages\MakeTestSetPage.xaml.cs">
       <DependentUpon>MakeTestSetPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\ViewStroke.xaml.cs">
+      <DependentUpon>ViewStroke.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\ViewResultDetailPage.xaml.cs">
       <DependentUpon>ViewResultDetailPage.xaml</DependentUpon>
     </Compile>
@@ -148,6 +151,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\MakeTestSetPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\ViewStroke.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
