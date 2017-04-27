@@ -15,7 +15,36 @@
                 <Button x:Name="saveBtn" Tag="{Binding}" Content="저장하기" Click="saveBtn_Click"/>
                 <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" Click="deleteBtn_Click"/>
             </StackPanel>
-            <ListView ItemsSource="{x:Bind TestExecResultList}">
+            <ListView x:Name="resultList"  ItemsSource="{x:Bind TestExecResultList, Mode=OneWay}">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:TestExecResultDetailData">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Bind TargetWord}"/>
+                            <ListView x:Name="subResultList" ItemsSource="{x:Bind DetailSubData, Mode=OneWay}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="local:TestExecResultDetailSubData">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Char}" Grid.Column="0" Margin="3"/>
+                                            <TextBlock Text="{Binding ChosungTime}" Grid.Column="1" Margin="3"/>
+                                            <TextBlock Text="{Binding FirstIdleTime}" Grid.Column="2" Margin="3"/>
+                                            <TextBlock Text="{Binding JoongsungTime}" Grid.Column="3" Margin="3"/>
+                                            <TextBlock Text="{Binding SecondIdleTime}" Grid.Column="4" Margin="3"/>
+                                            <TextBlock Text="{Binding JongsungTime}" Grid.Column="5" Margin="3"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>    
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
             </ListView>
 
         </StackPanel>

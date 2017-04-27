@@ -30,7 +30,14 @@ namespace MIDAS_BAT
         public ObservableCollection<TestExecData> TestExecList
         {
             get { return testExecList; }
-            set { testExecList = value;  }
+            set
+            {
+                if( testExecList != value )
+                {
+                    testExecList = value;
+                    NotifyPropertyChanged();
+                }
+            }
         }
 
         public ViewResultPage()
@@ -55,6 +62,8 @@ namespace MIDAS_BAT
 
                 testExecList.Add(data);
             }
+
+            NotifyPropertyChanged();
         }
 
         private async void deleteBtn_Click(object sender, RoutedEventArgs e)
@@ -77,14 +86,13 @@ namespace MIDAS_BAT
 
         private void saveBtn_Click(object sender, RoutedEventArgs e)
         {
-            
+           
         }
 
         private void backBtn_Click(object sender, RoutedEventArgs e)
         {
             this.Frame.GoBack();
         }
-
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
@@ -103,12 +111,23 @@ namespace MIDAS_BAT
 
         private void selectAllBtn_Click(object sender, RoutedEventArgs e)
         {
+            for( int i = 0; i < testExecList.Count; ++i )
+            {
+                testExecList[i].Selected = true;
+            }
 
+            NotifyPropertyChanged();
         }
 
         private void saveSelectedBtn_Click(object sender, RoutedEventArgs e)
         {
-
+            List<int> selectedTestExecList = new List<int>();
+            foreach (var item in testExecList)
+            {
+                if (item.Selected == true)
+                    selectedTestExecList.Add(item.Id);
+            }
+            Util.SaveResults(selectedTestExecList);
         }
 
         private async void deleteSelectedBtn_Click(object sender, RoutedEventArgs e)
@@ -141,13 +160,34 @@ namespace MIDAS_BAT
         }
     }
 
-    public class TestExecData
+    public class TestExecData : INotifyPropertyChanged
     {
         public int Id { get; set; }
         public int TesterId { get; set; }
-        public bool? Selected { get; set; }
+        private bool? selected;
+        public Boolean? Selected
+        {
+            get
+            {
+                return selected;
+            }
+            set
+            {
+                selected = value;
+                NotifyPropertyChanged();
+            }
+        }
         public string TesterName { get; set; }
         public int TestSetId { get; set; }
         public string Datetime { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
     }
 }

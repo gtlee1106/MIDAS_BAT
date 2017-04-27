@@ -33,7 +33,7 @@ namespace MIDAS_BAT
         TestExec m_testExec;
         string m_targetWord;
         int m_curIdx;
-        List<long> m_Times;
+        List<double> m_Times;
         
 
         public TestPage()
@@ -52,19 +52,17 @@ namespace MIDAS_BAT
 
             m_curIdx = 0;
             m_targetWord = "";
-            m_Times = new List<long>();
+            m_Times = new List<double>();
         }
 
         private void Core_PointerReleasing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
-            m_Times.Add(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
-            Debug.WriteLine("Added End");
+            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
         }
 
         private void Core_PointerPressing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
-            m_Times.Add(DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
-            Debug.WriteLine("Added Start");
+            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
         }
 
         private void InkPresenter_StrokesCollected(InkPresenter sender, InkStrokesCollectedEventArgs args)
@@ -141,7 +139,7 @@ namespace MIDAS_BAT
             title.Text = m_targetWord;
         }
 
-        private async void nextBtn_Click(object sender, RoutedEventArgs e)
+        private async Task nextHandling()
         {
             var currentStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             if (currentStrokes.Count == 0)
@@ -178,7 +176,12 @@ namespace MIDAS_BAT
             await saveStroke(currentStrokes);
             await saveResultIntoDB();
 
-            long[] timeDiff = new long[m_Times.Count - 1];
+            if (m_Times == null || m_Times.Count == 0 )
+            {
+                int a = 0;
+            }
+
+            double[] timeDiff = new double[m_Times.Count - 1];
             for( int i = 0; i < timeDiff.Length; ++i )
                 timeDiff[i] = m_Times[i+1] - m_Times[i];
             
@@ -187,8 +190,8 @@ namespace MIDAS_BAT
             {
                 int[] charCnt = CharacterUtil.GetSingleCharStrokeCnt(m_targetWord.ElementAt(i));
 
-                long[] duration = new long[charCnt.Length];
-                long[] idleTime = new long[charCnt.Length - 1];
+                double[] duration = new double[charCnt.Length];
+                double[] idleTime = new double[charCnt.Length - 1];
 
                 for (int j = 0; j < charCnt.Length;  ++j)
                 {
@@ -228,6 +231,11 @@ namespace MIDAS_BAT
             SetTargetWord(m_wordList[m_curIdx].Word);
             inkCanvas.InkPresenter.StrokeContainer.Clear();
             m_Times.Clear();
+        }
+
+        private async void nextBtn_Click(object sender, RoutedEventArgs e)
+        {
+            await nextHandling();
         }
 
         private async Task saveResultIntoDB()

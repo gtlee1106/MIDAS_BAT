@@ -69,6 +69,15 @@ namespace MIDAS_BAT
             return results.ElementAt(0);
         }
 
+        internal List<TestExecResult> GetTextExecResults(int testExecId, int testSetItemId)
+        {
+            string query = "SELECT * FROM TestExecResult WHERE TestExecId = '" + testExecId + "' and TestSetItemId = '"+ testSetItemId +"' ORDER BY Id";
+            IEnumerable<TestExecResult> results = conn.Query<TestExecResult>(query);
+            List<TestExecResult> list = new List<TestExecResult>(results);
+            
+            return list;
+        }
+
         internal List<TestExec> GetTextExecs( bool reverseOrder)
         {
             TableQuery<TestExec> tb = conn.Table<TestExec>();

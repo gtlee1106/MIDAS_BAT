@@ -31,20 +31,46 @@
 
         <TextBlock HorizontalAlignment="Right" Grid.Row="2" Text="성별"/>
         <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1">
-            <RadioButton x:Name="radioButton1" Content="남자" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-            <RadioButton x:Name="radioButton2" Content="여자" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <RadioButton x:Name="maleRadioBtn" GroupName="gender" Content="남자" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="True" Checked="gender_Checked"/>
+            <RadioButton x:Name="femaleRadioBtn" GroupName="gender"  Content="여자" HorizontalAlignment="Left" VerticalAlignment="Top" Checked="gender_Checked"/>
         </StackPanel>
         <TextBlock HorizontalAlignment="Right" Grid.Row="3" Text="생일"/>
         <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1">
-            <TextBox x:Name="year" />
+            <TextBox 
+                x:Name="year" 
+                Text="1950"
+                PlaceholderText="****"
+                />
             <TextBlock Text="년"/>
-            <TextBox x:Name="month" />
+            <TextBox 
+                x:Name="month" 
+                Text="01"
+                PlaceholderText="**"
+                />
             <TextBlock Text="월"/>
-            <TextBox x:Name="day" />
+            <TextBox 
+                x:Name="day"
+                Text="01"
+                PlaceholderText="**"
+                />
             <TextBlock Text="일"/>
         </StackPanel>
         <TextBlock HorizontalAlignment="Right" Text="학력" Grid.Row="4"/>
-        <TextBox x:Name="education" HorizontalAlignment="Left" Grid.Row="4" Grid.Column="1"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1">
+            <ComboBox
+                x:Name="educationCmb"
+                >
+                <x:String>초등학교</x:String>
+                <x:String>중학교</x:String>
+                <x:String>고등학교</x:String>
+                <x:String>대학교</x:String>
+            </ComboBox>
+            <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="graduateRadioBtn" GroupName="graduate" Content="졸업" IsChecked="True" Checked="graduate_Checked"/>
+                <RadioButton x:Name="dropRadioBtn" GroupName="graduate" Content="중퇴" Checked="graduate_Checked"/>
+            </StackPanel>
+        </StackPanel>
+       
 
         <StackPanel Grid.Row="5" Grid.ColumnSpan="3" HorizontalAlignment="center">
             <Button x:Name="startTest" Content="검사 시작하기" Click="startTest_Click" />

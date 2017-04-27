@@ -31,12 +31,39 @@ namespace MIDAS_BAT
         private void startTest_Click(object sender, RoutedEventArgs e)
         {
             DatabaseManager dbManager = DatabaseManager.Instance;
-            
+
+            string gender = "";
+            if (maleRadioBtn.IsChecked == true)
+                gender = "남";
+            else if (femaleRadioBtn.IsChecked == true)
+                gender = "여";
+            else
+                gender = "모름";
+
+            int education = 0;
+            if (educationCmb.SelectedValue.Equals("초등학교"))
+            {
+                education = 6;
+            }
+            else if (educationCmb.SelectedValue.Equals("중학교"))
+            {
+                education = 9;
+            }
+            else if (educationCmb.SelectedValue.Equals("고등학교"))
+            {
+                education = 12;
+            }
+            else if (educationCmb.SelectedValue.Equals("대학교"))
+            {
+                education = 16;
+            }
+
             Tester tester = new Tester()
             {
                 Name = name.Text,
+                Gender = gender,
                 birthday = year.Text + month.Text + day.Text,
-                Education = Int32.Parse( education.Text)
+                Education = education
             };
             dbManager.InsertTester(tester);
 
@@ -62,6 +89,16 @@ namespace MIDAS_BAT
         private void backBtn_Click(object sender, RoutedEventArgs e)
         {
             this.Frame.GoBack();
+        }
+
+        private void gender_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void graduate_Checked(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

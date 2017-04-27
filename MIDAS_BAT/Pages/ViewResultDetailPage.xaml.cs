@@ -27,8 +27,8 @@ namespace MIDAS_BAT
     /// </summary>
     public sealed partial class ViewResultDetailPage : Page, INotifyPropertyChanged
     {
-        ObservableCollection<ViewResultDataDetailData> testExecResultList = new ObservableCollection<ViewResultDataDetailData>();
-        public ObservableCollection<ViewResultDataDetailData> TestExecResultList
+        ObservableCollection<TestExecResultDetailData> testExecResultList = new ObservableCollection<TestExecResultDetailData>();
+        public ObservableCollection<TestExecResultDetailData> TestExecResultList
         {
             get { return testExecResultList; }
             set { testExecResultList = value; }
@@ -55,20 +55,30 @@ namespace MIDAS_BAT
 
             if (m_testExec != null)
             {
-                List<TestExecResult> list = dbManager.GetTextExecResults(m_testExec.Id);
-                foreach (var result in list)
+                List<TestSetItem> testSetItemList = dbManager.GetTestSetItems(m_testExec.TestSetId);
+                foreach (var testSetItem in testSetItemList)
                 {
-                    TestSetItem setItem = dbManager.GetTestSetItem(result.TestSetItemId);
 
-                    ViewResultDataDetailData data = new ViewResultDataDetailData()
+                    TestExecResultDetailData data = new TestExecResultDetailData()
                     {
-                        Word = setItem.Word,
-                        ChosungTime = result.ChosungTime,
-                        FirstIdleTIme = result.FirstIdleTIme,
-                        JoongsungTime = result.JoongsungTime,
-                        SecondIdelTime = result.SecondIdelTime,
-                        JongSungTime = result.JongsungTime
+                        TargetWord = testSetItem.Word,
                     };
+                    data.DetailSubData = new ObservableCollection<TestExecResultDetailSubData>();
+                    
+                    List<TestExecResult> list = dbManager.GetTextExecResults(m_testExec.Id, testSetItem.Id);
+                    foreach(var result in list)
+                    {
+                        TestExecResultDetailSubData subData = new TestExecResultDetailSubData()
+                        {
+                            Char = data.TargetWord.ElementAt(result.TestSetItemCharIdx).ToString(),
+                            ChosungTime = result.ChosungTime.ToString(),
+                            JoongsungTime = result.JoongsungTime.ToString(),
+                            JongsungTime = result.JongsungTime.ToString(),
+                            FirstIdleTime = result.FirstIdleTIme.ToString(),
+                            SecondIdleTime = result.SecondIdelTime.ToString()
+                        };
+                        data.DetailSubData.Add(subData);
+                    }
 
                     TestExecResultList.Add(data);
                 }
@@ -89,8 +99,9 @@ namespace MIDAS_BAT
             this.Frame.GoBack();
         }
 
-        private void saveBtn_Click(object sender, RoutedEventArgs e)
+        private async void saveBtn_Click(object sender, RoutedEventArgs e)
         {
+            await Util.SaveResult(m_testExec.Id);
         }
 
         private async void deleteBtn_Click(object sender, RoutedEventArgs e)
@@ -106,14 +117,22 @@ namespace MIDAS_BAT
         }
     }
 
-    public class ViewResultDataDetailData
+    public class TestExecResultDetailData
     {
-        public string Word { get; set; }
-        public double ChosungTime { get; set; }
-        public double FirstIdleTIme { get; set; }
-        public double JoongsungTime { get; set; }
-        public double SecondIdelTime { get; set; }
-        public double JongSungTime { get; set; }
+        public string TargetWord { get; set; }
+
+        public ObservableCollection<TestExecResultDetailSubData> DetailSubData { get; set; }
+        
+    }
+
+    public class TestExecResultDetailSubData
+    {
+        public string Char { get; set; }
+        public string ChosungTime { get; set; }
+        public string FirstIdleTime { get; set; }
+        public string JoongsungTime { get; set; }
+        public string SecondIdleTime { get; set; }
+        public string JongsungTime { get; set; }
     }
 
 }
