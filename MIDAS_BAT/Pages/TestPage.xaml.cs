@@ -34,7 +34,6 @@ namespace MIDAS_BAT
         string m_targetWord;
         int m_curIdx;
         List<double> m_Times;
-        
 
         public TestPage()
         {
@@ -109,7 +108,6 @@ namespace MIDAS_BAT
                 }
             }
 
-
             return ret;
         }
 
@@ -139,6 +137,32 @@ namespace MIDAS_BAT
             title.Text = m_targetWord;
         }
 
+        private async Task<bool> CheckTotalStrokeWithAnswer()
+        {
+            // 미리 계산해둘까...?
+            int totalCnt = 0;
+            string[] charSeq = CharacterUtil.GetSplitStrokeStr(m_targetWord);
+            for (int i = 0; i < m_targetWord.Length; ++i)
+            {
+                int[] charCnt = CharacterUtil.GetSingleCharStrokeCnt(m_targetWord.ElementAt(i));
+                for (int j = 0; j < charCnt.Length; ++j)
+                    totalCnt += charCnt[j];
+            }
+
+            var currentStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+            if (totalCnt != currentStrokes.Count)
+            {
+                var dialog = new MessageDialog("인식할 수 없습니다. 정자체로 다시 써주시기바랍니다.");
+                var res = await dialog.ShowAsync();
+
+                inkCanvas.InkPresenter.StrokeContainer.Clear();
+                m_Times.Clear();
+                return false;
+            }
+
+            return true;
+        }
+
         private async Task nextHandling()
         {
             var currentStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
@@ -149,58 +173,86 @@ namespace MIDAS_BAT
                 return;
             }
 
-            int totalCnt = 0;
-            string[] charSeq  = CharacterUtil.GetSplitStrokeStr(m_targetWord);
-            for (int i = 0; i < m_targetWord.Length; ++i)
-            {
-                int[] charCnt = CharacterUtil.GetSingleCharStrokeCnt(m_targetWord.ElementAt(i));
-                for (int j = 0; j < charCnt.Length; ++j)
-                    totalCnt += charCnt[j];
-            }
-            
-            if( totalCnt != currentStrokes.Count )
-            {
-                var dialog = new MessageDialog("인식할 수 없습니다. 정자체로 다시 써주시기바랍니다.");
-                var res = await dialog.ShowAsync();
-
-                inkCanvas.InkPresenter.StrokeContainer.Clear();
-                m_Times.Clear();
+            bool check =  await CheckTotalStrokeWithAnswer();
+            if (!check)
                 return;
-            }
-
- 
-            // 개수 카운트 필요하당
-
-            DatabaseManager dbManager = DatabaseManager.Instance;
 
             await saveStroke(currentStrokes);
-            await saveResultIntoDB();
+            saveResultIntoDB();
 
-            if (m_Times == null || m_Times.Count == 0 )
+            // index 증가
+            if( AvailableToGoToNext() )
             {
-                int a = 0;
+                m_curIdx++;
+
+                // 새로운 단어 지정 및 전체 초기화.
+                SetTargetWord(m_wordList[m_curIdx].Word);
+                inkCanvas.InkPresenter.StrokeContainer.Clear();
+                m_Times.Clear();
             }
+            else
+            {
+                this.Frame.Navigate(typeof(MainPage));
+                return;
+            }
+        }
+        
+        private bool AvailableToGoToNext()
+        {
+            if (m_curIdx + 1 >= m_wordList.Count)
+                return false;
+            return true;
+        }
+
+        private async void nextBtn_Click(object sender, RoutedEventArgs e)
+        {
+            await nextHandling();
+        }
+
+        private void saveResultIntoDB()
+        {
+            DatabaseManager dbManager = DatabaseManager.Instance;
 
             double[] timeDiff = new double[m_Times.Count - 1];
-            for( int i = 0; i < timeDiff.Length; ++i )
-                timeDiff[i] = m_Times[i+1] - m_Times[i];
-            
+            for (int i = 0; i < timeDiff.Length; ++i)
+                timeDiff[i] = m_Times[i + 1] - m_Times[i];
+
+            var currentStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             int timeIdx = 0;
+            int strokeIdx = 0;
             for (int i = 0; i < m_targetWord.Length; ++i)
             {
                 int[] charCnt = CharacterUtil.GetSingleCharStrokeCnt(m_targetWord.ElementAt(i));
 
-                double[] duration = new double[charCnt.Length];
-                double[] idleTime = new double[charCnt.Length - 1];
+                double[] duration = new double[charCnt.Length];     // 초성/중성/종성 시간 측정
+                double[] idleTime = new double[charCnt.Length - 1]; // idle time 측정
+                double[] avgPressure = new double[charCnt.Length];  // 초성/중성/종성 평균 압력 측정
 
-                for (int j = 0; j < charCnt.Length;  ++j)
+                for (int j = 0; j < charCnt.Length; ++j)
                 {
                     duration[j] = 0;
-                    for (int k = 0; k < charCnt[j]*2-1; ++k)
+                    for (int k = 0; k < charCnt[j] * 2 - 1; ++k)
                         duration[j] += timeDiff[timeIdx++];
 
-                    if( j < charCnt.Length - 1 )
+                    if (j < charCnt.Length - 1)
                         idleTime[j] = timeDiff[timeIdx++];
+
+
+                    avgPressure[j] = 0;
+                    int segCnt = 0;
+                    for(int k = 0; k < charCnt[j]; ++k )
+                    {
+                        IReadOnlyList<InkStrokeRenderingSegment> segList = currentStrokes[strokeIdx].GetRenderingSegments();
+                        foreach( var seg in segList)
+                        {
+                            avgPressure[j] += seg.Pressure;
+                        }
+                        segCnt += segList.Count;
+
+                        strokeIdx++;
+                    }
+                    if( segCnt != 0 )
+                        avgPressure[j] /= (double)segCnt;
                 }
 
                 TestExecResult result = new TestExecResult()
@@ -213,34 +265,13 @@ namespace MIDAS_BAT
                     JongsungTime = duration[2],
                     FirstIdleTIme = idleTime[0],
                     SecondIdelTime = idleTime[1],
+                    ChosungAvgPressure = avgPressure[0],
+                    JoongsungAvgPressure = avgPressure[1],
+                    JongsungAvgPressure = avgPressure[2]
                 };
 
                 dbManager.InsertTestExecResult(result);
             }
-            
-            // index 증가
-            m_curIdx++;
-            if (m_curIdx == m_wordList.Count)
-            {
-                // 종료함.
-                this.Frame.Navigate(typeof(MainPage));
-                return;
-            }
-
-            // 새로운 단어 지정 및 전체 초기화.
-            SetTargetWord(m_wordList[m_curIdx].Word);
-            inkCanvas.InkPresenter.StrokeContainer.Clear();
-            m_Times.Clear();
-        }
-
-        private async void nextBtn_Click(object sender, RoutedEventArgs e)
-        {
-            await nextHandling();
-        }
-
-        private async Task saveResultIntoDB()
-        {
-            DatabaseManager dbManager = DatabaseManager.Instance;
 
             return;
         }
@@ -251,14 +282,12 @@ namespace MIDAS_BAT
             Windows.Storage.StorageFolder storageFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
             Windows.Storage.StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
 
-            Debug.WriteLine("step1");
             if (file == null)
                 return 1;
 
             Windows.Storage.CachedFileManager.DeferUpdates(file);
             IRandomAccessStream stream = await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite);
 
-            Debug.WriteLine("step2");
             using (IOutputStream outputStream = stream.GetOutputStreamAt(0))
             {
                 await inkCanvas.InkPresenter.StrokeContainer.SaveAsync(outputStream);
@@ -266,13 +295,11 @@ namespace MIDAS_BAT
             }
             stream.Dispose();
 
-            Debug.WriteLine("step3");
             Windows.Storage.Provider.FileUpdateStatus status = await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
 
             if( status == Windows.Storage.Provider.FileUpdateStatus.Complete )
             {
             }
-            Debug.WriteLine("step4");
 
             return 0;
         }

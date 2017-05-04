@@ -125,7 +125,5 @@ namespace MIDAS_BAT
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
-
-
     }
 }

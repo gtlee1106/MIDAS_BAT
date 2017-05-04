@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -100,5 +102,35 @@ namespace MIDAS_BAT
         {
 
         }
+
+        private void showBoxChk_Click(object sender, RoutedEventArgs e)
+        {
+            if( showBoxChk.IsChecked == true )
+            {
+                if (widthBox != null)
+                { 
+                    widthBox.IsEnabled= true;
+                }
+                if (heightBox != null)
+                {
+                    heightBox.IsEnabled = true;
+                }
+
+            }
+            else
+            {
+                if( widthBox != null )
+                {
+                    widthBox.IsEnabled = false;
+                }
+                if (heightBox != null)
+                {
+                    heightBox.IsEnabled = false;
+                }
+            }
+
+
+        }
+
     }
 }

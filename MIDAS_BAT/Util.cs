@@ -57,7 +57,7 @@ namespace MIDAS_BAT
                 string newFolderName = tester.Name + "_" + tester.birthday;
 
                 Windows.Storage.StorageFolder subFolder = await rootFolder.CreateFolderAsync(newFolderName, Windows.Storage.CreationCollisionOption.ReplaceExisting);
-                SaveResult(subFolder, testExecId);
+                await SaveResult(subFolder, testExecId);
             }
 
             return true;
@@ -81,8 +81,22 @@ namespace MIDAS_BAT
             await Windows.Storage.FileIO.WriteTextAsync(resultFile, tester.Name + "(" + tester.Gender + "),");
             await Windows.Storage.FileIO.AppendTextAsync(resultFile, tester.birthday + "," );
             await Windows.Storage.FileIO.AppendTextAsync(resultFile, tester.Education.ToString() + "\r\n");
-            
-            foreach( var item in testSetItems)
+
+            // 각 항목별 헤더
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "단어,");
+
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "한글자,");
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "초성시간(ms),");
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "간격(ms),");
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "중성시간(ms),");
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "간격(ms),");
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "종성시간(ms),");
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "초성평균압력(0~1),");
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "중성평균압력(0~1),");
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "종성평균압력(0~1)"); 
+            await Windows.Storage.FileIO.AppendTextAsync(resultFile, "\r\n");
+
+            foreach (var item in testSetItems)
             {
                 List<TestExecResult> results = dbManager.GetTextExecResults(testExec.Id, item.Id);
 
@@ -93,11 +107,14 @@ namespace MIDAS_BAT
                     await Windows.Storage.FileIO.AppendTextAsync(resultFile, ",");
 
                     await Windows.Storage.FileIO.AppendTextAsync(resultFile, item.Word.ElementAt(results[i].TestSetItemCharIdx).ToString() + "," );
-                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].ChosungTime.ToString() + "," );
-                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].FirstIdleTIme.ToString() + "," );
-                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].JoongsungTime.ToString() + "," );
-                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].SecondIdelTime.ToString() + "," );
-                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].JongsungTime.ToString() + "," );
+                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].ChosungTime.ToString("F3") + "," );
+                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].FirstIdleTIme.ToString("F3") + "," );
+                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].JoongsungTime.ToString("F3") + "," );
+                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].SecondIdelTime.ToString("F3") + "," );
+                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].JongsungTime.ToString("F3") + "," );
+                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].ChosungAvgPressure.ToString("F6") + "," );
+                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].JoongsungAvgPressure.ToString("F6") + "," );
+                    await Windows.Storage.FileIO.AppendTextAsync(resultFile, results[i].JongsungAvgPressure.ToString("F6") );
                     await Windows.Storage.FileIO.AppendTextAsync(resultFile, "\r\n");
                 }
             }

@@ -49,14 +49,21 @@ namespace MIDAS_BAT
             foreach( var item in list)
             {
                 Tester tester = dbManager.GetTester(item.TesterId);
-                string testerStr = tester.Name + "(" + tester.Gender+ ", " + tester.birthday+ ")";
+                string testerStr = tester.Name + "(" + tester.Gender + ", " + tester.birthday + ")";
+                string execDatetime = item.Datetime.Substring(0, 4) + "." +
+                                      item.Datetime.Substring(4, 2) + "." +
+                                      item.Datetime.Substring(6, 2) + " " +
+                                      item.Datetime.Substring(9, 2) + ":" +
+                                      item.Datetime.Substring(11, 2) + ":" +
+                                      item.Datetime.Substring(13, 2);
+
                 TestExecData data = new TestExecData()
                 {
                     Id = item.Id,
                     TesterName = testerStr,
                     TesterId = item.TesterId,
                     TestSetId = item.TestSetId,
-                    Datetime = item.Datetime,
+                    ExecDatetime = execDatetime,
                     Selected = false
                 };
 
@@ -86,7 +93,9 @@ namespace MIDAS_BAT
 
         private void saveBtn_Click(object sender, RoutedEventArgs e)
         {
-           
+            var selectedTestExecData = (sender as FrameworkElement).Tag as TestExecData;
+
+            Util.SaveResult(selectedTestExecData.Id);
         }
 
         private void backBtn_Click(object sender, RoutedEventArgs e)
@@ -107,16 +116,6 @@ namespace MIDAS_BAT
         {
             TestExecData item = e.ClickedItem as TestExecData;
             this.Frame.Navigate(typeof(ViewResultDetailPage), item);
-        }
-
-        private void selectAllBtn_Click(object sender, RoutedEventArgs e)
-        {
-            for( int i = 0; i < testExecList.Count; ++i )
-            {
-                testExecList[i].Selected = true;
-            }
-
-            NotifyPropertyChanged();
         }
 
         private void saveSelectedBtn_Click(object sender, RoutedEventArgs e)
@@ -158,6 +157,17 @@ namespace MIDAS_BAT
         {
 
         }
+
+        private void selectAllChk_Click(object sender, RoutedEventArgs e)
+        {
+            bool? allCheck = selectAllChk.IsChecked;
+            for (int i = 0; i < testExecList.Count; ++i)
+            {
+                testExecList[i].Selected = allCheck;
+            }
+
+            NotifyPropertyChanged();
+        }
     }
 
     public class TestExecData : INotifyPropertyChanged
@@ -179,7 +189,7 @@ namespace MIDAS_BAT
         }
         public string TesterName { get; set; }
         public int TestSetId { get; set; }
-        public string Datetime { get; set; }
+        public string ExecDatetime { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")

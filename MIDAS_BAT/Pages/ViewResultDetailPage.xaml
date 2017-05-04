@@ -8,36 +8,106 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <StackPanel>
-            <TextBlock Text="Test Result"/>
-            <StackPanel Orientation="Horizontal">
-                <Button x:Name="backBtn" Content="뒤로 돌아가기" Click="backBtn_Click"/>
-                <Button x:Name="saveBtn" Tag="{Binding}" Content="저장하기" Click="saveBtn_Click"/>
-                <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" Click="deleteBtn_Click"/>
+        <RelativePanel>
+            <TextBlock x:Name="descText" Text="실험 결과" FontSize="20" Margin="10,10"/>
+            <StackPanel x:Name="btnPanel" RelativePanel.Below="descText" Orientation="Horizontal">
+                <Button x:Name="backBtn" Content="뒤로 돌아가기" Margin="5,5,5,5" Click="backBtn_Click"/>
+                <Button x:Name="saveBtn" Tag="{Binding}" Content="저장하기" Margin="5,5,5,5" Click="saveBtn_Click"/>
+                <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" Margin="5,5,5,5" Click="deleteBtn_Click"/>
             </StackPanel>
-            <ListView x:Name="resultList"  ItemsSource="{x:Bind TestExecResultList, Mode=OneWay}">
+            <Grid x:Name="listViewHeader" RelativePanel.Below="btnPanel" Padding="12,5" Background="AntiqueWhite">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="108"/>
+                    <ColumnDefinition Width="62"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="150"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" BorderThickness="1" BorderBrush="Black">
+                    <TextBlock Text="단어" HorizontalAlignment="Center" Grid.Column="0" Margin="5,5,5,5"/>
+                </Border>
+                <Border Grid.Column="1" BorderThickness="1" BorderBrush="Black" Margin="12,0,0,0">
+                <TextBlock Text="한자" HorizontalAlignment="Center" Grid.Column="1" Margin="5,5,5,5"/>
+                </Border>
+                <Border Grid.Column="2" BorderThickness="1" BorderBrush="Black">
+                <TextBlock Text="초성시간(ms)" HorizontalAlignment="Center" Grid.Column="2" Margin="5,5,5,5"/>
+                </Border>
+                <Border Grid.Column="3" BorderThickness="1" BorderBrush="Black">
+                <TextBlock Text="간격(ms)" HorizontalAlignment="Center" Grid.Column="3" Margin="5,5,5,5"/>
+                </Border>
+                <Border Grid.Column="4" BorderThickness="1" BorderBrush="Black">
+                <TextBlock Text="중성시간(ms)" HorizontalAlignment="Center" Grid.Column="4" Margin="5,5,5,5"/>
+                </Border>
+                <Border Grid.Column="5" BorderThickness="1" BorderBrush="Black">
+                <TextBlock Text="간격(ms)" HorizontalAlignment="Center" Grid.Column="5" Margin="5,5,5,5"/>
+                </Border>
+                <Border Grid.Column="6" BorderThickness="1" BorderBrush="Black">
+                <TextBlock Text="종성시간(ms)" HorizontalAlignment="Center" Grid.Column="6" Margin="5,5,5,5"/>
+                </Border>
+                <Border Grid.Column="7" BorderThickness="1" BorderBrush="Black">
+                <TextBlock Text="초성평균압력(0~1)" HorizontalAlignment="Center" Grid.Column="7" Margin="5,5,5,5"/>
+                </Border>
+                <Border Grid.Column="8" BorderThickness="1" BorderBrush="Black">
+                <TextBlock Text="중성평균압력(0~1)" HorizontalAlignment="Center" Grid.Column="8" Margin="5,5,5,5"/>
+                </Border>
+                <Border Grid.Column="9" BorderThickness="1" BorderBrush="Black">
+                <TextBlock Text="종성평균압력(0~1)" HorizontalAlignment="Center" Grid.Column="9" Margin="5,5,5,5"/>
+                </Border>
+            </Grid>
+            <ListView x:Name="resultList" RelativePanel.Below="listViewHeader" ItemsSource="{x:Bind TestExecResultList, Mode=OneWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="local:TestExecResultDetailData">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{x:Bind TargetWord}"/>
+                            <Border BorderBrush="Black" BorderThickness="1">
+                                <TextBlock Text="{x:Bind TargetWord}" Margin="3" FontSize="15" Width="100" VerticalAlignment="Center"/>
+                            </Border>
                             <ListView x:Name="subResultList" ItemsSource="{x:Bind DetailSubData, Mode=OneWay}">
                                 <ListView.ItemTemplate>
                                     <DataTemplate x:DataType="local:TestExecResultDetailSubData">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition/>
-                                                <ColumnDefinition/>
-                                                <ColumnDefinition/>
-                                                <ColumnDefinition/>
-                                                <ColumnDefinition/>
-                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="150"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Char}" Grid.Column="0" Margin="3"/>
-                                            <TextBlock Text="{Binding ChosungTime}" Grid.Column="1" Margin="3"/>
-                                            <TextBlock Text="{Binding FirstIdleTime}" Grid.Column="2" Margin="3"/>
-                                            <TextBlock Text="{Binding JoongsungTime}" Grid.Column="3" Margin="3"/>
-                                            <TextBlock Text="{Binding SecondIdleTime}" Grid.Column="4" Margin="3"/>
-                                            <TextBlock Text="{Binding JongsungTime}" Grid.Column="5" Margin="3"/>
+                                            <Border Grid.Column="0" BorderThickness="1" BorderBrush="Black">
+                                            <TextBlock Text="{Binding Char}" Grid.Column="0" Margin="3" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="1" BorderThickness="1" BorderBrush="Black">
+                                            <TextBlock Text="{Binding ChosungTime}" Grid.Column="1" Margin="3" HorizontalAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="2" BorderThickness="1" BorderBrush="Black">
+                                            <TextBlock Text="{Binding FirstIdleTime}" Grid.Column="2" Margin="3" HorizontalAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="3" BorderThickness="1" BorderBrush="Black">
+                                            <TextBlock Text="{Binding JoongsungTime}" Grid.Column="3" Margin="3" HorizontalAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="4" BorderThickness="1" BorderBrush="Black">
+                                            <TextBlock Text="{Binding SecondIdleTime}" Grid.Column="4" Margin="3" HorizontalAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="5" BorderThickness="1" BorderBrush="Black">
+                                            <TextBlock Text="{Binding JongsungTime}" Grid.Column="5" Margin="3" HorizontalAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="6" BorderThickness="1" BorderBrush="Black">
+                                            <TextBlock Text="{Binding ChosungAvgPressure}" Grid.Column="6" Margin="3" HorizontalAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="7" BorderThickness="1" BorderBrush="Black">
+                                            <TextBlock Text="{Binding JoongsungAvgPressure}" Grid.Column="7" Margin="3" HorizontalAlignment="Center"/>
+                                            </Border>
+                                            <Border Grid.Column="8" BorderThickness="1" BorderBrush="Black">
+                                            <TextBlock Text="{Binding JongsungAvgPressure}" Grid.Column="8" Margin="3" HorizontalAlignment="Center"/>
+                                            </Border>
                                         </Grid>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
@@ -47,6 +117,6 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-        </StackPanel>
+        </RelativePanel>
     </Grid>
 </Page>

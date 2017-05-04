@@ -8,32 +8,44 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <StackPanel>
-            <TextBlock Text="Test Result"/>
-            <StackPanel Orientation="Horizontal">
-                <Button x:Name="backBtn" Content="뒤로 돌아가기" Click="backBtn_Click"/>
-                <Button x:Name="selectAllBtn" Content="전체선택" Click="selectAllBtn_Click"/>
-                <Button x:Name="saveSelectedBtn" Content="선택결과 저장하기" Click="saveSelectedBtn_Click"/>
-                <Button x:Name="deleteSelectedBtn" Content="선택결과 삭제하기" Click="deleteSelectedBtn_Click"/>
+        <RelativePanel Height="Auto">
+            <TextBlock x:Name ="descText" Text="실험 결과" FontSize="20"/>
+            <StackPanel x:Name="btnPanel" RelativePanel.Below="descText" Orientation="Horizontal">
+                <Button x:Name="backBtn" Content="뒤로 돌아가기" Margin="5,5" Click="backBtn_Click" />
+                <Button x:Name="saveSelectedBtn" Content="선택결과 저장하기" Margin="5,5"  Click="saveSelectedBtn_Click"/>
+                <Button x:Name="deleteSelectedBtn" Content="선택결과 삭제하기" Margin="5,5"  Click="deleteSelectedBtn_Click"/>
             </StackPanel>
-            <ListView x:Name="testExecListView" ItemsSource="{x:Bind TestExecList, Mode=OneWay}" IsItemClickEnabled="True" ItemClick="testExecListView_ItemClick" Height="428">
+            <Grid x:Name="listViewHeader" RelativePanel.Below="btnPanel" Padding="12,5" Background="AntiqueWhite">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="400"/>
+                    <ColumnDefinition Width="380"/>
+                </Grid.ColumnDefinitions>
+                <CheckBox x:Name="selectAllChk" Click="selectAllChk_Click"/>
+                <TextBlock Text="피험자" Grid.Column="1" Margin="5,10,5,5"/>
+                <TextBlock Text="실험일" Grid.Column="2" Margin="5,10,5,5"/>
+            </Grid>
+            <ListView x:Name="testExecListView" RelativePanel.Below="listViewHeader" ItemsSource="{x:Bind TestExecList, Mode=OneWay}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsItemClickEnabled="True" ItemClick="testExecListView_ItemClick">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="local:TestExecData">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="400"/>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="80"/>
                             </Grid.ColumnDefinitions>
                             <CheckBox x:Name="selectChk" IsChecked="{x:Bind Selected, Mode=TwoWay}" Tag="{Binding}" Click="selectChk_Click"/>
-                            <TextBlock Text="{Binding TesterName}" Grid.Column="1"/>
-                            <Button x:Name="saveBtn" Tag="{Binding}" Content="저장하기" Grid.Column="2" Click="saveBtn_Click"/>
-                            <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" Grid.Column="3" Click="deleteBtn_Click"/>
+                            <TextBlock Text="{Binding TesterName}" Grid.Column="1" Margin="5,10,5,5"/>
+                            <TextBlock Text="{Binding ExecDatetime}" Grid.Column="2" Margin="5,10,5,5"/>
+                            <Button x:Name="saveBtn" Tag="{Binding}" Content="저장하기" Grid.Column="3" Margin="5,5,5,5" Click="saveBtn_Click"/>
+                            <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" Grid.Column="4" Margin="5,5,5,5" Click="deleteBtn_Click"/>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-        </StackPanel>
+        </RelativePanel>
     </Grid>
+
 </Page>

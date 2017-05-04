@@ -71,11 +71,14 @@ namespace MIDAS_BAT
                         TestExecResultDetailSubData subData = new TestExecResultDetailSubData()
                         {
                             Char = data.TargetWord.ElementAt(result.TestSetItemCharIdx).ToString(),
-                            ChosungTime = result.ChosungTime.ToString(),
-                            JoongsungTime = result.JoongsungTime.ToString(),
-                            JongsungTime = result.JongsungTime.ToString(),
-                            FirstIdleTime = result.FirstIdleTIme.ToString(),
-                            SecondIdleTime = result.SecondIdelTime.ToString()
+                            ChosungTime = result.ChosungTime.ToString("F3"),
+                            JoongsungTime = result.JoongsungTime.ToString("F3"),
+                            JongsungTime = result.JongsungTime.ToString("F3"),
+                            FirstIdleTime = result.FirstIdleTIme.ToString("F3"),
+                            SecondIdleTime = result.SecondIdelTime.ToString("F3"),
+                            ChosungAvgPressure = result.ChosungAvgPressure.ToString("F6"),
+                            JoongsungAvgPressure = result.JoongsungAvgPressure.ToString("F6"),
+                            JongsungAvgPressure = result.JongsungAvgPressure.ToString("F6"),
                         };
                         data.DetailSubData.Add(subData);
                     }
@@ -133,6 +136,9 @@ namespace MIDAS_BAT
         public string JoongsungTime { get; set; }
         public string SecondIdleTime { get; set; }
         public string JongsungTime { get; set; }
+        public string ChosungAvgPressure { get; set; }
+        public string JoongsungAvgPressure { get; set; }
+        public string JongsungAvgPressure { get; set; }
     }
 
 }

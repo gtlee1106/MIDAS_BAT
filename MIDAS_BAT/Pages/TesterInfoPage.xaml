@@ -15,6 +15,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -24,41 +25,42 @@
         </Grid.ColumnDefinitions>
 
         <!-- 설명 / 이름 / 성별 / 생일 / 학력 / 확인버튼-->
-        <TextBlock HorizontalAlignment="Right" Grid.ColumnSpan="2" Text="설명"/>
+        <TextBlock Grid.Column="1" Text="피험자 정보" FontSize="25"/>
 
-        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0"  Text="이름"/>
-        <TextBox x:Name="name" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1"/>
+        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" Margin="5,5,5,5" Text="이름"/>
+        <TextBox x:Name="name" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" Width="230" Margin="5,5,5,5"/>
 
-        <TextBlock HorizontalAlignment="Right" Grid.Row="2" Text="성별"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1">
+        <TextBlock HorizontalAlignment="Right" Grid.Row="2" Margin="5,5,5,5" Text="성별"/>
+        <StackPanel Orientation="Horizontal"  Margin="5,5,5,5" Grid.Row="2" Grid.Column="1">
             <RadioButton x:Name="maleRadioBtn" GroupName="gender" Content="남자" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="True" Checked="gender_Checked"/>
             <RadioButton x:Name="femaleRadioBtn" GroupName="gender"  Content="여자" HorizontalAlignment="Left" VerticalAlignment="Top" Checked="gender_Checked"/>
         </StackPanel>
-        <TextBlock HorizontalAlignment="Right" Grid.Row="3" Text="생일"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1">
+        <TextBlock HorizontalAlignment="Right" Grid.Row="3" Margin="5,5,5,5" Text="생일"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" Margin="5,5,5,5">
             <TextBox 
                 x:Name="year" 
                 Text="1950"
                 PlaceholderText="****"
                 />
-            <TextBlock Text="년"/>
+            <TextBlock Text="년" Margin="5,5,5,0"/>
             <TextBox 
                 x:Name="month" 
                 Text="01"
                 PlaceholderText="**"
                 />
-            <TextBlock Text="월"/>
+            <TextBlock Text="월" Margin="5,5,5,0" />
             <TextBox 
                 x:Name="day"
                 Text="01"
                 PlaceholderText="**"
                 />
-            <TextBlock Text="일"/>
+            <TextBlock Text="일"  Margin="5,5,5,0"/>
         </StackPanel>
-        <TextBlock HorizontalAlignment="Right" Text="학력" Grid.Row="4"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1">
+        <TextBlock HorizontalAlignment="Right" Text="학력" Margin="5,10,5,10" Grid.Row="4"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1" Margin="5,5,5,5">
             <ComboBox
-                x:Name="educationCmb"
+                x:Name="educationCmb" Width="115"
+                SelectedIndex="2"
                 >
                 <x:String>초등학교</x:String>
                 <x:String>중학교</x:String>
@@ -66,15 +68,39 @@
                 <x:String>대학교</x:String>
             </ComboBox>
             <StackPanel Orientation="Horizontal">
-                <RadioButton x:Name="graduateRadioBtn" GroupName="graduate" Content="졸업" IsChecked="True" Checked="graduate_Checked"/>
+                <RadioButton x:Name="graduateRadioBtn" GroupName="graduate" Content="졸업" Margin="10,0,0,0" IsChecked="True" Checked="graduate_Checked"/>
                 <RadioButton x:Name="dropRadioBtn" GroupName="graduate" Content="중퇴" Checked="graduate_Checked"/>
             </StackPanel>
         </StackPanel>
+
+        <TextBlock HorizontalAlignment="Right" Text="글상자" Margin="5,10,5,10" Grid.Row="5"/>
+        <StackPanel Orientation="Horizontal"  Grid.Row="5" Grid.Column="1">
+            <CheckBox x:Name="showBoxChk" Content="글상자 보이기" IsChecked="True" Margin="5,5,5,5" Click="showBoxChk_Click"/>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="너비(mm)" Grid.Row="0" Grid.Column="0" Margin="5,10,5,5"/>
+                <TextBox x:Name="widthBox" Grid.Row="0" Grid.Column="1" Text="80" Margin="5,5,5,5" />
+                <TextBlock Text="높이(mm)" Grid.Row="1" Grid.Column="0" Margin="5,10,5,5"/>
+                <TextBox x:Name="heightBox" Grid.Row="1" Grid.Column="1" Text="80"  Margin="5,5,5,5"/>
+            </Grid>
+
+
+        </StackPanel>
+        
        
 
-        <StackPanel Grid.Row="5" Grid.ColumnSpan="3" HorizontalAlignment="center">
-            <Button x:Name="startTest" Content="검사 시작하기" Click="startTest_Click" />
-            <Button x:Name="backBtn" Content="돌아가기" Click="backBtn_Click" />
+        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
+            <Button x:Name="startTest" Content="검사 시작하기" Margin="10,10,10,10" Click="startTest_Click" />
+            <Button x:Name="backBtn" Content="돌아가기"  Margin="10,10,10,10" Click="backBtn_Click" />
         </StackPanel>
 
     </Grid>
