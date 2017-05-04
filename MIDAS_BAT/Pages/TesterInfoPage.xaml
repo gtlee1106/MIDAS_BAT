@@ -25,7 +25,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- 설명 / 이름 / 성별 / 생일 / 학력 / 확인버튼-->
-        <TextBlock Grid.Column="1" Text="피험자 정보" FontSize="25"/>
+        <TextBlock Grid.Column="1" Text="피험자 정보" FontSize="25" Margin="20"/>
 
         <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" Margin="5,5,5,5" Text="이름"/>
         <TextBox x:Name="name" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" Width="230" Margin="5,5,5,5"/>
@@ -73,7 +73,7 @@
             </StackPanel>
         </StackPanel>
 
-        <TextBlock HorizontalAlignment="Right" Text="글상자" Margin="5,10,5,10" Grid.Row="5"/>
+        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="글상자" Margin="5,10,5,10" Grid.Row="5"/>
         <StackPanel Orientation="Horizontal"  Grid.Row="5" Grid.Column="1">
             <CheckBox x:Name="showBoxChk" Content="글상자 보이기" IsChecked="True" Margin="5,5,5,5" Click="showBoxChk_Click"/>
 

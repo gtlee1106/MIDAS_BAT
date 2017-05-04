@@ -8,11 +8,49 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <StackPanel>
-            <TextBlock x:Name="title" Text="설명" HorizontalAlignment="Center" FontSize="36"/>
-            <InkCanvas x:Name="inkCanvas" Height="442" VerticalAlignment="Center" HorizontalAlignment="Center" Width="640"/>
-            <Button x:Name="nextBtn" Content="다음" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="nextBtn_Click"/>
-            <Button x:Name="closeBtn" Content="시험종료" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="closeBtn_Click"/>
-        </StackPanel>
+        <RelativePanel>
+            <TextBlock 
+                x:Name="title" 
+                Text="설명" 
+                RelativePanel.AlignTopWithPanel= "True" 
+                RelativePanel.AlignHorizontalCenterWithPanel= "True" 
+                Margin="10"
+                FontSize="36"/>
+
+            <Border 
+                x:Name="borderInkCanvas" 
+                RelativePanel.AlignHorizontalCenterWithPanel="True" 
+                RelativePanel.AlignVerticalCenterWithPanel="True"
+                BorderBrush="Black" 
+                Height="600" Width="600"
+                BorderThickness="1">
+                <InkCanvas 
+                    x:Name="inkCanvas" />
+            </Border>
+            <Button 
+                x:Name="cleanBtn" 
+                Content="지우기" 
+                RelativePanel.Below="borderInkCanvas"
+                RelativePanel.AlignLeftWithPanel="True"
+                Margin="5,5,5,5"
+                Width="100"
+                Click="cleanBtn_Click"/>
+            <Button 
+                x:Name="nextBtn" 
+                Content="다음" 
+                RelativePanel.Below="borderInkCanvas"
+                RelativePanel.AlignRightWithPanel="True"
+                Width="100"
+                Margin="5,5,5,5"
+                Click="nextBtn_Click"/>
+            <Button 
+                x:Name="closeBtn" 
+                Content="시험종료" 
+                RelativePanel.Below="nextBtn"
+                RelativePanel.AlignRightWithPanel="True"
+                Margin="5,5,5,5"
+                Width="100"
+                Click="closeBtn_Click"/>
+        </RelativePanel>
     </Grid>
 </Page>

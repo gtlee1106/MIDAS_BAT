@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Graphics.Canvas;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,6 +8,10 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Graphics.DirectX;
+using Windows.Graphics.Display;
+using Windows.Graphics.Imaging;
+using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Input.Inking;
@@ -18,6 +23,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
 // 빈 페이지 항목 템플릿에 대한 설명은 http://go.microsoft.com/fwlink/?LinkId=234238에 나와 있습니다.
@@ -128,6 +134,17 @@ namespace MIDAS_BAT
                     m_targetWord = m_wordList.ElementAt(0).Word;
 
                 SetTargetWord(m_targetWord);
+
+
+                // ui setup
+                if (exec.ShowBorder)
+                    borderInkCanvas.BorderThickness = new Thickness(1.0);
+                else
+                    borderInkCanvas.BorderThickness = new Thickness(1.0);
+
+                DisplayInformation di = DisplayInformation.GetForCurrentView();
+                borderInkCanvas.Width = (int)(di.RawDpiX * (exec.ScreenWidth / 25.4f) / (float)di.RawPixelsPerViewPixel);
+                borderInkCanvas.Height = (int)(di.RawDpiY * (exec.ScreenHeight / 25.4f) / (float)di.RawPixelsPerViewPixel);
             }
         }
 
@@ -178,6 +195,7 @@ namespace MIDAS_BAT
                 return;
 
             await saveStroke(currentStrokes);
+            await saveInkCanvas(inkCanvas);
             saveResultIntoDB();
 
             // index 증가
@@ -187,8 +205,8 @@ namespace MIDAS_BAT
 
                 // 새로운 단어 지정 및 전체 초기화.
                 SetTargetWord(m_wordList[m_curIdx].Word);
-                inkCanvas.InkPresenter.StrokeContainer.Clear();
-                m_Times.Clear();
+
+                ClearInkData();
             }
             else
             {
@@ -196,7 +214,118 @@ namespace MIDAS_BAT
                 return;
             }
         }
-        
+
+        private async Task<bool> saveInkCanvas( InkCanvas inkCanvas )
+        {
+
+            var targetFile =
+                    await
+                    ApplicationData.Current.TemporaryFolder.CreateFileAsync(
+                        "test.jpg",
+                        CreationCollisionOption.ReplaceExisting);
+
+            if (targetFile != null)
+            {
+                int width = (int)inkCanvas.ActualWidth;
+                int height = (int)inkCanvas.ActualHeight;
+
+                var renderBitmap = new RenderTargetBitmap();
+                await renderBitmap.RenderAsync(inkCanvas, width, height);
+
+                var bitmapSizeAt96Dpi = new Size(width, height);
+
+                var pixels = await renderBitmap.GetPixelsAsync();
+
+                var win2DDevice = CanvasDevice.GetSharedDevice();
+
+                using (
+                    var target = new CanvasRenderTarget(
+                        win2DDevice,
+                        width, height,
+                        96.0f))
+                {
+                    using (var drawingSession = target.CreateDrawingSession())
+                    {
+                        using (
+                            var canvasBitmap = CanvasBitmap.CreateFromBytes(
+                                win2DDevice,
+                                pixels,
+                                (int)width, 
+                                (int)height,
+                                DirectXPixelFormat.B8G8R8A8UIntNormalized,
+                                96.0f))
+                        {
+                            drawingSession.DrawImage(
+                                canvasBitmap,
+                                new Rect(0, 0, target.SizeInPixels.Width, target.SizeInPixels.Height),
+                                new Rect(0, 0, bitmapSizeAt96Dpi.Width, bitmapSizeAt96Dpi.Height));
+                        }
+                        drawingSession.Units = CanvasUnits.Pixels;
+                        drawingSession.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
+                    }
+
+                    using (var stream = await targetFile.OpenAsync(FileAccessMode.ReadWrite))
+                    {
+                        var logicalDpi = DisplayInformation.GetForCurrentView().LogicalDpi;
+                        var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId,stream);
+
+                        byte[] bytes = target.GetPixelBytes();
+
+                        encoder.SetPixelData(
+                            BitmapPixelFormat.Bgra8,
+                            BitmapAlphaMode.Ignore,
+                            (uint)width,
+                            (uint)height,
+                            logicalDpi,
+                            logicalDpi,
+                            target.GetPixelBytes());
+
+                        await encoder.FlushAsync();
+                    }
+                }
+            }
+
+            return true;
+
+
+            /*
+
+
+
+            string file_name = m_testExec.TesterId.ToString() + "_" + m_curIdx.ToString() + ".png";
+            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
+
+            if (file == null)
+                return false;
+
+            Windows.Storage.CachedFileManager.DeferUpdates(file);
+
+            uint width = (uint)inkCanvas.ActualWidth;
+            uint height = (uint)inkCanvas.ActualHeight;
+            RenderTargetBitmap rtb = new RenderTargetBitmap();
+            await rtb.RenderAsync(inkCanvas, (int)width, (int)height);
+
+            DisplayInformation di = DisplayInformation.GetForCurrentView(); 
+
+            var pixels= await rtb.GetPixelsAsync();
+
+            var curcc = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+
+            using (IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.ReadWrite))
+            {
+                var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
+                byte[] bytes = pixels.ToArray();
+                encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore,
+                    width, height, di.LogicalDpi, di.LogicalDpi, bytes);
+
+                await encoder.FlushAsync();
+            }
+
+            return true;
+            */
+        }
+
         private bool AvailableToGoToNext()
         {
             if (m_curIdx + 1 >= m_wordList.Count)
@@ -307,6 +436,17 @@ namespace MIDAS_BAT
         private void closeBtn_Click(object sender, RoutedEventArgs e)
         {
             this.Frame.Navigate(typeof(MainPage));
+        }
+
+        private void cleanBtn_Click(object sender, RoutedEventArgs e)
+        {
+            ClearInkData();
+        }
+
+        private void ClearInkData()
+        {
+            inkCanvas.InkPresenter.StrokeContainer.Clear();
+            m_Times.Clear();
         }
     }
 }

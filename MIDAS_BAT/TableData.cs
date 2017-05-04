@@ -66,6 +66,9 @@ namespace MIDAS_BAT
         public int TesterId { get; set; }
         public int TestSetId { get; set; }
         public string Datetime { get; set; }
+        public bool ShowBorder { get; set; }
+        public int ScreenWidth { get; set; }
+        public int ScreenHeight{ get; set; }
     }
 
     public class TestExecResult

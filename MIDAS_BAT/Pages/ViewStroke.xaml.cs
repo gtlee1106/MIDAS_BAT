@@ -85,7 +85,6 @@ namespace MIDAS_BAT
                     }
                 }
             }
-
         }
 
         private async void playBtn_Click(object sender, RoutedEventArgs e)

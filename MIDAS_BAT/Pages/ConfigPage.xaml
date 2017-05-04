@@ -8,28 +8,30 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <StackPanel>
-            <TextBlock Text="Test Set"/>
-            <ListView x:Name="testSetListView" ItemsSource="{x:Bind TestSetList, Mode=OneWay}" IsItemClickEnabled="True" >
+        <RelativePanel>
+            <TextBlock x:Name="desc" Text="실험셋" FontSize="30" Margin="10"/>
+            <StackPanel Orientation="Horizontal" x:Name="btnPanel" RelativePanel.Below="desc">
+                <Button x:Name="addTestSet" Content="실험셋 추가하기" Margin="5" Click="addTestSet_Click"/>
+                <Button x:Name="backBtn" Content="뒤로 돌아가기" Margin="5" Click="backBtn_Click"/>
+            </StackPanel>
+            <ListView x:Name="testSetListView" RelativePanel.Below="btnPanel" ItemsSource="{x:Bind TestSetList, Mode=OneWay}" IsItemClickEnabled="True" >
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="local:TestSet">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="50"/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
+                                <ColumnDefinition Width="350"/>
+                                <ColumnDefinition Width="65"/>
+                                <ColumnDefinition Width="65"/>
                             </Grid.ColumnDefinitions>
                             <CheckBox x:Name="activeChk" IsChecked="{x:Bind Active, Mode=TwoWay}" Tag="{Binding}" Click="activeChk_Click"/>
-                            <TextBlock Text="{Binding SetName}" FontSize="36" Grid.Column="1"/>
-                            <Button x:Name="editBtn" Tag="{Binding}" Content="수정" FontSize="36" Grid.Column="2" Click="editBtn_Click"/>
-                            <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" FontSize="36" Grid.Column="3" Click="deleteBtn_Click"/>
+                            <TextBlock Text="{Binding SetName}" Margin="5,10,5,5" Grid.Column="1"/>
+                            <Button x:Name="editBtn" Tag="{Binding}" Content="수정" Grid.Column="2" Margin="5" Click="editBtn_Click"/>
+                            <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" Grid.Column="3" Margin="5" Click="deleteBtn_Click"/>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-            <Button x:Name="addTestSet" Content="실험셋 추가하기" Click="addTestSet_Click"/>
-            <Button x:Name="backBtn" Content="뒤로 돌아가기" Click="backBtn_Click"/>
-        </StackPanel>
+        </RelativePanel>
     </Grid>
 </Page>

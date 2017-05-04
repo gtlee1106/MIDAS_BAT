@@ -65,7 +65,7 @@ namespace MIDAS_BAT
                 Name = name.Text,
                 Gender = gender,
                 birthday = year.Text + month.Text + day.Text,
-                Education = education
+                Education = education,
             };
             dbManager.InsertTester(tester);
 
@@ -81,7 +81,10 @@ namespace MIDAS_BAT
             {
                 TesterId = tester.Id,
                 TestSetId = testSet.Id,
-                Datetime = System.DateTime.Now.ToString("yyyyMMdd_hhmmss")
+                Datetime = System.DateTime.Now.ToString("yyyyMMdd_hhmmss"),
+                ShowBorder = showBoxChk.IsChecked == true ? true : false,
+                ScreenWidth = Int32.Parse(widthBox.Text),
+                ScreenHeight = Int32.Parse(heightBox.Text)
             };
             dbManager.InsertTestExec(testExec);
 
