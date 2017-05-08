@@ -13,6 +13,7 @@ using Windows.Graphics.Display;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Input.Inking;
 using Windows.UI.Input.Inking.Core;
@@ -217,113 +218,83 @@ namespace MIDAS_BAT
 
         private async Task<bool> saveInkCanvas( InkCanvas inkCanvas )
         {
-
-            var targetFile =
-                    await
-                    ApplicationData.Current.TemporaryFolder.CreateFileAsync(
-                        "test.jpg",
-                        CreationCollisionOption.ReplaceExisting);
-
-            if (targetFile != null)
-            {
-                int width = (int)inkCanvas.ActualWidth;
-                int height = (int)inkCanvas.ActualHeight;
-
-                var renderBitmap = new RenderTargetBitmap();
-                await renderBitmap.RenderAsync(inkCanvas, width, height);
-
-                var bitmapSizeAt96Dpi = new Size(width, height);
-
-                var pixels = await renderBitmap.GetPixelsAsync();
-
-                var win2DDevice = CanvasDevice.GetSharedDevice();
-
-                using (
-                    var target = new CanvasRenderTarget(
-                        win2DDevice,
-                        width, height,
-                        96.0f))
-                {
-                    using (var drawingSession = target.CreateDrawingSession())
-                    {
-                        using (
-                            var canvasBitmap = CanvasBitmap.CreateFromBytes(
-                                win2DDevice,
-                                pixels,
-                                (int)width, 
-                                (int)height,
-                                DirectXPixelFormat.B8G8R8A8UIntNormalized,
-                                96.0f))
-                        {
-                            drawingSession.DrawImage(
-                                canvasBitmap,
-                                new Rect(0, 0, target.SizeInPixels.Width, target.SizeInPixels.Height),
-                                new Rect(0, 0, bitmapSizeAt96Dpi.Width, bitmapSizeAt96Dpi.Height));
-                        }
-                        drawingSession.Units = CanvasUnits.Pixels;
-                        drawingSession.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
-                    }
-
-                    using (var stream = await targetFile.OpenAsync(FileAccessMode.ReadWrite))
-                    {
-                        var logicalDpi = DisplayInformation.GetForCurrentView().LogicalDpi;
-                        var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId,stream);
-
-                        byte[] bytes = target.GetPixelBytes();
-
-                        encoder.SetPixelData(
-                            BitmapPixelFormat.Bgra8,
-                            BitmapAlphaMode.Ignore,
-                            (uint)width,
-                            (uint)height,
-                            logicalDpi,
-                            logicalDpi,
-                            target.GetPixelBytes());
-
-                        await encoder.FlushAsync();
-                    }
-                }
-            }
-
-            return true;
-
-
-            /*
-
-
-
-            string file_name = m_testExec.TesterId.ToString() + "_" + m_curIdx.ToString() + ".png";
+            // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
+            string file_name = m_testExec.TesterId.ToString() + "_char_" + m_curIdx.ToString() + ".gif";
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
             StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
 
-            if (file == null)
-                return false;
+            var displayInformation = DisplayInformation.GetForCurrentView();
+            var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.GifEncoderId, stream);
 
-            Windows.Storage.CachedFileManager.DeferUpdates(file);
+            CanvasDevice device = CanvasDevice.GetSharedDevice();
+            CanvasRenderTarget rtb = new CanvasRenderTarget(device, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight, 96); // 96 쓰는게 맞나? or dpi 받아서 써야되나?
+            IReadOnlyList<InkStroke> strokeList = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
 
-            uint width = (uint)inkCanvas.ActualWidth;
-            uint height = (uint)inkCanvas.ActualHeight;
-            RenderTargetBitmap rtb = new RenderTargetBitmap();
-            await rtb.RenderAsync(inkCanvas, (int)width, (int)height);
+            List<InkStroke> newStrokeList = new List<InkStroke>();
 
-            DisplayInformation di = DisplayInformation.GetForCurrentView(); 
-
-            var pixels= await rtb.GetPixelsAsync();
-
-            var curcc = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
-
-            using (IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.ReadWrite))
+            foreach (var stroke in strokeList)
             {
-                var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
-                byte[] bytes = pixels.ToArray();
-                encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore,
-                    width, height, di.LogicalDpi, di.LogicalDpi, bytes);
+                IReadOnlyList<InkPoint> pointList = stroke.GetInkPoints();
 
-                await encoder.FlushAsync();
+                List<InkPoint> newPointList = new List<InkPoint>();
+                foreach (var point in pointList)
+                {
+                    newPointList.Add(point);
+                    InkStrokeBuilder strokeBuilder = new InkStrokeBuilder();
+                    var newStroke = strokeBuilder.CreateStrokeFromInkPoints(newPointList, stroke.PointTransform);
+
+                    newStrokeList.Add(newStroke);
+
+                    // 한프레임...?
+                    using (var ds = rtb.CreateDrawingSession())
+                    {
+                        ds.Clear(Colors.White);
+                        ds.DrawInk(newStrokeList);
+                    }
+
+                    var pixelBuffer = rtb.GetPixelBytes();
+                    var pixels = pixelBuffer.ToArray();
+
+                    encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                         BitmapAlphaMode.Premultiplied,
+                                             (uint)inkCanvas.ActualWidth,
+                                             (uint)inkCanvas.ActualWidth,
+                                             displayInformation.RawDpiX,
+                                             displayInformation.RawDpiY,
+                                             pixels);
+
+                    await encoder.GoToNextFrameAsync();
+
+                }
             }
 
+            using (var ds = rtb.CreateDrawingSession())
+            {
+                ds.Clear(Colors.White);
+                ds.DrawInk(newStrokeList);
+            }
+
+            var lastPixelBuffer = rtb.GetPixelBytes();
+            var lastPixels = lastPixelBuffer.ToArray();
+
+            for (int i = 0; i < 10; ++i)
+            {
+                encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                BitmapAlphaMode.Premultiplied,
+                                    (uint)inkCanvas.ActualWidth,
+                                    (uint)inkCanvas.ActualWidth,
+                                    displayInformation.RawDpiX,
+                                    displayInformation.RawDpiY,
+                                    lastPixels);
+                if (i < 10 - 1)
+                    await encoder.GoToNextFrameAsync();
+            }
+
+            await encoder.FlushAsync();
+            stream.Dispose();
+
             return true;
-            */
         }
 
         private bool AvailableToGoToNext()
@@ -408,8 +379,8 @@ namespace MIDAS_BAT
         private async Task<int> saveStroke(IReadOnlyList<InkStroke> currentStroke)
         {
             string file_name = m_testExec.TesterId.ToString() + "_" + m_curIdx.ToString() + ".gif";
-            Windows.Storage.StorageFolder storageFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
-            Windows.Storage.StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
+            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
 
             if (file == null)
                 return 1;
