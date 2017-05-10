@@ -46,9 +46,9 @@ namespace MIDAS_BAT
         {
             this.InitializeComponent();
 
-            inkCanvas.InkPresenter.InputDeviceTypes = Windows.UI.Core.CoreInputDeviceTypes.Mouse 
-                                                    | Windows.UI.Core.CoreInputDeviceTypes.Pen
-                                                    | Windows.UI.Core.CoreInputDeviceTypes.Touch;
+            inkCanvas.InkPresenter.InputDeviceTypes = CoreInputDeviceTypes.Mouse 
+                                                    | CoreInputDeviceTypes.Pen
+                                                    | CoreInputDeviceTypes.Touch;
 
             inkCanvas.InkPresenter.StrokesCollected += InkPresenter_StrokesCollected;
 
@@ -139,13 +139,18 @@ namespace MIDAS_BAT
 
                 // ui setup
                 if (exec.ShowBorder)
+                {
                     borderInkCanvas.BorderThickness = new Thickness(1.0);
+                    DisplayInformation di = DisplayInformation.GetForCurrentView();
+                    borderInkCanvas.Width = (int)(di.RawDpiX * (exec.ScreenWidth / 25.4f) / (float)di.RawPixelsPerViewPixel);
+                    borderInkCanvas.Height = (int)(di.RawDpiY * (exec.ScreenHeight / 25.4f) / (float)di.RawPixelsPerViewPixel);
+                }
                 else
-                    borderInkCanvas.BorderThickness = new Thickness(1.0);
+                {
+                    borderInkCanvas.BorderThickness = new Thickness(0.0);
+                }
 
-                DisplayInformation di = DisplayInformation.GetForCurrentView();
-                borderInkCanvas.Width = (int)(di.RawDpiX * (exec.ScreenWidth / 25.4f) / (float)di.RawPixelsPerViewPixel);
-                borderInkCanvas.Height = (int)(di.RawDpiY * (exec.ScreenHeight / 25.4f) / (float)di.RawPixelsPerViewPixel);
+                
             }
         }
 
@@ -183,6 +188,8 @@ namespace MIDAS_BAT
 
         private async Task nextHandling()
         {
+            saveInkCanvas(inkCanvas);
+
             var currentStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             if (currentStrokes.Count == 0)
             {  
@@ -196,7 +203,7 @@ namespace MIDAS_BAT
                 return;
 
             await saveStroke(currentStrokes);
-            await saveInkCanvas(inkCanvas);
+            
             saveResultIntoDB();
 
             // index 증가
