@@ -188,21 +188,13 @@ namespace MIDAS_BAT
 
         private async Task nextHandling()
         {
-            saveInkCanvas(inkCanvas);
-
-            var currentStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
-            if (currentStrokes.Count == 0)
-            {  
-                // 다시 시작한다.
-                inkCanvas.InkPresenter.StrokeContainer.Clear();
-                return;
-            }
-
             bool check =  await CheckTotalStrokeWithAnswer();
             if (!check)
                 return;
 
-            await saveStroke(currentStrokes);
+            await Util.CaptureInkCanvasForStroke(inkCanvas, m_testExec.TesterId.ToString(), m_curIdx);
+            
+            await saveStroke();
             
             saveResultIntoDB();
 
@@ -383,16 +375,16 @@ namespace MIDAS_BAT
             return;
         }
 
-        private async Task<int> saveStroke(IReadOnlyList<InkStroke> currentStroke)
+        private async Task<int> saveStroke()
         {
             string file_name = m_testExec.TesterId.ToString() + "_" + m_curIdx.ToString() + ".gif";
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
-            StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
             if (file == null)
                 return 1;
 
-            Windows.Storage.CachedFileManager.DeferUpdates(file);
+            CachedFileManager.DeferUpdates(file);
             IRandomAccessStream stream = await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite);
 
             using (IOutputStream outputStream = stream.GetOutputStreamAt(0))

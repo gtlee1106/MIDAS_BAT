@@ -24,6 +24,16 @@ namespace MIDAS_BAT
         private static ushort m_unicodeHangulBase = 0xAC00;
         private static ushort m_unicodeHangulLast = 0xD79F;
 
+        public static bool IsHangul(string word)
+        {
+            for( int i = 0; i < word.Length; ++i )
+            {
+                if (word.ElementAt(i) < m_unicodeHangulBase || word.ElementAt(i) > m_unicodeHangulLast)
+                    return false;
+            }
+            return true;
+        }
+
         public static int[] GetSplitStrokeNumber(string targetWord)
         {
             int[] numbers = new int[targetWord.Length * 3];
