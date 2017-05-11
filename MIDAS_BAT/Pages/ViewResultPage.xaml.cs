@@ -118,7 +118,7 @@ namespace MIDAS_BAT
             this.Frame.Navigate(typeof(ViewResultDetailPage), item);
         }
 
-        private void saveSelectedBtn_Click(object sender, RoutedEventArgs e)
+        private async void saveSelectedBtn_Click(object sender, RoutedEventArgs e)
         {
             List<int> selectedTestExecList = new List<int>();
             foreach (var item in testExecList)
@@ -126,7 +126,7 @@ namespace MIDAS_BAT
                 if (item.Selected == true)
                     selectedTestExecList.Add(item.Id);
             }
-            Util.SaveResults(selectedTestExecList);
+            await Util.SaveResults(selectedTestExecList);
         }
 
         private async void deleteSelectedBtn_Click(object sender, RoutedEventArgs e)

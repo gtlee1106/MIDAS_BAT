@@ -54,16 +54,15 @@ namespace MIDAS_BAT
             if (rootFolder == null)
                 return false;
 
-
             DatabaseManager dbManager = DatabaseManager.Instance;
             foreach (int testExecId in testExecList)
             {
                 TestExec testExec = dbManager.GetTestExec(testExecId);
                 Tester tester = dbManager.GetTester(testExec.TesterId);
 
-                string newFolderName = tester.Name + "_" + tester.birthday;
+                string newFolderName = tester.Name + "_" + tester.birthday + "_" + tester.Gender;
 
-                Windows.Storage.StorageFolder subFolder = await rootFolder.CreateFolderAsync(newFolderName, CreationCollisionOption.ReplaceExisting);
+                StorageFolder subFolder = await rootFolder.CreateFolderAsync(newFolderName, CreationCollisionOption.ReplaceExisting);
                 await SaveResult(subFolder, testExecId);
             }
 
