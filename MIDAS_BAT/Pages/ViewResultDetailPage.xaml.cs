@@ -76,6 +76,7 @@ namespace MIDAS_BAT
                             JongsungTime = result.JongsungTime.ToString("F3"),
                             FirstIdleTime = result.FirstIdleTIme.ToString("F3"),
                             SecondIdleTime = result.SecondIdelTime.ToString("F3"),
+                            ThirdIdleTime = result.ThirdIdleTime.ToString("F3"),
                             ChosungAvgPressure = result.ChosungAvgPressure.ToString("F6"),
                             JoongsungAvgPressure = result.JoongsungAvgPressure.ToString("F6"),
                             JongsungAvgPressure = result.JongsungAvgPressure.ToString("F6"),
@@ -136,6 +137,7 @@ namespace MIDAS_BAT
         public string JoongsungTime { get; set; }
         public string SecondIdleTime { get; set; }
         public string JongsungTime { get; set; }
+        public string ThirdIdleTime { get; set; }
         public string ChosungAvgPressure { get; set; }
         public string JoongsungAvgPressure { get; set; }
         public string JongsungAvgPressure { get; set; }

@@ -19,25 +19,27 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="108"/>
                     <ColumnDefinition Width="62"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="80"/>
                     <ColumnDefinition Width="100"/>
                     <ColumnDefinition Width="100"/>
                     <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="150"/>
                 </Grid.ColumnDefinitions>
-                    <TextBlock Text="단어" HorizontalAlignment="Center" Grid.Column="0" Margin="5,5,5,5"/>
-                <TextBlock Text="한자" HorizontalAlignment="Center" Grid.Column="1" Margin="5,5,5,5"/>
-                <TextBlock Text="초성시간(ms)" HorizontalAlignment="Center" Grid.Column="2" Margin="5,5,5,5"/>
-                <TextBlock Text="간격(ms)" HorizontalAlignment="Center" Grid.Column="3" Margin="5,5,5,5"/>
-                <TextBlock Text="중성시간(ms)" HorizontalAlignment="Center" Grid.Column="4" Margin="5,5,5,5"/>
-                <TextBlock Text="간격(ms)" HorizontalAlignment="Center" Grid.Column="5" Margin="5,5,5,5"/>
-                <TextBlock Text="종성시간(ms)" HorizontalAlignment="Center" Grid.Column="6" Margin="5,5,5,5"/>
-                <TextBlock Text="초성평균압력(0~1)" HorizontalAlignment="Center" Grid.Column="7" Margin="5,5,5,5"/>
-                <TextBlock Text="중성평균압력(0~1)" HorizontalAlignment="Center" Grid.Column="8" Margin="5,5,5,5"/>
-                <TextBlock Text="종성평균압력(0~1)" HorizontalAlignment="Center" Grid.Column="9" Margin="5,5,5,5"/>
+                <TextBlock Text="단어" HorizontalAlignment="Center" Grid.Column="0" Margin="2"/>
+                <TextBlock Text="한자" HorizontalAlignment="Center" Grid.Column="1" Margin="2"/>
+                <TextBlock Text="초성시간&#x0a;(ms)" HorizontalAlignment="Center" Grid.Column="2" Margin="2"/>
+                <TextBlock Text="간격&#x0a;(ms)" HorizontalAlignment="Center" Grid.Column="3" Margin="2"/>
+                <TextBlock Text="중성시간&#x0a;(ms)" HorizontalAlignment="Center" Grid.Column="4" Margin="2"/>
+                <TextBlock Text="간격&#x0a;(ms)" HorizontalAlignment="Center" Grid.Column="5" Margin="2"/>
+                <TextBlock Text="종성시간&#x0a;(ms)" HorizontalAlignment="Center" Grid.Column="6" Margin="2"/>
+                <TextBlock Text="간격&#x0a;(ms)" HorizontalAlignment="Center" Grid.Column="7" Margin="2"/>
+                <TextBlock Text="초성평균압력&#x0a;(0~1)" HorizontalAlignment="Center" Grid.Column="8" Margin="2"/>
+                <TextBlock Text="중성평균압력&#x0a;(0~1)" HorizontalAlignment="Center" Grid.Column="9" Margin="2"/>
+                <TextBlock Text="종성평균압력&#x0a;(0~1)" HorizontalAlignment="Center" Grid.Column="10" Margin="2"/>
             </Grid>
             <ListView x:Name="resultList" RelativePanel.Below="listViewHeader" ItemsSource="{x:Bind TestExecResultList, Mode=OneWay}">
                 <ListView.ItemTemplate>
@@ -50,14 +52,15 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="80"/>
                                                 <ColumnDefinition Width="100"/>
                                                 <ColumnDefinition Width="100"/>
                                                 <ColumnDefinition Width="100"/>
-                                                <ColumnDefinition Width="100"/>
-                                                <ColumnDefinition Width="100"/>
-                                                <ColumnDefinition Width="150"/>
-                                                <ColumnDefinition Width="150"/>
-                                                <ColumnDefinition Width="150"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding Char}" Grid.Column="0" Margin="3" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                             <TextBlock Text="{Binding ChosungTime}" Grid.Column="1" Margin="3" HorizontalAlignment="Center"/>
@@ -65,9 +68,10 @@
                                             <TextBlock Text="{Binding JoongsungTime}" Grid.Column="3" Margin="3" HorizontalAlignment="Center"/>
                                             <TextBlock Text="{Binding SecondIdleTime}" Grid.Column="4" Margin="3" HorizontalAlignment="Center"/>
                                             <TextBlock Text="{Binding JongsungTime}" Grid.Column="5" Margin="3" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding ChosungAvgPressure}" Grid.Column="6" Margin="3" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding JoongsungAvgPressure}" Grid.Column="7" Margin="3" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding JongsungAvgPressure}" Grid.Column="8" Margin="3" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding ThirdIdleTime}" Grid.Column="6" Margin="3" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding ChosungAvgPressure}" Grid.Column="7" Margin="3" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding JoongsungAvgPressure}" Grid.Column="8" Margin="3" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding JongsungAvgPressure}" Grid.Column="9" Margin="3" HorizontalAlignment="Center"/>
                                         </Grid>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>

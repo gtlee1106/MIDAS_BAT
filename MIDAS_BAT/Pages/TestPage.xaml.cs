@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -196,7 +197,9 @@ namespace MIDAS_BAT
             
             await saveStroke();
             
-            saveResultIntoDB();
+            await saveRawData();
+            saveResultIntoDB_other();
+
 
             // index 증가
             if( AvailableToGoToNext() )
@@ -210,9 +213,41 @@ namespace MIDAS_BAT
             }
             else
             {
+
+                var dialog = new MessageDialog("검사가 끝났습니다. 수고하셨습니다.");
+                dialog.ShowAsync();
                 this.Frame.Navigate(typeof(MainPage));
                 return;
             }
+        }
+
+        private async Task<bool> saveRawData()
+        {
+            // pressure & time diff 저장...?
+            string file_name = m_testExec.TesterId.ToString() + "_raw_" + m_curIdx.ToString() + ".txt";
+            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine(m_Times.Count.ToString());
+            for( int i = 0; i < m_Times.Count; ++i )
+                builder.AppendLine(m_Times[i].ToString("F3"));
+
+            IReadOnlyList<InkStroke> strokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+            builder.AppendLine(strokes.Count.ToString());
+            for( int i = 0; i < strokes.Count; ++i )
+            {
+                IReadOnlyList<InkStrokeRenderingSegment> segments = strokes[i].GetRenderingSegments();
+                builder.AppendLine(segments.Count.ToString());
+                foreach( var seg in segments )
+                {
+                    builder.AppendLine(seg.Pressure.ToString("F6"));
+                }
+            }
+
+            await FileIO.WriteTextAsync(file, builder.ToString());
+
+            return true;
         }
 
         private async Task<bool> saveInkCanvas( InkCanvas inkCanvas )
@@ -303,9 +338,92 @@ namespace MIDAS_BAT
             return true;
         }
 
+        private static bool nextLock = false;
         private async void nextBtn_Click(object sender, RoutedEventArgs e)
         {
-            await nextHandling();
+            if (nextLock == false) 
+            {
+                nextLock = true;
+                await nextHandling();
+                nextLock = false;
+            }
+        }
+
+        private void saveResultIntoDB_other()
+        {
+            DatabaseManager dbManager = DatabaseManager.Instance;
+            var currentStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+
+            int strokeIdx = 0;
+            int baseIdx = 0;
+            for (int i = 0; i < m_targetWord.Length; ++i)
+            {
+                int[] charCnt = CharacterUtil.GetSingleCharStrokeCnt(m_targetWord.ElementAt(i));
+                double[] duration = new double[charCnt.Length];     // 초성/중성/종성 시간 측정
+                double[] idleTime = new double[charCnt.Length]; // idle time 측정
+
+                // duration 계산
+                for( int j = 0; j < charCnt.Length; ++j )
+                {
+                    if( charCnt[j] == 0 ) // 종성이 없는 경우 들어옴. 
+                    {
+                        duration[j] = 0.0;
+                        idleTime[j] = 0.0;
+                        continue;
+                    }
+
+                    int offset = baseIdx + charCnt[j] * 2 - 1;
+                    duration[j] = m_Times[offset] - m_Times[baseIdx];
+
+                    if (m_Times.Count > offset + 1)
+                        idleTime[j] = m_Times[offset + 1] - m_Times[offset];
+                    else
+                        idleTime[j] = 0.0;
+
+                    baseIdx = offset + 1;
+                }
+
+                // pressure 계산
+                double[] avgPressure = new double[charCnt.Length];  // 초성/중성/종성 평균 압력 측정
+                for (int j = 0; j < charCnt.Length; ++j)
+                {
+                    avgPressure[j] = 0;
+                    int segCnt = 0;
+                    for (int k = 0; k < charCnt[j]; ++k)
+                    {
+                        IReadOnlyList<InkStrokeRenderingSegment> segList = currentStrokes[strokeIdx].GetRenderingSegments();
+                        foreach (var seg in segList)
+                        {
+                            avgPressure[j] += seg.Pressure;
+                        }
+                        segCnt += segList.Count;
+
+                        strokeIdx++;
+                    }
+                    if (segCnt != 0)
+                        avgPressure[j] /= (double)segCnt;
+                }
+
+                TestExecResult result = new TestExecResult()
+                {
+                    TestExecId = m_testExec.Id,
+                    TestSetItemId = m_wordList[m_curIdx].Id,
+                    TestSetItemCharIdx = i,
+                    ChosungTime = duration[0],
+                    JoongsungTime = duration[1],
+                    JongsungTime = duration[2],
+                    FirstIdleTIme = idleTime[0],
+                    SecondIdelTime = idleTime[1],
+                    ThirdIdleTime = idleTime[2],
+                    ChosungAvgPressure = avgPressure[0],
+                    JoongsungAvgPressure = avgPressure[1],
+                    JongsungAvgPressure = avgPressure[2]
+                };
+
+                dbManager.InsertTestExecResult(result);
+
+
+            }
         }
 
         private void saveResultIntoDB()
@@ -324,7 +442,7 @@ namespace MIDAS_BAT
                 int[] charCnt = CharacterUtil.GetSingleCharStrokeCnt(m_targetWord.ElementAt(i));
 
                 double[] duration = new double[charCnt.Length];     // 초성/중성/종성 시간 측정
-                double[] idleTime = new double[charCnt.Length - 1]; // idle time 측정
+                double[] idleTime = new double[charCnt.Length]; // idle time 측정
                 double[] avgPressure = new double[charCnt.Length];  // 초성/중성/종성 평균 압력 측정
 
                 for (int j = 0; j < charCnt.Length; ++j)
@@ -333,8 +451,10 @@ namespace MIDAS_BAT
                     for (int k = 0; k < charCnt[j] * 2 - 1; ++k)
                         duration[j] += timeDiff[timeIdx++];
 
-                    if (j < charCnt.Length - 1)
+                    if (timeIdx < timeDiff.Count())
                         idleTime[j] = timeDiff[timeIdx++];
+                    else
+                        idleTime[j] = 0.0;
 
 
                     avgPressure[j] = 0;
@@ -364,6 +484,7 @@ namespace MIDAS_BAT
                     JongsungTime = duration[2],
                     FirstIdleTIme = idleTime[0],
                     SecondIdelTime = idleTime[1],
+                    ThirdIdleTime = idleTime[2],
                     ChosungAvgPressure = avgPressure[0],
                     JoongsungAvgPressure = avgPressure[1],
                     JongsungAvgPressure = avgPressure[2]

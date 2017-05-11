@@ -17,7 +17,7 @@ namespace MIDAS_BAT
         public string Name { get; set; }
         public string Gender { get; set; }
         public string birthday { get; set; }
-        public int Education { get; set; }
+        public string Education { get; set; }
     }
 
     public class TestSet : INotifyPropertyChanged
@@ -86,5 +86,6 @@ namespace MIDAS_BAT
         public double SecondIdelTime { get; set; }
         public double JongsungTime { get; set; }
         public double JongsungAvgPressure { get; set; }
+        public double ThirdIdleTime { get; set; }
     }
 }

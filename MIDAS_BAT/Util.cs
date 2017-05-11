@@ -141,8 +141,9 @@ namespace MIDAS_BAT
                 StorageFile charGifFile = await gifSavedFolder.GetFileAsync(orgGifName);
                 await charGifFile.CopyAsync(folder, newGifName);
             }
+
+            // 완전 raw 데이터... 
             
-            // 또 다른거 있나...? 
 
             return true;
         }

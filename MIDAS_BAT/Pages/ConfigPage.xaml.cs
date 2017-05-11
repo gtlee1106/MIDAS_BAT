@@ -65,7 +65,7 @@ namespace MIDAS_BAT
 
         private async void deleteBtn_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new MessageDialog("정말로 삭제하시겠습니까?");
+            var dialog = new MessageDialog("정말로 삭제하시겠습니까?\n(해당 실험셋을 활용한 실험결과도 같이 삭제됩니다.)");
             dialog.Title = "삭제";
             dialog.Commands.Add(new UICommand { Label = "예", Id=0 });
             dialog.Commands.Add(new UICommand { Label = "아니오", Id=1 });

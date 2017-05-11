@@ -112,16 +112,16 @@ namespace MIDAS_BAT
 
             // 무식하지만...
             TestSetItem[] items = new TestSetItem[10];
-            if( m_testSet.Word1 != null ) items[0] = new TestSetItem() { Number = 1, TestSetId = curSet.Id, Word = m_testSet.Word1.Trim() };
-            if (m_testSet.Word2 != null) items[1] = new TestSetItem() { Number = 2, TestSetId = curSet.Id, Word = m_testSet.Word2.Trim() };
-            if (m_testSet.Word3 != null) items[2] = new TestSetItem() { Number = 3, TestSetId = curSet.Id, Word = m_testSet.Word3.Trim() };
-            if (m_testSet.Word4 != null) items[3] = new TestSetItem() { Number = 4, TestSetId = curSet.Id, Word = m_testSet.Word4.Trim() };
-            if (m_testSet.Word5 != null) items[4] = new TestSetItem() { Number = 5, TestSetId = curSet.Id, Word = m_testSet.Word5.Trim() };
-            if (m_testSet.Word6 != null) items[5] = new TestSetItem() { Number = 6, TestSetId = curSet.Id, Word = m_testSet.Word6.Trim() };
-            if (m_testSet.Word7 != null) items[6] = new TestSetItem() { Number = 7, TestSetId = curSet.Id, Word = m_testSet.Word7.Trim() };
-            if (m_testSet.Word8 != null) items[7] = new TestSetItem() { Number = 8, TestSetId = curSet.Id, Word = m_testSet.Word8.Trim() };
-            if (m_testSet.Word9 != null) items[8] = new TestSetItem() { Number = 9, TestSetId = curSet.Id, Word = m_testSet.Word9.Trim() };
-            if (m_testSet.Word10 != null) items[9] = new TestSetItem() { Number = 10, TestSetId = curSet.Id, Word = m_testSet.Word10.Trim() };
+            if( m_testSet.Word1 != null ) items[0] = new TestSetItem() { Number = 0, TestSetId = curSet.Id, Word = m_testSet.Word1.Trim() };
+            if (m_testSet.Word2 != null) items[1] = new TestSetItem() { Number = 1, TestSetId = curSet.Id, Word = m_testSet.Word2.Trim() };
+            if (m_testSet.Word3 != null) items[2] = new TestSetItem() { Number = 2, TestSetId = curSet.Id, Word = m_testSet.Word3.Trim() };
+            if (m_testSet.Word4 != null) items[3] = new TestSetItem() { Number = 3, TestSetId = curSet.Id, Word = m_testSet.Word4.Trim() };
+            if (m_testSet.Word5 != null) items[4] = new TestSetItem() { Number = 4, TestSetId = curSet.Id, Word = m_testSet.Word5.Trim() };
+            if (m_testSet.Word6 != null) items[5] = new TestSetItem() { Number = 5, TestSetId = curSet.Id, Word = m_testSet.Word6.Trim() };
+            if (m_testSet.Word7 != null) items[6] = new TestSetItem() { Number = 6, TestSetId = curSet.Id, Word = m_testSet.Word7.Trim() };
+            if (m_testSet.Word8 != null) items[7] = new TestSetItem() { Number = 7, TestSetId = curSet.Id, Word = m_testSet.Word8.Trim() };
+            if (m_testSet.Word9 != null) items[8] = new TestSetItem() { Number = 8, TestSetId = curSet.Id, Word = m_testSet.Word9.Trim() };
+            if (m_testSet.Word10 != null) items[9] = new TestSetItem() { Number = 9, TestSetId = curSet.Id, Word = m_testSet.Word10.Trim() };
 
             for (int i = 0; i < 10; ++i)
             {
@@ -142,6 +142,11 @@ namespace MIDAS_BAT
         private void cancel_Click(object sender, RoutedEventArgs e)
         {
             this.Frame.GoBack();
+
+        }
+
+        private void testSetName_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
 
         }
     }

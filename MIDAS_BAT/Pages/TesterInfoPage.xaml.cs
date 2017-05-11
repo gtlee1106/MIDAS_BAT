@@ -42,23 +42,11 @@ namespace MIDAS_BAT
             else
                 gender = "모름";
 
-            int education = 0;
-            if (educationCmb.SelectedValue.Equals("초등학교"))
-            {
-                education = 6;
-            }
-            else if (educationCmb.SelectedValue.Equals("중학교"))
-            {
-                education = 9;
-            }
-            else if (educationCmb.SelectedValue.Equals("고등학교"))
-            {
-                education = 12;
-            }
-            else if (educationCmb.SelectedValue.Equals("대학교"))
-            {
-                education = 16;
-            }
+            string education = educationCmb.SelectedValue + " ";
+            if( graduateRadioBtn.IsChecked == true )
+                education += graduateRadioBtn.Content;
+            else if( dropRadioBtn.IsChecked == true )
+                education += dropRadioBtn.Content;
 
             Tester tester = new Tester()
             {
