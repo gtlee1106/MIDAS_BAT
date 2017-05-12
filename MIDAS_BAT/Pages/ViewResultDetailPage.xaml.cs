@@ -55,6 +55,13 @@ namespace MIDAS_BAT
 
             if (m_testExec != null)
             {
+                Tester tester = dbManager.GetTester(m_testExec.TesterId);
+                nameText.Text = tester.Name;
+                genderText.Text = "(" + tester.Gender + ", ";
+                birthdayText.Text = tester.birthday + ", ";
+                educationText.Text = tester.Education + ") ";
+                testExecDateText.Text = "검사일 : " + Util.ParsePrettyDateTimeForm(m_testExec.Datetime);
+
                 List<TestSetItem> testSetItemList = dbManager.GetTestSetItems(m_testExec.TestSetId);
                 foreach (var testSetItem in testSetItemList)
                 {

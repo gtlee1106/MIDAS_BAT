@@ -84,25 +84,14 @@ namespace MIDAS_BAT
             
             List<TestSetItem> testSetItems = dbManager.GetTestSetItems(testExec.TestSetId);
 
+            StringBuilder builder = new StringBuilder();
+            builder.Append(tester.Name + "(" + tester.Gender + "),");
+            builder.Append(tester.birthday + ",");
+            builder.Append(tester.Education.ToString() + "," );
+            builder.AppendLine("검사일 : " + ParsePrettyDateTimeForm(testExec.Datetime));
 
-            // tester 정보
-            await FileIO.WriteTextAsync(resultFile, tester.Name + "(" + tester.Gender + "),");
-            await FileIO.AppendTextAsync(resultFile, tester.birthday + ",");
-            await FileIO.AppendTextAsync(resultFile, tester.Education.ToString() + "\r\n");
-
-            // 각 항목별 헤더
-            await FileIO.AppendTextAsync(resultFile, "단어,");
-
-            await FileIO.AppendTextAsync(resultFile, "한글자,");
-            await FileIO.AppendTextAsync(resultFile, "초성시간(ms),");
-            await FileIO.AppendTextAsync(resultFile, "간격(ms),");
-            await FileIO.AppendTextAsync(resultFile, "중성시간(ms),");
-            await FileIO.AppendTextAsync(resultFile, "간격(ms),");
-            await FileIO.AppendTextAsync(resultFile, "종성시간(ms),");
-            await FileIO.AppendTextAsync(resultFile, "초성평균압력(0~1),");
-            await FileIO.AppendTextAsync(resultFile, "중성평균압력(0~1),");
-            await FileIO.AppendTextAsync(resultFile, "종성평균압력(0~1)");
-            await FileIO.AppendTextAsync(resultFile, "\r\n");
+            builder.AppendLine("단어, 한글자, 초성시간(ms), 간격(ms), 중성시간(ms), 간격(ms), 종성시간(ms), 간격(ms), "+
+                "초성평균압력(0~1), 중성평균압력(0~1), 종성평균압력(0~1)");
 
             foreach (var item in testSetItems)
             {
@@ -111,21 +100,28 @@ namespace MIDAS_BAT
                 for (int i = 0; i < results.Count; ++i)
                 {
                     if (i == 0)
-                        await FileIO.AppendTextAsync(resultFile, item.Word);
-                    await FileIO.AppendTextAsync(resultFile, ",");
+                        builder.Append(item.Word);
 
-                    await FileIO.AppendTextAsync(resultFile, item.Word.ElementAt(results[i].TestSetItemCharIdx).ToString() + ",");
-                    await FileIO.AppendTextAsync(resultFile, results[i].ChosungTime.ToString("F3") + ",");
-                    await FileIO.AppendTextAsync(resultFile, results[i].FirstIdleTIme.ToString("F3") + ",");
-                    await FileIO.AppendTextAsync(resultFile, results[i].JoongsungTime.ToString("F3") + ",");
-                    await FileIO.AppendTextAsync(resultFile, results[i].SecondIdelTime.ToString("F3") + ",");
-                    await FileIO.AppendTextAsync(resultFile, results[i].JongsungTime.ToString("F3") + ",");
-                    await FileIO.AppendTextAsync(resultFile, results[i].ChosungAvgPressure.ToString("F6") + ",");
-                    await FileIO.AppendTextAsync(resultFile, results[i].JoongsungAvgPressure.ToString("F6") + ",");
-                    await FileIO.AppendTextAsync(resultFile, results[i].JongsungAvgPressure.ToString("F6"));
-                    await FileIO.AppendTextAsync(resultFile, "\r\n");
+                    builder.Append(",");
+                    builder.Append(item.Word.ElementAt(results[i].TestSetItemCharIdx).ToString() + ",");
+                    builder.Append(results[i].ChosungTime.ToString("F3") + ",");
+                    builder.Append(results[i].FirstIdleTIme.ToString("F3") + ",");
+                    builder.Append(results[i].JoongsungTime.ToString("F3") + ",");
+                    builder.Append(results[i].SecondIdelTime.ToString("F3") + ",");
+                    builder.Append(results[i].JongsungTime.ToString("F3") + ",");
+                    builder.Append(results[i].ThirdIdleTime.ToString("F3") + ",");
+                    builder.Append(results[i].ChosungAvgPressure.ToString("F6") + ",");
+                    builder.Append(results[i].JoongsungAvgPressure.ToString("F6") + ",");
+                    builder.AppendLine(results[i].JongsungAvgPressure.ToString("F6"));
                 }
             }
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            Encoding encoding = Encoding.GetEncoding("euc-kr");
+
+            byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+
+            await FileIO.WriteBytesAsync(resultFile, fileBytes);
 
             StorageFolder gifSavedFolder = ApplicationData.Current.LocalFolder;
             
@@ -294,6 +290,18 @@ namespace MIDAS_BAT
             stream.Dispose();
 
             return true;
+        }
+
+        public static string ParsePrettyDateTimeForm( string datetime )
+        {
+            // YYYYMMDD_hhmmss 폼으로 온 것들 파싱해서 예쁘게...? ㅋㅋ
+            string result = datetime.Substring(0, 4) + "." +
+                            datetime.Substring(4, 2) + "." +
+                            datetime.Substring(6, 2) + " " +
+                            datetime.Substring(9, 2) + ":" +
+                            datetime.Substring(11, 2) + ":" +
+                            datetime.Substring(13, 2);
+            return result;
         }
     }
 }

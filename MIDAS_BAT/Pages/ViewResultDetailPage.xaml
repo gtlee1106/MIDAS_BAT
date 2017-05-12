@@ -15,7 +15,15 @@
                 <Button x:Name="saveBtn" Tag="{Binding}" Content="저장하기" Margin="5,5,5,5" Click="saveBtn_Click"/>
                 <Button x:Name="deleteBtn" Tag="{Binding}" Content="삭제" Margin="5,5,5,5" Click="deleteBtn_Click"/>
             </StackPanel>
-            <Grid x:Name="listViewHeader" RelativePanel.Below="btnPanel" Padding="12,5" Background="AntiqueWhite">
+            <StackPanel x:Name="testerInfoPanel" RelativePanel.Below="btnPanel" Padding="12,5" Orientation="Horizontal" >
+                <TextBlock x:Name="nameText" Margin="5" Text="홍길동"/>
+                <TextBlock x:Name="genderText" Margin="5" Text="(남, "/>
+                <TextBlock x:Name="birthdayText" Margin="5" Text="1950.01.01, "/>
+                <TextBlock x:Name="educationText" Margin="5" Text="고등학교 졸업) "/>
+                <TextBlock x:Name="testExecDateText" Margin="5" Text="검사일 : 2017.05.12 09:00:00"/>
+
+            </StackPanel>
+            <Grid x:Name="listViewHeader" RelativePanel.Below="testerInfoPanel" Padding="12,5" Background="AntiqueWhite">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="108"/>
                     <ColumnDefinition Width="62"/>
@@ -30,7 +38,7 @@
                     <ColumnDefinition Width="100"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="단어" HorizontalAlignment="Center" Grid.Column="0" Margin="2"/>
-                <TextBlock Text="한자" HorizontalAlignment="Center" Grid.Column="1" Margin="2"/>
+                <TextBlock Text="한글자" HorizontalAlignment="Center" Grid.Column="1" Margin="2"/>
                 <TextBlock Text="초성시간&#x0a;(ms)" HorizontalAlignment="Center" Grid.Column="2" Margin="2"/>
                 <TextBlock Text="간격&#x0a;(ms)" HorizontalAlignment="Center" Grid.Column="3" Margin="2"/>
                 <TextBlock Text="중성시간&#x0a;(ms)" HorizontalAlignment="Center" Grid.Column="4" Margin="2"/>
