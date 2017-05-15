@@ -224,7 +224,7 @@ namespace MIDAS_BAT
         private async Task<bool> saveRawData()
         {
             // pressure & time diff 저장...?
-            string file_name = m_testExec.TesterId.ToString() + "_raw_" + m_curIdx.ToString() + ".txt";
+            string file_name = m_testExec.TesterId.ToString() + "_raw_time_" + m_curIdx.ToString() + ".txt";
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
             StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
@@ -232,8 +232,14 @@ namespace MIDAS_BAT
             builder.AppendLine(m_Times.Count.ToString());
             for( int i = 0; i < m_Times.Count; ++i )
                 builder.AppendLine(m_Times[i].ToString("F3"));
+            await FileIO.WriteTextAsync(file, builder.ToString());
 
+
+            // 필압
+            file_name = m_testExec.TesterId.ToString() + "_raw_pressure_" + m_curIdx.ToString() + ".txt";
+            StorageFile pressure_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
             IReadOnlyList<InkStroke> strokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+            builder.Clear();
             builder.AppendLine(strokes.Count.ToString());
             for( int i = 0; i < strokes.Count; ++i )
             {
@@ -244,8 +250,7 @@ namespace MIDAS_BAT
                     builder.AppendLine(seg.Pressure.ToString("F6"));
                 }
             }
-
-            await FileIO.WriteTextAsync(file, builder.ToString());
+            await FileIO.WriteTextAsync(pressure_file, builder.ToString());
 
             return true;
         }

@@ -123,33 +123,42 @@ namespace MIDAS_BAT
 
             await FileIO.WriteBytesAsync(resultFile, fileBytes);
 
-            StorageFolder gifSavedFolder = ApplicationData.Current.LocalFolder;
+            StorageFolder savedFolder = ApplicationData.Current.LocalFolder;
             
             foreach (var item in testSetItems)
             {
                 string orgGifName = tester.Id + "_char_" + item.Number + ".gif";
 
-                if (await gifSavedFolder.TryGetItemAsync(orgGifName) != null)
+                if (await savedFolder.TryGetItemAsync(orgGifName) != null)
                 {
                     string newGifName = testerName + "_" + item.Number + "_" + item.Word + ".gif";
 
-                    StorageFile charGifFile = await gifSavedFolder.GetFileAsync(orgGifName);
+                    StorageFile charGifFile = await savedFolder.GetFileAsync(orgGifName);
                     await charGifFile.CopyAsync(folder, newGifName, NameCollisionOption.ReplaceExisting);
                 }
 
 
                 string orgPngName = tester.Id + "_char_" + item.Number + "_last.png";
-                if (await gifSavedFolder.TryGetItemAsync(orgPngName) != null)
+                if (await savedFolder.TryGetItemAsync(orgPngName) != null)
                 {
                     string newPngName = testerName + "_" + item.Number + "_" + item.Word + "_last.png";
 
-                    StorageFile charPngFile = await gifSavedFolder.GetFileAsync(orgPngName);
+                    StorageFile charPngFile = await savedFolder.GetFileAsync(orgPngName);
                     await charPngFile.CopyAsync(folder, newPngName, NameCollisionOption.ReplaceExisting);
                 }
-            }
 
-            // 완전 raw 데이터... 
-            
+                // pressure
+                string orgPressureName = tester.Id + "_raw_pressure_" + item.Number + ".txt";
+                if (await savedFolder.TryGetItemAsync(orgPngName) != null)
+                {
+                    string newPressureName = testerName + "_" + item.Number + "_" + item.Word + "_pressure.txt";
+
+                    StorageFile pressureFile = await savedFolder.GetFileAsync(orgPressureName);
+                    await pressureFile.CopyAsync(folder, newPressureName, NameCollisionOption.ReplaceExisting);
+                }
+
+
+            }
 
             return true;
         }
