@@ -129,13 +129,23 @@ namespace MIDAS_BAT
             {
                 string orgGifName = tester.Id + "_char_" + item.Number + ".gif";
 
-                if( await gifSavedFolder.TryGetItemAsync(orgGifName) == null)
-                    continue;
+                if (await gifSavedFolder.TryGetItemAsync(orgGifName) != null)
+                {
+                    string newGifName = testerName + "_" + item.Number + "_" + item.Word + ".gif";
 
-                string newGifName = testerName + "_" + item.Number + "_" + item.Word + ".gif";
+                    StorageFile charGifFile = await gifSavedFolder.GetFileAsync(orgGifName);
+                    await charGifFile.CopyAsync(folder, newGifName, NameCollisionOption.ReplaceExisting);
+                }
 
-                StorageFile charGifFile = await gifSavedFolder.GetFileAsync(orgGifName);
-                await charGifFile.CopyAsync(folder, newGifName);
+
+                string orgPngName = tester.Id + "_char_" + item.Number + "_last.png";
+                if (await gifSavedFolder.TryGetItemAsync(orgPngName) != null)
+                {
+                    string newPngName = testerName + "_" + item.Number + "_" + item.Word + "_last.png";
+
+                    StorageFile charPngFile = await gifSavedFolder.GetFileAsync(orgPngName);
+                    await charPngFile.CopyAsync(folder, newPngName, NameCollisionOption.ReplaceExisting);
+                }
             }
 
             // 완전 raw 데이터... 
@@ -153,13 +163,13 @@ namespace MIDAS_BAT
         public static async Task<bool> CaptureInkCanvas(InkCanvas inkCanvas, string tester_id, int curIdx)
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
-            string file_name = tester_id + "_char_" + curIdx.ToString() + ".gif";
+            string file_name = tester_id + "_char_" + curIdx.ToString() + "_last.png";
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
             StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
 
             var displayInformation = DisplayInformation.GetForCurrentView();
             var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
-            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.GifEncoderId, stream);
+            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
 
             CanvasDevice device = CanvasDevice.GetSharedDevice();
             CanvasRenderTarget rtb = new CanvasRenderTarget(device, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight, 96); // 96 쓰는게 맞나? or dpi 받아서 써야되나?

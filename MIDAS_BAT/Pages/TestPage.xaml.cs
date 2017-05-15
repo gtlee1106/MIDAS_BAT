@@ -194,9 +194,9 @@ namespace MIDAS_BAT
                 return;
 
             await Util.CaptureInkCanvasForStroke(inkCanvas, m_testExec.TesterId.ToString(), m_curIdx);
+            await Util.CaptureInkCanvas(inkCanvas, m_testExec.TesterId.ToString(), m_curIdx);
             
             await saveStroke();
-            
             await saveRawData();
             saveResultIntoDB_other();
 
