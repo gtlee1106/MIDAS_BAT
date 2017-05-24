@@ -53,14 +53,16 @@ namespace MIDAS_BAT
         
         private void addTestSet_Click(object sender, RoutedEventArgs e)
         {
-            this.Frame.Navigate(typeof(MakeTestSetPage));
+            //this.Frame.Navigate(typeof(MakeTestSetPage));
+            this.Frame.Navigate(typeof(NewMakeTestSetPage));
         }
 
         private void editBtn_Click(object sender, RoutedEventArgs e)
         {
             var selectedTestSet = (sender as FrameworkElement).Tag as TestSet;
 
-            this.Frame.Navigate(typeof(MakeTestSetPage), selectedTestSet);
+            //this.Frame.Navigate(typeof(MakeTestSetPage), selectedTestSet);
+            this.Frame.Navigate(typeof(NewMakeTestSetPage), selectedTestSet);
         }
 
         private async void deleteBtn_Click(object sender, RoutedEventArgs e)
