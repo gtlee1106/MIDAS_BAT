@@ -25,8 +25,14 @@
                 Height="600" Width="600"
                 BorderThickness="1">
                 <InkCanvas 
-                    x:Name="inkCanvas" />
+                    x:Name="inkCanvas" 
+                    />
             </Border>
+            <Canvas 
+                x:Name="guideLineCanvas"
+                RelativePanel.AlignHorizontalCenterWithPanel="True" 
+                RelativePanel.AlignVerticalCenterWithPanel="True"
+                />
             <Button 
                 x:Name="cleanBtn" 
                 Content="지우기" 

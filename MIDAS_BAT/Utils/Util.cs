@@ -148,10 +148,10 @@ namespace MIDAS_BAT
                 }
 
                 // pressure
-                string orgPressureName = tester.Id + "_raw_pressure_" + item.Number + ".txt";
+                string orgPressureName = tester.Id + "_raw_pressure_" + item.Number + ".csv";
                 if (await savedFolder.TryGetItemAsync(orgPngName) != null)
                 {
-                    string newPressureName = testerName + "_" + item.Number + "_" + item.Word + "_pressure.txt";
+                    string newPressureName = testerName + "_" + item.Number + "_" + item.Word + "_pressure.csv";
 
                     StorageFile pressureFile = await savedFolder.GetFileAsync(orgPressureName);
                     await pressureFile.CopyAsync(folder, newPressureName, NameCollisionOption.ReplaceExisting);
@@ -195,7 +195,7 @@ namespace MIDAS_BAT
             encoder.SetPixelData(BitmapPixelFormat.Bgra8,
                 BitmapAlphaMode.Premultiplied,
                 (uint)inkCanvas.ActualWidth,
-                (uint)inkCanvas.ActualWidth,
+                (uint)inkCanvas.ActualHeight,
                 displayInformation.RawDpiX,
                 displayInformation.RawDpiY,
                 pixels);
@@ -246,7 +246,7 @@ namespace MIDAS_BAT
             encoder.SetPixelData(BitmapPixelFormat.Bgra8,
                                  BitmapAlphaMode.Premultiplied,
                                  (uint)inkCanvas.ActualWidth,
-                                 (uint)inkCanvas.ActualWidth,
+                                 (uint)inkCanvas.ActualHeight,
                                  displayInformation.RawDpiX,
                                  displayInformation.RawDpiY,
                                  pixels);
@@ -271,7 +271,7 @@ namespace MIDAS_BAT
                 encoder.SetPixelData(BitmapPixelFormat.Bgra8,
                                      BitmapAlphaMode.Premultiplied,
                                      (uint)inkCanvas.ActualWidth,
-                                     (uint)inkCanvas.ActualWidth,
+                                     (uint)inkCanvas.ActualHeight,
                                      displayInformation.RawDpiX,
                                      displayInformation.RawDpiY,
                                      pixels);
@@ -293,7 +293,7 @@ namespace MIDAS_BAT
             encoder.SetPixelData(BitmapPixelFormat.Bgra8,
                                 BitmapAlphaMode.Premultiplied,
                                 (uint)inkCanvas.ActualWidth,
-                                (uint)inkCanvas.ActualWidth,
+                                (uint)inkCanvas.ActualHeight,
                                 displayInformation.RawDpiX,
                                 displayInformation.RawDpiY,
                                 pixels);

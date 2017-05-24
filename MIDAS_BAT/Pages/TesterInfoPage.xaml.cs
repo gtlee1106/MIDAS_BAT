@@ -43,10 +43,13 @@ namespace MIDAS_BAT
                 gender = "모름";
 
             string education = educationCmb.SelectedValue + " ";
-            if( graduateRadioBtn.IsChecked == true )
+            if (graduateRadioBtn.IsChecked == true)
                 education += graduateRadioBtn.Content;
-            else if( dropRadioBtn.IsChecked == true )
+            else if (dropRadioBtn.IsChecked == true)
+            {
                 education += dropRadioBtn.Content;
+                education += "(" + dropYear.Text + "년 재학)";
+            }
 
             Tester tester = new Tester()
             {
@@ -91,7 +94,19 @@ namespace MIDAS_BAT
 
         private void graduate_Checked(object sender, RoutedEventArgs e)
         {
+            if (graduateRadioBtn == null ||
+                dropRadioBtn == null ||
+                dropUISet == null)
+                return;
 
+            if (graduateRadioBtn.IsChecked == true)
+            {
+                dropUISet.Visibility = Visibility.Collapsed;
+            }
+            else if (dropRadioBtn.IsChecked == true)
+            {
+                dropUISet.Visibility = Visibility.Visible;
+            }
         }
 
         private void showBoxChk_Click(object sender, RoutedEventArgs e)

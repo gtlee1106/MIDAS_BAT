@@ -1,15 +1,10 @@
 ﻿using Microsoft.Graphics.Canvas;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Graphics.DirectX;
 using Windows.Graphics.Display;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -21,20 +16,12 @@ using Windows.UI.Input.Inking.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-
-// 빈 페이지 항목 템플릿에 대한 설명은 http://go.microsoft.com/fwlink/?LinkId=234238에 나와 있습니다.
+using Windows.UI.Xaml.Shapes;
 
 namespace MIDAS_BAT
 {
-    /// <summary>
-    /// 자체적으로 사용하거나 프레임 내에서 탐색할 수 있는 빈 페이지입니다.
-    /// </summary>
     public sealed partial class TestPage : Page
     {
         List<TestSetItem> m_wordList;
@@ -137,27 +124,14 @@ namespace MIDAS_BAT
 
                 SetTargetWord(m_targetWord);
 
-
-                // ui setup
-                if (exec.ShowBorder)
-                {
-                    borderInkCanvas.BorderThickness = new Thickness(1.0);
-                    DisplayInformation di = DisplayInformation.GetForCurrentView();
-                    borderInkCanvas.Width = (int)(di.RawDpiX * (exec.ScreenWidth / 25.4f) / (float)di.RawPixelsPerViewPixel);
-                    borderInkCanvas.Height = (int)(di.RawDpiY * (exec.ScreenHeight / 25.4f) / (float)di.RawPixelsPerViewPixel);
-                }
-                else
-                {
-                    borderInkCanvas.BorderThickness = new Thickness(0.0);
-                }
-
-                
+                ResizeCanvas();
             }
         }
 
         private void SetTargetWord(string targetWord)
         {
             m_targetWord = targetWord;
+            // title에 Text는 보이지 않도록 한다. 
             title.Text = m_targetWord;
         }
 
@@ -209,6 +183,8 @@ namespace MIDAS_BAT
                 // 새로운 단어 지정 및 전체 초기화.
                 SetTargetWord(m_wordList[m_curIdx].Word);
 
+                ResizeCanvas();
+
                 ClearInkData();
             }
             else
@@ -218,6 +194,49 @@ namespace MIDAS_BAT
                 dialog.ShowAsync();
                 this.Frame.Navigate(typeof(MainPage));
                 return;
+            }
+        }
+
+        private void ResizeCanvas()
+        {
+            // ui setup
+            DisplayInformation di = DisplayInformation.GetForCurrentView();
+            int len = m_targetWord.Length;
+            int width = (int)(di.RawDpiX * (m_testExec.ScreenWidth / 25.4f) / (float)di.RawPixelsPerViewPixel);
+            int height = (int)(di.RawDpiY * (m_testExec.ScreenHeight / 25.4f) / (float)di.RawPixelsPerViewPixel);
+            if (m_testExec.ShowBorder)
+            {
+                borderInkCanvas.BorderThickness = new Thickness(1.0);
+                borderInkCanvas.Width = width * len;
+                borderInkCanvas.Height = height;
+
+                guideLineCanvas.Width = width * len;
+                guideLineCanvas.Height = height;
+
+
+                guideLineCanvas.Children.Clear();
+                for (int i = 0; i < len - 1; ++i)
+                {
+                    var line = new Line();
+                    line.Stroke = new SolidColorBrush(Colors.Black);
+                    line.StrokeThickness = 2;
+
+                    var dashed = new DoubleCollection();
+                    dashed.Add(1);
+                    line.StrokeDashArray = dashed;
+
+                    line.X1 = (i + 1) * width;
+                    line.X2 = (i + 1) * width;
+                    line.Y2 = height;
+
+                    guideLineCanvas.Children.Add(line);
+                }
+
+            }
+            else
+            {
+                guideLineCanvas.Children.Clear();
+                borderInkCanvas.BorderThickness = new Thickness(0.0);
             }
         }
 
@@ -236,21 +255,28 @@ namespace MIDAS_BAT
 
 
             // 필압
-            file_name = m_testExec.TesterId.ToString() + "_raw_pressure_" + m_curIdx.ToString() + ".txt";
+            file_name = m_testExec.TesterId.ToString() + "_raw_pressure_" + m_curIdx.ToString() + ".csv";
             StorageFile pressure_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
             IReadOnlyList<InkStroke> strokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             builder.Clear();
-            builder.AppendLine(strokes.Count.ToString());
+            builder.Append(m_wordList[m_curIdx].Word);
+            builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
             for( int i = 0; i < strokes.Count; ++i )
             {
                 IReadOnlyList<InkStrokeRenderingSegment> segments = strokes[i].GetRenderingSegments();
-                builder.AppendLine(segments.Count.ToString());
+                builder.Append(segments.Count.ToString() + ", ");
                 foreach( var seg in segments )
                 {
-                    builder.AppendLine(seg.Pressure.ToString("F6"));
+                    builder.Append(seg.Pressure.ToString("F6") + ", ");
                 }
+                builder.AppendLine("");
             }
-            await FileIO.WriteTextAsync(pressure_file, builder.ToString());
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            Encoding encoding = Encoding.GetEncoding("euc-kr");
+
+            byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            await FileIO.WriteBytesAsync(pressure_file, fileBytes);
 
             return true;
         }

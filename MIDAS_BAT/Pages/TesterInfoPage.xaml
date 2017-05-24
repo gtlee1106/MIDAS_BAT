@@ -65,11 +65,15 @@
                 <x:String>초등학교</x:String>
                 <x:String>중학교</x:String>
                 <x:String>고등학교</x:String>
-                <x:String>대학교</x:String>
+                <x:String>대학교 이상</x:String>
             </ComboBox>
             <StackPanel Orientation="Horizontal">
-                <RadioButton x:Name="graduateRadioBtn" GroupName="graduate" Content="졸업" Margin="10,0,0,0" IsChecked="True" Checked="graduate_Checked"/>
-                <RadioButton x:Name="dropRadioBtn" GroupName="graduate" Content="중퇴" Checked="graduate_Checked"/>
+                <RadioButton x:Name="graduateRadioBtn" GroupName="graduate" Content="졸업" Margin="10,4,0,4" IsChecked="True" MinWidth="65" Checked="graduate_Checked"/>
+                <RadioButton x:Name="dropRadioBtn" GroupName="graduate" Content="중퇴" MinWidth="65" Checked="graduate_Checked"/>
+            </StackPanel>
+            <StackPanel x:Name="dropUISet" Orientation="Horizontal" Visibility="Collapsed">
+                <TextBlock HorizontalAlignment="Right" Text="재학년수" Margin="5,10,5,10" />
+                <TextBox x:Name="dropYear" Width="50" Height="20"/>
             </StackPanel>
         </StackPanel>
 
@@ -88,15 +92,15 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Text="너비(mm)" Grid.Row="0" Grid.Column="0" Margin="5,10,5,5"/>
-                <TextBox x:Name="widthBox" Grid.Row="0" Grid.Column="1" Text="80" Margin="5,5,5,5" />
+                <TextBox x:Name="widthBox" Grid.Row="0" Grid.Column="1" Text="50" Margin="5,5,5,5" />
                 <TextBlock Text="높이(mm)" Grid.Row="1" Grid.Column="0" Margin="5,10,5,5"/>
-                <TextBox x:Name="heightBox" Grid.Row="1" Grid.Column="1" Text="80"  Margin="5,5,5,5"/>
+                <TextBox x:Name="heightBox" Grid.Row="1" Grid.Column="1" Text="50"  Margin="5,5,5,5"/>
             </Grid>
 
 
         </StackPanel>
-        
-       
+
+
 
         <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
             <Button x:Name="startTest" Content="검사 시작하기" Margin="10,10,10,10" Click="startTest_Click" />
