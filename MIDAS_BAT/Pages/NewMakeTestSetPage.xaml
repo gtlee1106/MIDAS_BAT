@@ -43,7 +43,7 @@
                     <DataTemplate x:DataType="local:TestExecData">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" >
                             <TextBlock Text="{Binding Number}" Margin="5,10,5,5" HorizontalAlignment="Center" Width="30"/>
-                            <TextBox Text="{Binding Word, Mode=TwoWay}" Width="200" Margin="5,5,10,5" TextChanged="TextBox_TextChanged"/>
+                            <TextBox Text="{Binding Word, Mode=TwoWay}" Width="200" Margin="5,5,10,5" />
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>

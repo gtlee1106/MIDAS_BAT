@@ -139,16 +139,6 @@ namespace MIDAS_BAT
         {
             this.Frame.GoBack();
         }
-
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            TextBox b = sender as TextBox;
-            var ttt = b.Parent;
-
-
-            int a = 0;
-
-        }
     }
 
 }

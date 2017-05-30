@@ -155,6 +155,17 @@ namespace MIDAS_BAT
                     await charPngFile.CopyAsync(folder, newPngName, NameCollisionOption.ReplaceExisting);
                 }
 
+
+                // time
+                string orgTimeName = tester.Id + "_raw_time_" + item.Number + ".csv";
+                if (await savedFolder.TryGetItemAsync(orgPngName) != null)
+                {
+                    string newTimeName = testerName + "_" + item.Number + "_" + item.Word + "_time.csv";
+
+                    StorageFile tiimeFile = await savedFolder.GetFileAsync(orgTimeName);
+                    await tiimeFile.CopyAsync(folder, newTimeName, NameCollisionOption.ReplaceExisting);
+                }
+
                 // pressure
                 string orgPressureName = tester.Id + "_raw_pressure_" + item.Number + ".csv";
                 if (await savedFolder.TryGetItemAsync(orgPngName) != null)
@@ -177,10 +188,10 @@ namespace MIDAS_BAT
             return await SaveResult(folder, testExecId);
         }
 
-        public static async Task<bool> CaptureInkCanvas(InkCanvas inkCanvas, string tester_id, int curIdx)
+        public static async Task<bool> CaptureInkCanvas(InkCanvas inkCanvas, TestExec testExec, TestSetItem setItem)
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
-            string file_name = tester_id + "_char_" + curIdx.ToString() + "_last.png";
+            string file_name = testExec.TesterId + "_char_" + setItem.Number + "_last.png";
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
             StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
 
@@ -214,10 +225,10 @@ namespace MIDAS_BAT
             return true;
         }
 
-        public static async Task<bool> CaptureInkCanvasForStroke(InkCanvas inkCanvas, string tester_id, int curIdx)
+        public static async Task<bool> CaptureInkCanvasForStroke(InkCanvas inkCanvas, TestExec testExec, TestSetItem setItem )
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
-            string file_name = tester_id + "_char_" + curIdx.ToString() + ".gif";
+            string file_name = testExec.TesterId + "_char_" + setItem.Number.ToString() + ".gif";
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
             StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
 

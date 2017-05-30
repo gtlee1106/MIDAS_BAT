@@ -87,7 +87,7 @@ namespace MIDAS_BAT
             }
         }
 
-        private async void playBtn_Click(object sender, RoutedEventArgs e)
+        private void playBtn_Click(object sender, RoutedEventArgs e)
         {
             LoadAndDrawStork();
 

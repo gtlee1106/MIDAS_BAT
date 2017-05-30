@@ -40,9 +40,8 @@ namespace MIDAS_BAT
         {
             this.InitializeComponent();
 
-            inkCanvas.InkPresenter.InputDeviceTypes = CoreInputDeviceTypes.Mouse 
-                                                    | CoreInputDeviceTypes.Pen
-                                                    | CoreInputDeviceTypes.Touch;
+            inkCanvas.InkPresenter.InputDeviceTypes = CoreInputDeviceTypes.Mouse
+                                                    | CoreInputDeviceTypes.Pen;
 
             inkCanvas.InkPresenter.StrokesCollected += InkPresenter_StrokesCollected;
 
@@ -172,8 +171,8 @@ namespace MIDAS_BAT
                 return;
             }
 
-            await Util.CaptureInkCanvasForStroke(inkCanvas, m_testExec.TesterId.ToString(), m_curIdx);
-            await Util.CaptureInkCanvas(inkCanvas, m_testExec.TesterId.ToString(), m_curIdx);
+            await Util.CaptureInkCanvasForStroke(inkCanvas, m_testExec, m_wordList[m_curIdx]);
+            await Util.CaptureInkCanvas(inkCanvas, m_testExec, m_wordList[m_curIdx]);
             
             await m_saveUtil.saveStroke( inkCanvas);
             await m_saveUtil.saveRawData( m_Times, inkCanvas );

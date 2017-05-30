@@ -91,11 +91,11 @@ namespace MIDAS_BAT
             NotifyPropertyChanged();
         }
 
-        private void saveBtn_Click(object sender, RoutedEventArgs e)
+        private async void saveBtn_Click(object sender, RoutedEventArgs e)
         {
             var selectedTestExecData = (sender as FrameworkElement).Tag as TestExecData;
 
-            Util.SaveResult(selectedTestExecData.Id);
+            await Util.SaveResult(selectedTestExecData.Id);
         }
 
         private void backBtn_Click(object sender, RoutedEventArgs e)

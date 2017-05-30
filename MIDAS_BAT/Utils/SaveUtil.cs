@@ -136,7 +136,6 @@ namespace MIDAS_BAT.Utils
         }
 
 
-
         public async Task<bool> saveRawData( List<double> times, InkCanvas inkCanvas )
         {
             // pressure & time diff 저장...?
@@ -150,11 +149,34 @@ namespace MIDAS_BAT.Utils
                 builder.AppendLine(times[i].ToString("F3"));
             await FileIO.WriteTextAsync(file, builder.ToString());
 
+            // 필기시간
+            file_name = TestExec.TesterId.ToString() + "_raw_time_" + TestSetItem.Number.ToString() + ".csv";
+            StorageFile time_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+            IReadOnlyList<InkStroke> strokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+            builder.Clear();
+            builder.Append(TestSetItem.Word);
+            builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
+
+            builder.AppendLine("Pressed(ms), Released(ms), Duration(ms), Transition(ms)");
+            for( int i = 0; i < times.Count; i+=2 ) // 한 획당 2개씩 기록되어있어서... 
+            {
+                builder.Append((times[i] - times[0]).ToString("F3") + "," );
+                builder.Append((times[i+1] - times[0]).ToString("F3")  + "," );
+                builder.Append((times[i+1] - times[i]).ToString("F3")  + "," );
+                if (i + 2 < times.Count )
+                    builder.Append((times[i+2] - times[i+1]).ToString("F3")  + "," );
+                builder.AppendLine("");
+            }
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            Encoding encoding = Encoding.GetEncoding("euc-kr");
+
+            byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            await FileIO.WriteBytesAsync(time_file, fileBytes);
 
             // 필압
             file_name = TestExec.TesterId.ToString() + "_raw_pressure_" + TestSetItem.Number.ToString() + ".csv";
             StorageFile pressure_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
-            IReadOnlyList<InkStroke> strokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             builder.Clear();
             builder.Append(TestSetItem.Word);
             builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
@@ -169,10 +191,8 @@ namespace MIDAS_BAT.Utils
                 builder.AppendLine("");
             }
 
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            Encoding encoding = Encoding.GetEncoding("euc-kr");
 
-            byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
             await FileIO.WriteBytesAsync(pressure_file, fileBytes);
 
             return true;

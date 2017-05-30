@@ -195,7 +195,6 @@ namespace MIDAS_BAT
             List<string> splits = GetSplitStrokeStr(targetWord);
             IReadOnlyList<InkStroke> currentStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             int startIdx = 0;
-            bool end = false;
             for (int i = 0; i < currentStrokes.Count; ++i)
             {
                 var stroke = currentStrokes.ElementAt(i);
@@ -237,7 +236,6 @@ namespace MIDAS_BAT
 
                 int ll = recognitionResults.Count;
 
-                int startIdx = 0;
                 foreach (var recog in recognitionResults )
                 {
                     // 한글자로 인식할 수도 있고, 두 글자 이상으로 인식할 수도 있음.
@@ -304,7 +302,6 @@ namespace MIDAS_BAT
         private static string MergingString(string str)
         {
             StringBuilder builder = new StringBuilder();
-            int idx = 0;
             for( int i = 0; i < str.Length; ++i )
             {
                 int chosungIdx = -1;
@@ -421,7 +418,6 @@ namespace MIDAS_BAT
                 foreach (var candi in candidates)
                 {
                     int candi_len = candi.Length;
-                    int a = 0;
                 }
 
                 res.AddRange(candidates);
