@@ -13,12 +13,12 @@ namespace MIDAS_BAT
     {
         private static readonly DatabaseManager instance = new DatabaseManager();
 
-        SQLite.Net.SQLiteConnection conn;
+        SQLiteConnection conn;
         string path;
         private DatabaseManager()
         {
             path = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "bat_db.sqlite");
-            conn = new SQLite.Net.SQLiteConnection(new SQLite.Net.Platform.WinRT.SQLitePlatformWinRT(), path);
+            conn = new SQLiteConnection(new SQLite.Net.Platform.WinRT.SQLitePlatformWinRT(), path);
 
             conn.CreateTable<Tester>();
             conn.CreateTable<TestSet>();

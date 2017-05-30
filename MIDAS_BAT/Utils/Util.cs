@@ -30,6 +30,14 @@ namespace MIDAS_BAT
             return true;
         }
 
+        public static async Task<bool> ShowWrongWritingAlertDlg()
+        {
+            var dialog = new MessageDialog("인식할 수 없습니다. 정자체로 다시 써주시기바랍니다.");
+            var res = await dialog.ShowAsync();
+
+            return true;
+        }
+
         private static async Task<Windows.Storage.StorageFolder> GetSaveFolder()
         {
             var folderPicker = new Windows.Storage.Pickers.FolderPicker();

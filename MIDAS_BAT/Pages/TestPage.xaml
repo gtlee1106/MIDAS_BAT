@@ -11,7 +11,7 @@
         <RelativePanel>
             <TextBlock 
                 x:Name="title" 
-                Text="설명" 
+                Text="" 
                 RelativePanel.AlignTopWithPanel= "True" 
                 RelativePanel.AlignHorizontalCenterWithPanel= "True" 
                 Margin="10"

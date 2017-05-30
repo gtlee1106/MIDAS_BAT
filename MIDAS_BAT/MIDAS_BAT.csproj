@@ -130,6 +130,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Data\TableData.cs" />
     <Compile Include="Utils\CharacterUtil.cs" />
+    <Compile Include="Utils\SaveUtil.cs" />
+    <Compile Include="Utils\TestUtil.cs" />
     <Compile Include="Utils\Util.cs" />
   </ItemGroup>
   <ItemGroup>
