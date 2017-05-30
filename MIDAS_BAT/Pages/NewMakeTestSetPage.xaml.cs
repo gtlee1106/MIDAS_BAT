@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
@@ -19,8 +20,8 @@ namespace MIDAS_BAT
         private const int MAX_ITEM_NUM = 45;
         private bool m_updateMode = false;
         private TestSet m_targetTestSet;
-        private List<TestSetItem> m_testSetItemList = new List<TestSetItem>();
-        private List<TestSetItem> TestSetItemList
+        private ObservableCollection<TestSetItem> m_testSetItemList = new ObservableCollection<TestSetItem>();
+        private ObservableCollection<TestSetItem> TestSetItemList
         {
             get
             {
@@ -86,6 +87,9 @@ namespace MIDAS_BAT
                 return;
             }
 
+            itemList.CompleteViewChange();
+            itemList.UpdateLayout();
+
             // data 추가
             DatabaseManager databaseManager = DatabaseManager.Instance;
 
@@ -121,6 +125,8 @@ namespace MIDAS_BAT
                 );
             }
 
+            var test = itemList.Items;
+
             // Active 된 TestSet이 없다면 이 set을 active 시킴
             TestSet activeSet = databaseManager.GetActiveTestSet();
             if (activeSet == null)
@@ -132,6 +138,16 @@ namespace MIDAS_BAT
         private void cancel_Click(object sender, RoutedEventArgs e)
         {
             this.Frame.GoBack();
+        }
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox b = sender as TextBox;
+            var ttt = b.Parent;
+
+
+            int a = 0;
+
         }
     }
 
