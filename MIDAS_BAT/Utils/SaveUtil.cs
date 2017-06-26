@@ -35,6 +35,10 @@ namespace MIDAS_BAT.Utils
 
         public void saveResultIntoDB( List<double> times, InkCanvas inkCanvas )
         {
+            // 자모 구분을 하지 않으면 DB에 저장할 데이터 만들기가 어려움... 
+            if ( TestExec.UseJamoSepartaion != true )
+                return;
+
             DatabaseManager dbManager = DatabaseManager.Instance;
             var currentStrokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
 

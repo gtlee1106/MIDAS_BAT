@@ -1,0 +1,21 @@
+﻿<Page
+    x:Class="MIDAS_BAT.ConfigAppPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MIDAS_BAT"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <RelativePanel>
+            <TextBlock x:Name="desc" Text="앱 설정" FontSize="30" Margin="10"/>
+            <StackPanel x:Name="btnPanel" RelativePanel.Below="desc">
+                <CheckBox x:Name="chkShowTargetWord" Content="실험시 대상 단어 보이기" IsChecked="False" Margin="5" Click="chkShowTargetWord_Click"/>
+                <CheckBox x:Name="chkUseJamoSeperation" Content="한글 자모 구분하기" IsChecked="False" Margin="5" Click="chkUseJamoSeperation_Click"/>
+                <CheckBox x:Name="chkUseHandWritingRecognition"  Content="필기 인식 사용하기" IsEnabled="False" IsChecked="False" Margin="5" Click="chkUseHandWritingRecognition_Click"/>
+            </StackPanel>
+            <Button x:Name="backBtn" Content="뒤로 돌아가기" Margin="5" RelativePanel.Below="btnPanel" Click="backBtn_Click"/>
+        </RelativePanel>
+    </Grid>
+</Page>

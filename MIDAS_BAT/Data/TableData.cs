@@ -2,6 +2,7 @@
 using SQLite.Net.Attributes;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace MIDAS_BAT
 {
@@ -13,6 +14,29 @@ namespace MIDAS_BAT
         public string Gender { get; set; }
         public string birthday { get; set; }
         public string Education { get; set; }
+
+        public string GetTesterName(bool useBirthday= false, bool useGender = false, bool useEducation = false )
+        {
+            StringBuilder builder = new StringBuilder(Name);
+            bool useParenthesis = useBirthday || useGender || useEducation;
+
+            if (useParenthesis)
+                builder.Append("( ");
+
+            if (useBirthday)
+                builder.Append(birthday).Append(" ");
+
+            if (useGender)
+                builder.Append(Gender).Append(" ");
+
+            if (useEducation)
+                builder.Append(Education).Append(" ");
+
+            if(useParenthesis)
+                builder.Append(")");
+
+            return builder.ToString();
+        }
     }
 
     public class TestSet : INotifyPropertyChanged
@@ -61,6 +85,7 @@ namespace MIDAS_BAT
         public int TesterId { get; set; }
         public int TestSetId { get; set; }
         public string Datetime { get; set; }
+        public bool UseJamoSepartaion { get; set; }
         public bool ShowBorder { get; set; }
         public int ScreenWidth { get; set; }
         public int ScreenHeight{ get; set; }

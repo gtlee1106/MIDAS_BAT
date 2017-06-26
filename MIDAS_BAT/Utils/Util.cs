@@ -38,7 +38,7 @@ namespace MIDAS_BAT
             return true;
         }
 
-        private static async Task<Windows.Storage.StorageFolder> GetSaveFolder()
+        private static async Task<StorageFolder> GetSaveFolder()
         {
             var folderPicker = new Windows.Storage.Pickers.FolderPicker();
             folderPicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop;
@@ -76,29 +76,23 @@ namespace MIDAS_BAT
 
             return true;
         }
-        public static async Task<bool> SaveResult(StorageFolder folder, int testExecId)
-        {
-            if (folder == null)
-                return false;
 
+        private static async Task<bool> exportDBResult(StorageFolder folder, int testExecId)
+        {
             DatabaseManager dbManager = DatabaseManager.Instance;
+
             TestExec testExec = dbManager.GetTestExec(testExecId);
             Tester tester = dbManager.GetTester(testExec.TesterId);
 
-            string testerName = tester.Name + "(" + tester.birthday + " " + tester.Gender + ")";
-
+            string testerName = tester.GetTesterName(true, true);
             StorageFile resultFile = await folder.CreateFileAsync(testerName + "_결과.csv", CreationCollisionOption.ReplaceExisting);
 
-            
             List<TestSetItem> testSetItems = dbManager.GetTestSetItems(testExec.TestSetId);
 
             StringBuilder builder = new StringBuilder();
-            builder.Append(tester.Name + "(" + tester.Gender + "),");
-            builder.Append(tester.birthday + ",");
-            builder.Append(tester.Education.ToString() + "," );
+            builder.Append(tester.GetTesterName(true, true, true) + ",");
             builder.AppendLine("검사일 : " + ParsePrettyDateTimeForm(testExec.Datetime));
-
-            builder.AppendLine("단어, 한글자, 초성시간(ms), 간격(ms), 중성시간(ms), 간격(ms), 종성시간(ms), 간격(ms), "+
+            builder.AppendLine("단어, 한글자, 초성시간(ms), 간격(ms), 중성시간(ms), 간격(ms), 종성시간(ms), 간격(ms), " +
                 "초성평균압력(0~1), 중성평균압력(0~1), 종성평균압력(0~1)");
 
             foreach (var item in testSetItems)
@@ -131,8 +125,20 @@ namespace MIDAS_BAT
 
             await FileIO.WriteBytesAsync(resultFile, fileBytes);
 
+            return true;
+        }
+        
+        public static async Task<bool> ExportRawResult(StorageFolder folder, int testExecId)
+        {
+            DatabaseManager dbManager = DatabaseManager.Instance;
+
+            TestExec testExec = dbManager.GetTestExec(testExecId);
+            Tester tester = dbManager.GetTester(testExec.TesterId);
+
+            List<TestSetItem> testSetItems = dbManager.GetTestSetItems(testExec.TestSetId);
+            string testerName = tester.GetTesterName(true, true);
+
             StorageFolder savedFolder = ApplicationData.Current.LocalFolder;
-            
             foreach (var item in testSetItems)
             {
                 string orgGifName = tester.Id + "_char_" + item.Number + ".gif";
@@ -145,7 +151,6 @@ namespace MIDAS_BAT
                     await charGifFile.CopyAsync(folder, newGifName, NameCollisionOption.ReplaceExisting);
                 }
 
-
                 string orgPngName = tester.Id + "_char_" + item.Number + "_last.png";
                 if (await savedFolder.TryGetItemAsync(orgPngName) != null)
                 {
@@ -154,7 +159,6 @@ namespace MIDAS_BAT
                     StorageFile charPngFile = await savedFolder.GetFileAsync(orgPngName);
                     await charPngFile.CopyAsync(folder, newPngName, NameCollisionOption.ReplaceExisting);
                 }
-
 
                 // time
                 string orgTimeName = tester.Id + "_raw_time_" + item.Number + ".csv";
@@ -175,9 +179,21 @@ namespace MIDAS_BAT
                     StorageFile pressureFile = await savedFolder.GetFileAsync(orgPressureName);
                     await pressureFile.CopyAsync(folder, newPressureName, NameCollisionOption.ReplaceExisting);
                 }
-
-
             }
+
+            return true;
+        }
+
+
+        public static async Task<bool> SaveResult(StorageFolder folder, int testExecId)
+        {
+            if (folder == null)
+                return false;
+
+            if( AppConfig.Instance.UseJamoSeperation == true )
+                await exportDBResult(folder, testExecId);
+
+            await ExportRawResult(folder, testExecId);
 
             return true;
         }

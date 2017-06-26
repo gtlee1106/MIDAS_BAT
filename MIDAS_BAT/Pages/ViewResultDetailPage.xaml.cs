@@ -93,6 +93,17 @@ namespace MIDAS_BAT
 
                     TestExecResultList.Add(data);
                 }
+
+                if( m_testExec.UseJamoSepartaion != true )
+                {
+                    statusText.Visibility = Visibility.Visible;
+                    statusText.Text = "자모구분을 사용하지 않아, 초/중/종성별 평균 입력 시간 및 필압을 구할 수 없습니다. 저장버튼을 눌러 Raw값을 이용하십시오.";
+                    resultList.IsEnabled = false;
+                }
+                else
+                {
+                    statusText.Visibility = Visibility.Collapsed;
+                }
             }
         }
 

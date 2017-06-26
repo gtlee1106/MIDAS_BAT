@@ -41,5 +41,9 @@ namespace MIDAS_BAT
         {
             this.Frame.Navigate(typeof(ConfigPage));
         }
+        private void configAppBtn_Click(object sender, RoutedEventArgs e)
+        {
+            this.Frame.Navigate(typeof(ConfigAppPage));
+        }
     }
 }

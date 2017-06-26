@@ -156,8 +156,9 @@ namespace MIDAS_BAT
             m_saveUtil.TestSetItem = m_wordList[m_curIdx];
 
             m_targetWord = m_wordList[m_curIdx].Word;
-            // title에 Text는 보이지 않도록 한다. 
-            //title.Text = m_targetWord;
+
+            if( AppConfig.Instance.ShowTargetWord == true )
+                title.Text = m_targetWord;
         }
 
         private async Task nextHandling()

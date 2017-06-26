@@ -72,7 +72,8 @@ namespace MIDAS_BAT
             {
                 TesterId = tester.Id,
                 TestSetId = testSet.Id,
-                Datetime = System.DateTime.Now.ToString("yyyyMMdd_hhmmss"),
+                Datetime = DateTime.Now.ToString("yyyyMMdd_hhmmss"),
+                UseJamoSepartaion = (bool)AppConfig.Instance.UseJamoSeperation,
                 ShowBorder = showBoxChk.IsChecked == true ? true : false,
                 ScreenWidth = Int32.Parse(widthBox.Text),
                 ScreenHeight = Int32.Parse(heightBox.Text)

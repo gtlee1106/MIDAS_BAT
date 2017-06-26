@@ -11,9 +11,6 @@ namespace MIDAS_BAT.Utils
     {
         private static readonly TestUtil instance = new TestUtil();
 
-        // 켜져 있으면 필기인식, 꺼져있으면 획수로 카운트
-        bool m_bInkRecognize = false;
-
         private TestUtil()
         {
         }
@@ -26,19 +23,9 @@ namespace MIDAS_BAT.Utils
             }
         }
 
-        public void EnableRecognize()
-        {
-            m_bInkRecognize = true;
-        }
-
-        public void DisableRecognize()
-        {
-            m_bInkRecognize = true;
-        }
-
         public async Task<bool> IsCorrectWriting( string targetWord, InkCanvas inkCanvas)
         {
-            if (m_bInkRecognize)
+            if (AppConfig.Instance.UseHandWritingRecognition == true)
                 return await IsCorrectWriting_InkRecognize(targetWord, inkCanvas);
             else
                 return IsCorrectWriting_LineCounting(targetWord, inkCanvas);
@@ -51,7 +38,9 @@ namespace MIDAS_BAT.Utils
 
         private bool IsCorrectWriting_LineCounting(string targetWord, InkCanvas inkCanvas)
         {
-            // 미리 계산해둘까...?
+            //gtlee. 당장은 사용하지 않는 방향으로...
+            return true;
+
             int totalCnt = 0;
             List<string> charSeq = CharacterUtil.GetSplitStrokeStr(targetWord);
             for (int i = 0; i < targetWord.Length; ++i)

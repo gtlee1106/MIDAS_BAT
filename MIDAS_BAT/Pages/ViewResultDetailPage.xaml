@@ -21,9 +21,11 @@
                 <TextBlock x:Name="birthdayText" Margin="5" Text="1950.01.01, "/>
                 <TextBlock x:Name="educationText" Margin="5" Text="고등학교 졸업) "/>
                 <TextBlock x:Name="testExecDateText" Margin="5" Text="검사일 : 2017.05.12 09:00:00"/>
-
             </StackPanel>
-            <Grid x:Name="listViewHeader" RelativePanel.Below="testerInfoPanel" Padding="12,5" Background="AntiqueWhite">
+
+            <TextBlock x:Name="statusText" Text="" RelativePanel.Below="testerInfoPanel" FontWeight="Bold" Margin="10"/> 
+
+            <Grid x:Name="listViewHeader" RelativePanel.Below="statusText" Padding="12,5" Background="AntiqueWhite">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="108"/>
                     <ColumnDefinition Width="62"/>
