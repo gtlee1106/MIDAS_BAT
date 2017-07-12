@@ -181,6 +181,11 @@ namespace MIDAS_BAT
             conn.Delete(selectedTestSet);
         }
 
+        internal void UpdateTestSet(TestSet testSet)
+        {
+            conn.Update(testSet);
+        }
+
         internal void DeleteTestSetItem(TestSetItem item)
         {
             conn.Delete(item);

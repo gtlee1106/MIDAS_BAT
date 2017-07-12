@@ -103,6 +103,9 @@ namespace MIDAS_BAT
                 {
                     databaseManager.DeleteTestSetItem(item);
                 }
+
+                curSet.SetName = testSetName.Text;
+                databaseManager.UpdateTestSet(curSet);
             }
             else
             {
