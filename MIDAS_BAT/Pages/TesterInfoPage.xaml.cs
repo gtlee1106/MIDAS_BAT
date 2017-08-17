@@ -25,9 +25,12 @@ namespace MIDAS_BAT
     /// </summary>
     public sealed partial class TesterInfoPage : Page
     {
+        private string m_dropYear = ""; // 있는 경우 1~6문자열 입력됨. 
         public TesterInfoPage()
         {
             this.InitializeComponent();
+
+            initBtn();
         }
 
         private void startTest_Click(object sender, RoutedEventArgs e)
@@ -48,7 +51,7 @@ namespace MIDAS_BAT
             else if (dropRadioBtn.IsChecked == true)
             {
                 education += dropRadioBtn.Content;
-                education += "(" + dropYear.Text + "년 재학)";
+                education += "(" + m_dropYear + "년 재학)";
             }
 
             Tester tester = new Tester()
@@ -61,7 +64,7 @@ namespace MIDAS_BAT
             dbManager.InsertTester(tester);
 
             TestSet testSet = dbManager.GetActiveTestSet();
-            if( testSet == null )
+            if (testSet == null)
             {
                 var dialog = new MessageDialog("활성화된 실험셋이 없습니다. 새로 만들어주세요.");
                 dialog.ShowAsync();
@@ -107,16 +110,18 @@ namespace MIDAS_BAT
             else if (dropRadioBtn.IsChecked == true)
             {
                 dropUISet.Visibility = Visibility.Visible;
+
+                onChangedEducationComb();
             }
         }
 
         private void showBoxChk_Click(object sender, RoutedEventArgs e)
         {
-            if( showBoxChk.IsChecked == true )
+            if (showBoxChk.IsChecked == true)
             {
                 if (widthBox != null)
-                { 
-                    widthBox.IsEnabled= true;
+                {
+                    widthBox.IsEnabled = true;
                 }
                 if (heightBox != null)
                 {
@@ -126,7 +131,7 @@ namespace MIDAS_BAT
             }
             else
             {
-                if( widthBox != null )
+                if (widthBox != null)
                 {
                     widthBox.IsEnabled = false;
                 }
@@ -139,5 +144,82 @@ namespace MIDAS_BAT
 
         }
 
+        private void dropYear_btn_Click(object sender, RoutedEventArgs e)
+        {
+            Button btn = sender as Button;
+            m_dropYear = btn.Content.ToString();
+
+            initBtn();
+            btn.Background = new SolidColorBrush(Windows.UI.Colors.DarkGray);
+        }
+
+        private void initBtn()
+        {
+            dropYear_1.Background = new SolidColorBrush(Windows.UI.Colors.LightGray);
+            dropYear_2.Background = new SolidColorBrush(Windows.UI.Colors.LightGray);
+            dropYear_3.Background = new SolidColorBrush(Windows.UI.Colors.LightGray);
+            dropYear_4.Background = new SolidColorBrush(Windows.UI.Colors.LightGray);
+            dropYear_5.Background = new SolidColorBrush(Windows.UI.Colors.LightGray);
+            dropYear_6.Background = new SolidColorBrush(Windows.UI.Colors.LightGray);
+        }
+
+        private void onChangedEducationComb()
+        {
+            if( dropRadioBtn == null)
+                return;
+
+            if (dropRadioBtn.IsChecked != true )
+                return;
+
+            int eduIdx = educationCmb.SelectedIndex;
+            switch (eduIdx)
+            {
+                case 0:
+                    {
+                        dropYear_1.Visibility = Visibility.Visible;
+                        dropYear_2.Visibility = Visibility.Visible;
+                        dropYear_3.Visibility = Visibility.Visible;
+                        dropYear_4.Visibility = Visibility.Visible;
+                        dropYear_5.Visibility = Visibility.Visible;
+                        dropYear_6.Visibility = Visibility.Visible;
+                    }
+                    break;
+                case 1:
+                case 2:
+                    {
+                        dropYear_1.Visibility = Visibility.Visible;
+                        dropYear_2.Visibility = Visibility.Visible;
+                        dropYear_3.Visibility = Visibility.Visible;
+                        dropYear_4.Visibility = Visibility.Collapsed;
+                        dropYear_5.Visibility = Visibility.Collapsed;
+                        dropYear_6.Visibility = Visibility.Collapsed;
+                    }
+                    break;
+                case 3:
+                    {
+                        dropYear_1.Visibility = Visibility.Visible;
+                        dropYear_2.Visibility = Visibility.Visible;
+                        dropYear_3.Visibility = Visibility.Visible;
+                        dropYear_4.Visibility = Visibility.Visible;
+                        dropYear_5.Visibility = Visibility.Collapsed;
+                        dropYear_6.Visibility = Visibility.Collapsed;
+                    }
+
+                    break;
+            }
+        }
+
+        private void educationCmb_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            onChangedEducationComb();
+        }
+
+        private string getDropYear()
+        {
+            if (dropRadioBtn.IsChecked != true)
+                return "";
+
+            return m_dropYear;
+        }
     }
 }

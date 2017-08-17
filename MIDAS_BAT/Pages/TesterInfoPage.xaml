@@ -57,23 +57,31 @@
             <TextBlock Text="일"  Margin="5,5,5,0"/>
         </StackPanel>
         <TextBlock HorizontalAlignment="Right" Text="학력" Margin="5,10,5,10" Grid.Row="4"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1" Margin="5,5,5,5">
-            <ComboBox
-                x:Name="educationCmb" Width="115"
-                SelectedIndex="2"
-                >
-                <x:String>초등학교</x:String>
-                <x:String>중학교</x:String>
-                <x:String>고등학교</x:String>
-                <x:String>대학교 이상</x:String>
-            </ComboBox>
-            <StackPanel Orientation="Horizontal">
-                <RadioButton x:Name="graduateRadioBtn" GroupName="graduate" Content="졸업" Margin="10,4,0,4" IsChecked="True" MinWidth="65" Checked="graduate_Checked"/>
-                <RadioButton x:Name="dropRadioBtn" GroupName="graduate" Content="중퇴" MinWidth="65" Checked="graduate_Checked"/>
+        <StackPanel Orientation="Vertical" Grid.Row="4" Grid.Column="1" Margin="5">
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <ComboBox
+                    x:Name="educationCmb" Width="115"
+                    SelectedIndex="2"
+                    SelectionChanged="educationCmb_SelectionChanged"
+                    >
+                    <x:String>초등학교</x:String>
+                    <x:String>중학교</x:String>
+                    <x:String>고등학교</x:String>
+                    <x:String>대학교 이상</x:String>
+                </ComboBox>
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton x:Name="graduateRadioBtn" GroupName="graduate" Content="졸업" Margin="10,4,0,4" IsChecked="True" MinWidth="65" Checked="graduate_Checked"/>
+                    <RadioButton x:Name="dropRadioBtn" GroupName="graduate" Content="중퇴" MinWidth="65" Checked="graduate_Checked"/>
+                </StackPanel>
             </StackPanel>
             <StackPanel x:Name="dropUISet" Orientation="Horizontal" Visibility="Collapsed">
                 <TextBlock HorizontalAlignment="Right" Text="재학년수" Margin="5,10,5,10" />
-                <TextBox x:Name="dropYear" Width="50" Height="20"/>
+                <Button x:Name="dropYear_1" Content="1" Margin="5" Click="dropYear_btn_Click"/>
+                <Button x:Name="dropYear_2" Content="2" Margin="5" Click="dropYear_btn_Click"/>
+                <Button x:Name="dropYear_3" Content="3" Margin="5" Click="dropYear_btn_Click"/>
+                <Button x:Name="dropYear_4" Content="4" Margin="5" Click="dropYear_btn_Click"/>
+                <Button x:Name="dropYear_5" Content="5" Margin="5" Click="dropYear_btn_Click"/>
+                <Button x:Name="dropYear_6" Content="6" Margin="5" Click="dropYear_btn_Click"/>
             </StackPanel>
         </StackPanel>
 

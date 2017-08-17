@@ -184,6 +184,7 @@ namespace MIDAS_BAT.Utils
             builder.Clear();
             builder.Append(TestSetItem.Word);
             builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
+            builder.AppendLine("총 획수,평균 필압,Raw값");
             for (int i = 0; i < strokes.Count; ++i)
             {
                 IReadOnlyList<InkStrokeRenderingSegment> segments = strokes[i].GetRenderingSegments();

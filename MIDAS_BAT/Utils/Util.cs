@@ -84,7 +84,7 @@ namespace MIDAS_BAT
             TestExec testExec = dbManager.GetTestExec(testExecId);
             Tester tester = dbManager.GetTester(testExec.TesterId);
 
-            string testerName = tester.GetTesterName(true, true);
+            string testerName = tester.GetTesterName(true, true, true);
             StorageFile resultFile = await folder.CreateFileAsync(testerName + "_결과.csv", CreationCollisionOption.ReplaceExisting);
 
             List<TestSetItem> testSetItems = dbManager.GetTestSetItems(testExec.TestSetId);
@@ -136,7 +136,7 @@ namespace MIDAS_BAT
             Tester tester = dbManager.GetTester(testExec.TesterId);
 
             List<TestSetItem> testSetItems = dbManager.GetTestSetItems(testExec.TestSetId);
-            string testerName = tester.GetTesterName(true, true);
+            string testerName = tester.GetTesterName(true, true, true);
 
             StorageFolder savedFolder = ApplicationData.Current.LocalFolder;
             foreach (var item in testSetItems)

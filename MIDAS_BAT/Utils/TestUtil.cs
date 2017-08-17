@@ -43,8 +43,8 @@ namespace MIDAS_BAT.Utils
 
         private bool IsCorrectWriting_LineCounting(string targetWord, InkCanvas inkCanvas)
         {
-            //gtlee. 당장은 사용하지 않는 방향으로...
-            return true;
+            if (AppConfig.Instance.UseJamoSeperation != true )
+                return true;
 
             int totalCnt = 0;
             List<string> charSeq = CharacterUtil.GetSplitStrokeStr(targetWord);
