@@ -17,26 +17,27 @@
                 Margin="10"
                 FontSize="36"/>
 
+            <InkCanvas 
+                x:Name="inkCanvas" 
+                RelativePanel.AlignHorizontalCenterWithPanel="True" 
+                RelativePanel.AlignVerticalCenterWithPanel="True"
+                Width="100"
+                Height="100"
+                />
             <Border 
-                x:Name="borderInkCanvas" 
+                x:Name="borderCanvas" 
                 RelativePanel.AlignHorizontalCenterWithPanel="True" 
                 RelativePanel.AlignVerticalCenterWithPanel="True"
                 BorderBrush="Black" 
                 Height="600" Width="600"
                 BorderThickness="1">
-                <InkCanvas 
-                    x:Name="inkCanvas" 
-                    />
+                <Canvas 
+                x:Name="guideLineCanvas"/>
             </Border>
-            <Canvas 
-                x:Name="guideLineCanvas"
-                RelativePanel.AlignHorizontalCenterWithPanel="True" 
-                RelativePanel.AlignVerticalCenterWithPanel="True"
-                />
             <Button 
                 x:Name="cleanBtn" 
                 Content="지우기" 
-                RelativePanel.Below="borderInkCanvas"
+                RelativePanel.Below="borderCanvas"
                 RelativePanel.AlignLeftWithPanel="True"
                 Margin="5,5,5,5"
                 Width="100"
@@ -44,7 +45,7 @@
             <Button 
                 x:Name="nextBtn" 
                 Content="다음" 
-                RelativePanel.Below="borderInkCanvas"
+                RelativePanel.Below="borderCanvas"
                 RelativePanel.AlignRightWithPanel="True"
                 Width="100"
                 Margin="5,5,5,5"

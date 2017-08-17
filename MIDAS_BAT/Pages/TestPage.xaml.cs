@@ -16,6 +16,7 @@ using Windows.UI.Core;
 using Windows.UI.Input.Inking;
 using Windows.UI.Input.Inking.Core;
 using Windows.UI.Popups;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -118,13 +119,19 @@ namespace MIDAS_BAT
             int height = (int)(di.RawDpiY * (m_testExec.ScreenHeight / 25.4f) / (float)di.RawPixelsPerViewPixel);
             if (m_testExec.ShowBorder)
             {
-                borderInkCanvas.BorderThickness = new Thickness(1.0);
-                borderInkCanvas.Width = width * len;
-                borderInkCanvas.Height = height;
+                var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+                var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
+
+                inkCanvas.Width = bounds.Width;
+                inkCanvas.Height = bounds.Height;
+
+
+                borderCanvas.BorderThickness = new Thickness(1.0);
+                borderCanvas.Width = width * len;
+                borderCanvas.Height = height;
 
                 guideLineCanvas.Width = width * len;
                 guideLineCanvas.Height = height;
-
 
                 guideLineCanvas.Children.Clear();
                 for (int i = 0; i < len - 1; ++i)
@@ -147,7 +154,7 @@ namespace MIDAS_BAT
             else
             {
                 guideLineCanvas.Children.Clear();
-                borderInkCanvas.BorderThickness = new Thickness(0.0);
+                borderCanvas.BorderThickness = new Thickness(0.0);
             }
         }
 
