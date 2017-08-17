@@ -26,8 +26,8 @@ namespace MIDAS_BAT.Utils
         public async Task<bool> IsCorrectWriting( string targetWord, InkCanvas inkCanvas)
         {
             int strokeCount = inkCanvas.InkPresenter.StrokeContainer.GetStrokes().Count;
-            if (strokeCount < 1 )
-                return false;
+            //if (strokeCount < 1 )
+            //    return false;
 
 
             if (AppConfig.Instance.UseHandWritingRecognition == true)
