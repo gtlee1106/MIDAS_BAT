@@ -189,13 +189,23 @@ namespace MIDAS_BAT.Utils
             {
                 IReadOnlyList<InkStrokeRenderingSegment> segments = strokes[i].GetRenderingSegments();
                 builder.Append(segments.Count.ToString() + ", ");
+
+                float avgPressure = 0.0f;
+                int pressure_cnt = 0;
+                foreach (var seg in segments)
+                {
+                    avgPressure += seg.Pressure;
+                    pressure_cnt++;
+                }
+                avgPressure = avgPressure / pressure_cnt;
+                builder.Append(avgPressure.ToString("F6") + ", ");
+
                 foreach (var seg in segments)
                 {
                     builder.Append(seg.Pressure.ToString("F6") + ", ");
                 }
                 builder.AppendLine("");
             }
-
 
             fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
             await FileIO.WriteBytesAsync(pressure_file, fileBytes);

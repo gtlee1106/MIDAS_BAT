@@ -57,12 +57,13 @@
             <TextBlock Text="일"  Margin="5,5,5,0"/>
         </StackPanel>
         <TextBlock HorizontalAlignment="Right" Text="학력" Margin="5,10,5,10" Grid.Row="4"/>
-        <StackPanel Orientation="Vertical" Grid.Row="4" Grid.Column="1" Margin="5">
+        <StackPanel Orientation="Vertical" Grid.Row="4" Grid.Column="1" Margin="0">
             <StackPanel Orientation="Horizontal" Margin="5">
                 <ComboBox
                     x:Name="educationCmb" Width="115"
                     SelectedIndex="2"
                     SelectionChanged="educationCmb_SelectionChanged"
+                    Margin="0,3,0,0"
                     >
                     <x:String>초등학교</x:String>
                     <x:String>중학교</x:String>

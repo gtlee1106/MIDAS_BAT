@@ -60,7 +60,8 @@ namespace MIDAS_BAT
                 testSetName.Text = m_targetTestSet.SetName;
                 foreach(var item in items)
                     TestSetItemList.ElementAt(item.Number - 1).Word = item.Word;
-                
+
+                add.Content = "수정하기";
             }
             base.OnNavigatedTo(e);
         }
@@ -104,12 +105,12 @@ namespace MIDAS_BAT
                     databaseManager.DeleteTestSetItem(item);
                 }
 
-                curSet.SetName = testSetName.Text;
+                curSet.SetName = testSetName.Text.Trim();
                 databaseManager.UpdateTestSet(curSet);
             }
             else
             {
-                curSet = new TestSet() { SetName = testSetName.Text, Active = false };
+                curSet = new TestSet() { SetName = testSetName.Text.Trim(), Active = false };
                 databaseManager.InsertTestSet(curSet);
             }
 
