@@ -1,9 +1,11 @@
 ﻿using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Foundation;
 using Windows.Graphics.Display;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -11,6 +13,7 @@ using Windows.UI;
 using Windows.UI.Input.Inking;
 using Windows.UI.Popups;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Shapes;
 
 namespace MIDAS_BAT
 {
@@ -127,7 +130,7 @@ namespace MIDAS_BAT
 
             return true;
         }
-        
+
         public static async Task<bool> ExportRawResult(StorageFolder folder, int testExecId)
         {
             DatabaseManager dbManager = DatabaseManager.Instance;
@@ -190,7 +193,7 @@ namespace MIDAS_BAT
             if (folder == null)
                 return false;
 
-            if( AppConfig.Instance.UseJamoSeperation == true )
+            if (AppConfig.Instance.UseJamoSeperation == true)
                 await exportDBResult(folder, testExecId);
 
             await ExportRawResult(folder, testExecId);
@@ -204,7 +207,7 @@ namespace MIDAS_BAT
             return await SaveResult(folder, testExecId);
         }
 
-        public static async Task<bool> CaptureInkCanvas(InkCanvas inkCanvas, TestExec testExec, TestSetItem setItem)
+        public static async Task<bool> CaptureInkCanvas(InkCanvas inkCanvas, Border borderUI, TestExec testExec, TestSetItem setItem)
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
             string file_name = testExec.TesterId + "_char_" + setItem.Number + "_last.png";
@@ -222,6 +225,8 @@ namespace MIDAS_BAT
             {
                 ds.Clear(Colors.White);
                 ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
+
+                DrawGuideLineInImage(borderUI, ds);
             }
 
             var pixelBuffer = rtb.GetPixelBytes();
@@ -241,7 +246,34 @@ namespace MIDAS_BAT
             return true;
         }
 
-        public static async Task<bool> CaptureInkCanvasForStroke(InkCanvas inkCanvas, TestExec testExec, TestSetItem setItem )
+        private static void DrawGuideLineInImage( Border borderUI, CanvasDrawingSession ds )
+        {
+            // 흠... 직접 그린다...
+            RelativePanel parent = borderUI.Parent as RelativePanel;
+            var transform = borderUI.TransformToVisual(parent);
+            var point = transform.TransformPoint(new Point(0, 0));
+
+            float[] range = { (float)point.X, (float)point.Y, (float)(point.X + borderUI.ActualWidth), (float)(point.Y + borderUI.ActualHeight) };
+
+            ds.DrawLine(range[0], range[1], range[2], range[1], Colors.Black);
+            ds.DrawLine(range[2], range[1], range[2], range[3], Colors.Black);
+            ds.DrawLine(range[2], range[3], range[0], range[3], Colors.Black);
+            ds.DrawLine(range[0], range[3], range[0], range[1], Colors.Black);
+
+            Canvas guideLineCanvas = borderUI.Child as Canvas;
+            CanvasStrokeStyle style = new CanvasStrokeStyle();
+            style.DashStyle = CanvasDashStyle.Dash;
+            foreach (var guideLine in guideLineCanvas.Children)
+            {
+                Line l = guideLine as Line;
+
+                float[] linePt = { (float)(range[0] + l.X1), (float)(range[1] + l.Y1),
+                        (float)(range[0] + l.X2), (float)(range[1] + l.Y2) };
+                ds.DrawLine(linePt[0], linePt[1], linePt[2], linePt[3], Colors.Black, 2, style);
+            }
+        }
+
+        public static async Task<bool> CaptureInkCanvasForStroke(InkCanvas inkCanvas, Border borderUI, TestExec testExec, TestSetItem setItem)
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
             string file_name = testExec.TesterId + "_char_" + setItem.Number.ToString() + ".gif";
@@ -257,7 +289,7 @@ namespace MIDAS_BAT
             IReadOnlyList<InkStroke> strokeList = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
 
             List<InkStroke> newStrokeList = new List<InkStroke>();
-            
+
             var propertySet = new BitmapPropertySet();
             var propertyValue = new BitmapTypedValue(
                 100, // multiple of 10ms
@@ -273,6 +305,8 @@ namespace MIDAS_BAT
             {
                 ds.Clear(Colors.White);
                 ds.DrawInk(newStrokeList);
+
+                DrawGuideLineInImage(borderUI, ds);
             }
 
             var pixelBuffer = rtb.GetPixelBytes();
@@ -287,7 +321,7 @@ namespace MIDAS_BAT
                                  pixels);
             await encoder.BitmapProperties.SetPropertiesAsync(propertySet);
             await encoder.GoToNextFrameAsync();
-            
+
             // 중간
             foreach (var stroke in strokeList)
             {
@@ -298,6 +332,8 @@ namespace MIDAS_BAT
                 {
                     ds.Clear(Colors.White);
                     ds.DrawInk(newStrokeList);
+
+                    DrawGuideLineInImage(borderUI, ds);
                 }
 
                 pixelBuffer = rtb.GetPixelBytes();
@@ -320,6 +356,8 @@ namespace MIDAS_BAT
             {
                 ds.Clear(Colors.White);
                 ds.DrawInk(newStrokeList);
+
+                DrawGuideLineInImage(borderUI, ds);
             }
 
             pixelBuffer = rtb.GetPixelBytes();
@@ -339,14 +377,14 @@ namespace MIDAS_BAT
                 );
             lastPropertySet.Add("/grctlext/Delay", lastPropertyValue);
             await encoder.BitmapProperties.SetPropertiesAsync(lastPropertySet);
-            
+
             await encoder.FlushAsync();
             stream.Dispose();
 
             return true;
         }
 
-        public static string ParsePrettyDateTimeForm( string datetime )
+        public static string ParsePrettyDateTimeForm(string datetime)
         {
             // YYYYMMDD_hhmmss 폼으로 온 것들 파싱해서 예쁘게...? ㅋㅋ
             string result = datetime.Substring(0, 4) + "." +

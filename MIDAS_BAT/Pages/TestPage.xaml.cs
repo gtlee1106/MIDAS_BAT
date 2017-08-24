@@ -179,8 +179,8 @@ namespace MIDAS_BAT
                 return;
             }
 
-            await Util.CaptureInkCanvasForStroke(inkCanvas, m_testExec, m_wordList[m_curIdx]);
-            await Util.CaptureInkCanvas(inkCanvas, m_testExec, m_wordList[m_curIdx]);
+            await Util.CaptureInkCanvasForStroke(inkCanvas, borderCanvas, m_testExec, m_wordList[m_curIdx]);
+            await Util.CaptureInkCanvas(inkCanvas, borderCanvas, m_testExec, m_wordList[m_curIdx]);
             
             await m_saveUtil.saveStroke( inkCanvas);
             await m_saveUtil.saveRawData( m_Times, inkCanvas );
