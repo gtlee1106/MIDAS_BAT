@@ -145,7 +145,51 @@ namespace MIDAS_BAT
             return true;
         }
 
-        public static async Task<bool> ExportRawResult(StorageFolder folder, int testExecId)
+        private static async void ExportRawResultItem(StorageFolder folder, string testerId, string testerName, string itemNumber, string itemWord)
+        {
+            StorageFolder savedFolder = ApplicationData.Current.LocalFolder;
+
+            string orgGifName = testerId + "_char_" + itemNumber + ".gif";
+
+            if (await savedFolder.TryGetItemAsync(orgGifName) != null)
+            {
+                string newGifName = testerName + "_" + itemNumber + "_" + itemWord + ".gif";
+
+                StorageFile charGifFile = await savedFolder.GetFileAsync(orgGifName);
+                await charGifFile.CopyAsync(folder, newGifName, NameCollisionOption.ReplaceExisting);
+            }
+
+            string orgPngName = testerId + "_char_" + itemNumber + "_last.png";
+            if (await savedFolder.TryGetItemAsync(orgPngName) != null)
+            {
+                string newPngName = testerName + "_" + itemNumber + "_" + itemWord + "_last.png";
+
+                StorageFile charPngFile = await savedFolder.GetFileAsync(orgPngName);
+                await charPngFile.CopyAsync(folder, newPngName, NameCollisionOption.ReplaceExisting);
+            }
+
+            // time
+            string orgTimeName = testerId + "_raw_time_" + itemNumber + ".csv";
+            if (await savedFolder.TryGetItemAsync(orgPngName) != null)
+            {
+                string newTimeName = testerName + "_" + itemNumber + "_" + itemWord + "_time.csv";
+
+                StorageFile tiimeFile = await savedFolder.GetFileAsync(orgTimeName);
+                await tiimeFile.CopyAsync(folder, newTimeName, NameCollisionOption.ReplaceExisting);
+            }
+
+            // pressure
+            string orgPressureName = testerId + "_raw_pressure_" + itemNumber + ".csv";
+            if (await savedFolder.TryGetItemAsync(orgPngName) != null)
+            {
+                string newPressureName = testerName + "_" + itemNumber + "_" + itemWord + "_pressure.csv";
+
+                StorageFile pressureFile = await savedFolder.GetFileAsync(orgPressureName);
+                await pressureFile.CopyAsync(folder, newPressureName, NameCollisionOption.ReplaceExisting);
+            }
+        }
+
+        public static bool ExportRawResult(StorageFolder folder, int testExecId)
         {
             DatabaseManager dbManager = DatabaseManager.Instance;
 
@@ -156,46 +200,13 @@ namespace MIDAS_BAT
             string testerName = tester.GetTesterName(true, true, true);
 
             StorageFolder savedFolder = ApplicationData.Current.LocalFolder;
+
+            // 사전 테스트 결과
+            ExportRawResultItem(folder, tester.Id.ToString(), testerName, 0.ToString(), "사전테스트");
+
             foreach (var item in testSetItems)
             {
-                string orgGifName = tester.Id + "_char_" + item.Number + ".gif";
-
-                if (await savedFolder.TryGetItemAsync(orgGifName) != null)
-                {
-                    string newGifName = testerName + "_" + item.Number + "_" + item.Word + ".gif";
-
-                    StorageFile charGifFile = await savedFolder.GetFileAsync(orgGifName);
-                    await charGifFile.CopyAsync(folder, newGifName, NameCollisionOption.ReplaceExisting);
-                }
-
-                string orgPngName = tester.Id + "_char_" + item.Number + "_last.png";
-                if (await savedFolder.TryGetItemAsync(orgPngName) != null)
-                {
-                    string newPngName = testerName + "_" + item.Number + "_" + item.Word + "_last.png";
-
-                    StorageFile charPngFile = await savedFolder.GetFileAsync(orgPngName);
-                    await charPngFile.CopyAsync(folder, newPngName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // time
-                string orgTimeName = tester.Id + "_raw_time_" + item.Number + ".csv";
-                if (await savedFolder.TryGetItemAsync(orgPngName) != null)
-                {
-                    string newTimeName = testerName + "_" + item.Number + "_" + item.Word + "_time.csv";
-
-                    StorageFile tiimeFile = await savedFolder.GetFileAsync(orgTimeName);
-                    await tiimeFile.CopyAsync(folder, newTimeName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // pressure
-                string orgPressureName = tester.Id + "_raw_pressure_" + item.Number + ".csv";
-                if (await savedFolder.TryGetItemAsync(orgPngName) != null)
-                {
-                    string newPressureName = testerName + "_" + item.Number + "_" + item.Word + "_pressure.csv";
-
-                    StorageFile pressureFile = await savedFolder.GetFileAsync(orgPressureName);
-                    await pressureFile.CopyAsync(folder, newPressureName, NameCollisionOption.ReplaceExisting);
-                }
+                ExportRawResultItem(folder, tester.Id.ToString(), testerName, item.Number.ToString(), item.Word);
             }
 
             return true;
@@ -210,7 +221,7 @@ namespace MIDAS_BAT
             if (AppConfig.Instance.UseJamoSeperation == true)
                 await exportDBResult(folder, testExecId);
 
-            await ExportRawResult(folder, testExecId);
+            ExportRawResult(folder, testExecId);
 
             return true;
         }
@@ -220,10 +231,11 @@ namespace MIDAS_BAT
             StorageFolder folder = await GetSaveFolder();
             return await SaveResult(folder, testExecId);
         }
-        public static async Task<bool> CaptureInkCanva_PreTest(InkCanvas inkCanvas, TestExec testExec )
+
+        public static async Task<bool> CaptureInkCanva_PreTest(InkCanvas inkCanvas, TestExec testExec)
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
-            string file_name = testExec.TesterId + "_pretest_last.png";
+            string file_name = testExec.TesterId + "_char_0_last.png";
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
             StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
 
@@ -297,7 +309,7 @@ namespace MIDAS_BAT
             return true;
         }
 
-        private static void DrawGuideLineInImage( Border borderUI, CanvasDrawingSession ds )
+        private static void DrawGuideLineInImage(Border borderUI, CanvasDrawingSession ds)
         {
             // 흠... 직접 그린다...
             RelativePanel parent = borderUI.Parent as RelativePanel;
@@ -327,7 +339,7 @@ namespace MIDAS_BAT
         public static async Task<bool> CaptureInkCanvasForStroke_PreTest(InkCanvas inkCanvas, TestExec testExec)
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
-            string file_name = testExec.TesterId + "_pretest.gif";
+            string file_name = testExec.TesterId + "_char_0.gif";
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
             StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
 
