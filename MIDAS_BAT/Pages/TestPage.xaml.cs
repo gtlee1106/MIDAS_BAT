@@ -128,6 +128,7 @@ namespace MIDAS_BAT
             inkCanvas.Width = bounds.Width;
             inkCanvas.Height = bounds.Height;
 
+
             if (m_testExec.ShowBorder)
             {
                 borderCanvas.BorderThickness = new Thickness(1.0);
@@ -159,6 +160,7 @@ namespace MIDAS_BAT
             {
                 guideLineCanvas.Children.Clear();
                 borderCanvas.BorderThickness = new Thickness(0.0);
+                borderCanvas.Height = height; // 버튼 위치들 때문에 높이만 맞춰준다. 
             }
         }
 

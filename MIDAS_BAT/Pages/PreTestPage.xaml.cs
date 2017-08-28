@@ -97,17 +97,11 @@ namespace MIDAS_BAT
             int lineWidth = (int)(di.RawDpiX * (50.0f / 25.4f) / (float)di.RawPixelsPerViewPixel);
             int lineHeight = (int)(di.RawDpiY * (50.0f / 25.4f) / (float)di.RawPixelsPerViewPixel);
 
-            float targetHeight = 50.0f;
-            if (m_testExec != null)
-                targetHeight = (float)m_testExec.ScreenWidth;
-
-            int canvasHeight = (int)(di.RawDpiY * (targetHeight / 25.4f) / (float)di.RawPixelsPerViewPixel);
-
             inkCanvas.Width = bounds.Width;
             inkCanvas.Height = bounds.Height;
 
             content.Width = bounds.Width;
-            content.Height = canvasHeight;
+            content.Height = lineHeight;
 
             horizontalLine.X2 = lineWidth;
             verticalLine.Y2 = lineHeight;

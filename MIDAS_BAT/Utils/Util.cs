@@ -289,7 +289,8 @@ namespace MIDAS_BAT
                 ds.Clear(Colors.White);
                 ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
 
-                DrawGuideLineInImage(borderUI, ds);
+                if( testExec.ShowBorder )
+                    DrawGuideLineInImage(borderUI, ds);
             }
 
             var pixelBuffer = rtb.GetPixelBytes();
@@ -474,8 +475,9 @@ namespace MIDAS_BAT
             {
                 ds.Clear(Colors.White);
                 ds.DrawInk(newStrokeList);
-
-                DrawGuideLineInImage(borderUI, ds);
+ 
+                if( testExec.ShowBorder)
+                    DrawGuideLineInImage(borderUI, ds);
             }
 
             var pixelBuffer = rtb.GetPixelBytes();
@@ -502,7 +504,8 @@ namespace MIDAS_BAT
                     ds.Clear(Colors.White);
                     ds.DrawInk(newStrokeList);
 
-                    DrawGuideLineInImage(borderUI, ds);
+                    if( testExec.ShowBorder )
+                        DrawGuideLineInImage(borderUI, ds);
                 }
 
                 pixelBuffer = rtb.GetPixelBytes();
@@ -526,7 +529,8 @@ namespace MIDAS_BAT
                 ds.Clear(Colors.White);
                 ds.DrawInk(newStrokeList);
 
-                DrawGuideLineInImage(borderUI, ds);
+                if( testExec.ShowBorder )
+                    DrawGuideLineInImage(borderUI, ds);
             }
 
             pixelBuffer = rtb.GetPixelBytes();
