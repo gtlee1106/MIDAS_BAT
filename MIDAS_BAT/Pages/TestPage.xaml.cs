@@ -117,15 +117,15 @@ namespace MIDAS_BAT
             int len = m_targetWord.Length;
             int width = (int)(di.RawDpiX * (m_testExec.ScreenWidth / 25.4f) / (float)di.RawPixelsPerViewPixel);
             int height = (int)(di.RawDpiY * (m_testExec.ScreenHeight / 25.4f) / (float)di.RawPixelsPerViewPixel);
+
+            var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+            var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
+
+            inkCanvas.Width = bounds.Width;
+            inkCanvas.Height = bounds.Height;
+
             if (m_testExec.ShowBorder)
             {
-                var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
-                var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
-
-                inkCanvas.Width = bounds.Width;
-                inkCanvas.Height = bounds.Height;
-
-
                 borderCanvas.BorderThickness = new Thickness(1.0);
                 borderCanvas.Width = width * len;
                 borderCanvas.Height = height;
