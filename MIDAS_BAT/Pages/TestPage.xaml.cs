@@ -99,8 +99,12 @@ namespace MIDAS_BAT
             }
         }
 
-        private void closeBtn_Click(object sender, RoutedEventArgs e)
+        private async void closeBtn_Click(object sender, RoutedEventArgs e)
         {
+            bool exit = await Util.ShowStopExamAlertDlg();
+            if (!exit)
+                return;
+
             this.Frame.Navigate(typeof(MainPage));
         }
 

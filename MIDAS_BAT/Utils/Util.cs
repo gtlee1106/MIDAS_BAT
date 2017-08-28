@@ -220,6 +220,43 @@ namespace MIDAS_BAT
             StorageFolder folder = await GetSaveFolder();
             return await SaveResult(folder, testExecId);
         }
+        public static async Task<bool> CaptureInkCanva_PreTest(InkCanvas inkCanvas, TestExec testExec )
+        {
+            // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
+            string file_name = testExec.TesterId + "_pretest_last.png";
+            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
+
+            var displayInformation = DisplayInformation.GetForCurrentView();
+            var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
+
+            CanvasDevice device = CanvasDevice.GetSharedDevice();
+            CanvasRenderTarget rtb = new CanvasRenderTarget(device, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight, 96); // 96 쓰는게 맞나? or dpi 받아서 써야되나?
+
+            using (var ds = rtb.CreateDrawingSession())
+            {
+                ds.Clear(Colors.White);
+                ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
+            }
+
+            var pixelBuffer = rtb.GetPixelBytes();
+            var pixels = pixelBuffer.ToArray();
+
+            encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                BitmapAlphaMode.Premultiplied,
+                (uint)inkCanvas.ActualWidth,
+                (uint)inkCanvas.ActualHeight,
+                displayInformation.RawDpiX,
+                displayInformation.RawDpiY,
+                pixels);
+
+            await encoder.FlushAsync();
+            stream.Dispose();
+
+            return true;
+        }
+
 
         public static async Task<bool> CaptureInkCanvas(InkCanvas inkCanvas, Border borderUI, TestExec testExec, TestSetItem setItem)
         {
@@ -286,6 +323,112 @@ namespace MIDAS_BAT
                 ds.DrawLine(linePt[0], linePt[1], linePt[2], linePt[3], Colors.Black, 2, style);
             }
         }
+
+        public static async Task<bool> CaptureInkCanvasForStroke_PreTest(InkCanvas inkCanvas, TestExec testExec)
+        {
+            // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
+            string file_name = testExec.TesterId + "_pretest.gif";
+            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
+
+            var displayInformation = DisplayInformation.GetForCurrentView();
+            var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.GifEncoderId, stream);
+
+            CanvasDevice device = CanvasDevice.GetSharedDevice();
+            CanvasRenderTarget rtb = new CanvasRenderTarget(device, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight, 96); // 96 쓰는게 맞나? or dpi 받아서 써야되나?
+            IReadOnlyList<InkStroke> strokeList = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+
+            List<InkStroke> newStrokeList = new List<InkStroke>();
+
+            var propertySet = new BitmapPropertySet();
+            var propertyValue = new BitmapTypedValue(
+                100, // multiple of 10ms
+                Windows.Foundation.PropertyType.UInt16
+                );
+            propertySet.Add("/grctlext/Delay", propertyValue);
+
+            // 아오 복붙 ㅋㅋㅋ... ㅠㅠ
+
+            // 초기화면
+            // 한프레임...?
+            using (var ds = rtb.CreateDrawingSession())
+            {
+                ds.Clear(Colors.White);
+                ds.DrawInk(newStrokeList);
+            }
+
+            var pixelBuffer = rtb.GetPixelBytes();
+            var pixels = pixelBuffer.ToArray();
+
+            encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                 BitmapAlphaMode.Premultiplied,
+                                 (uint)inkCanvas.ActualWidth,
+                                 (uint)inkCanvas.ActualHeight,
+                                 displayInformation.RawDpiX,
+                                 displayInformation.RawDpiY,
+                                 pixels);
+            await encoder.BitmapProperties.SetPropertiesAsync(propertySet);
+            await encoder.GoToNextFrameAsync();
+
+            // 중간
+            foreach (var stroke in strokeList)
+            {
+                newStrokeList.Add(stroke);
+
+                // 한프레임...?
+                using (var ds = rtb.CreateDrawingSession())
+                {
+                    ds.Clear(Colors.White);
+                    ds.DrawInk(newStrokeList);
+                }
+
+                pixelBuffer = rtb.GetPixelBytes();
+                pixels = pixelBuffer.ToArray();
+
+                encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                     BitmapAlphaMode.Premultiplied,
+                                     (uint)inkCanvas.ActualWidth,
+                                     (uint)inkCanvas.ActualHeight,
+                                     displayInformation.RawDpiX,
+                                     displayInformation.RawDpiY,
+                                     pixels);
+                await encoder.BitmapProperties.SetPropertiesAsync(propertySet);
+
+                await encoder.GoToNextFrameAsync();
+            }
+
+            // 마지막 샷 
+            using (var ds = rtb.CreateDrawingSession())
+            {
+                ds.Clear(Colors.White);
+                ds.DrawInk(newStrokeList);
+            }
+
+            pixelBuffer = rtb.GetPixelBytes();
+            pixels = pixelBuffer.ToArray();
+
+            encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                BitmapAlphaMode.Premultiplied,
+                                (uint)inkCanvas.ActualWidth,
+                                (uint)inkCanvas.ActualHeight,
+                                displayInformation.RawDpiX,
+                                displayInformation.RawDpiY,
+                                pixels);
+            var lastPropertySet = new BitmapPropertySet();
+            var lastPropertyValue = new BitmapTypedValue(
+                500, // multiple of 10ms
+                Windows.Foundation.PropertyType.UInt16
+                );
+            lastPropertySet.Add("/grctlext/Delay", lastPropertyValue);
+            await encoder.BitmapProperties.SetPropertiesAsync(lastPropertySet);
+
+            await encoder.FlushAsync();
+            stream.Dispose();
+
+            return true;
+        }
+
 
         public static async Task<bool> CaptureInkCanvasForStroke(InkCanvas inkCanvas, Border borderUI, TestExec testExec, TestSetItem setItem)
         {

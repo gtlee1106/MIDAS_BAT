@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Windows.Graphics.Display;
 using Windows.UI;
 using Windows.UI.Core;
+using Windows.UI.Input.Inking.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -29,13 +30,30 @@ namespace MIDAS_BAT
 
             inkCanvas.InkPresenter.InputDeviceTypes = CoreInputDeviceTypes.Mouse
                                                     | CoreInputDeviceTypes.Pen;
+
+            CoreInkIndependentInputSource core = CoreInkIndependentInputSource.Create(inkCanvas.InkPresenter);
+            core.PointerPressing += Core_PointerPressing;
+            core.PointerReleasing += Core_PointerReleasing;
+        }
+
+        private void Core_PointerReleasing(CoreInkIndependentInputSource sender, PointerEventArgs args)
+        {
+            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
+        }
+
+        private void Core_PointerPressing(CoreInkIndependentInputSource sender, PointerEventArgs args)
+        {
+            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             if (e.Parameter is TestExec)
+            {
                 m_testExec = e.Parameter as TestExec;
+                m_saveUtil.TestExec = m_testExec;
+            }
 
             ResizeCanvas();
         }
@@ -97,19 +115,22 @@ namespace MIDAS_BAT
 
         private async Task nextHandling()
         {
-            /*
             TestUtil testUtil = TestUtil.Instance;
 
-            await Util.CaptureInkCanvasForStroke(inkCanvas, borderCanvas, m_testExec, m_wordList[m_curIdx]);
-            await Util.CaptureInkCanvas(inkCanvas, borderCanvas, m_testExec, m_wordList[m_curIdx]);
+            m_saveUtil.TestSetItem = new TestSetItem(){ Id = 0,
+                Number = 0,
+                TestSetId = 0,
+                Word = "사전테스트" };
+
+            await Util.CaptureInkCanvasForStroke_PreTest(inkCanvas, m_testExec);
+            await Util.CaptureInkCanva_PreTest(inkCanvas, m_testExec);
             
-            await m_saveUtil.saveStroke( inkCanvas);
+            await m_saveUtil.saveStroke( inkCanvas );
             await m_saveUtil.saveRawData( m_Times, inkCanvas );
             m_saveUtil.saveResultIntoDB( m_Times, inkCanvas );
 
-            ResizeCanvas();
-            ClearInkData();
-            */
+            //ResizeCanvas();
+            //ClearInkData();
         }
 
         private void ClearInkData()
