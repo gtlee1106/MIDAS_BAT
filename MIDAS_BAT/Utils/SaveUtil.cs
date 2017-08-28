@@ -142,6 +142,9 @@ namespace MIDAS_BAT.Utils
 
         public async Task<bool> saveRawData( List<double> times, InkCanvas inkCanvas )
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            Encoding encoding = Encoding.GetEncoding("euc-kr");
+
             // pressure & time diff 저장...?
             string file_name = TestExec.TesterId.ToString() + "_raw_time_" + TestSetItem.Number.ToString() + ".txt";
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
@@ -172,8 +175,6 @@ namespace MIDAS_BAT.Utils
                 builder.AppendLine("");
             }
 
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            Encoding encoding = Encoding.GetEncoding("euc-kr");
 
             byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
             await FileIO.WriteBytesAsync(time_file, fileBytes);

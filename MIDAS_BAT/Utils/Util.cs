@@ -32,6 +32,20 @@ namespace MIDAS_BAT
 
             return true;
         }
+        public static async Task<bool> ShowStopExamAlertDlg()
+        {
+            var dialog = new MessageDialog("저장하지 않고 끝내시겠습니까?");
+            dialog.Title = "중단";
+            dialog.Commands.Add(new UICommand { Label = "예", Id = 0 });
+            dialog.Commands.Add(new UICommand { Label = "아니오", Id = 1 });
+
+            var res = await dialog.ShowAsync();
+            if ((int)res.Id != 0)
+                return false;
+
+            return true;
+        }
+
 
         public static async Task<bool> ShowWrongWritingAlertDlg()
         {

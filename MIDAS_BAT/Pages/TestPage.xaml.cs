@@ -166,6 +166,7 @@ namespace MIDAS_BAT
 
             if( AppConfig.Instance.ShowTargetWord == true )
                 title.Text = m_targetWord;
+            number.Text = (m_curIdx + 1).ToString();
         }
 
         private async Task nextHandling()

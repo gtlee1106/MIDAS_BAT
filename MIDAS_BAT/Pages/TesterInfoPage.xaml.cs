@@ -83,7 +83,8 @@ namespace MIDAS_BAT
             };
             dbManager.InsertTestExec(testExec);
 
-            this.Frame.Navigate(typeof(TestPage), testExec);
+            //this.Frame.Navigate(typeof(TestPage), testExec);
+            this.Frame.Navigate(typeof(PreTestPage), testExec);
         }
 
         private void backBtn_Click(object sender, RoutedEventArgs e)

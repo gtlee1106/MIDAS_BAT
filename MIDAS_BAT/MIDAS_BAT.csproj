@@ -107,6 +107,9 @@
     <Compile Include="Pages\NewMakeTestSetPage.xaml.cs">
       <DependentUpon>NewMakeTestSetPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PreTestPage.xaml.cs">
+      <DependentUpon>PreTestPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Utils\DatabaseManager.cs" />
     <Compile Include="Pages\ConfigPage.xaml.cs">
       <DependentUpon>ConfigPage.xaml</DependentUpon>
@@ -174,6 +177,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\MakeTestSetPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PreTestPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
