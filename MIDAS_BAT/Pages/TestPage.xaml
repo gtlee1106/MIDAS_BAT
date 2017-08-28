@@ -14,8 +14,8 @@
                 Text="" 
                 RelativePanel.AlignTopWithPanel= "True" 
                 RelativePanel.AlignLeftWithPanel= "True" 
-                Margin="10"
-                FontSize="36"/>
+                Margin="20"
+                FontSize="20"/>
 
             <TextBlock 
                 x:Name="title" 
@@ -60,7 +60,7 @@
                 Click="nextBtn_Click"/>
             <Button 
                 x:Name="closeBtn" 
-                Content="시험종료" 
+                Content="중단" 
                 RelativePanel.Below="nextBtn"
                 RelativePanel.AlignRightWithPanel="True"
                 Margin="5,5,5,5"
