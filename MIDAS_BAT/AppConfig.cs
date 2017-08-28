@@ -60,6 +60,35 @@ namespace MIDAS_BAT
             }
         }
 
+        public int BoxWidth 
+        {
+            get
+            {
+                ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+                return (int)localSettings.Values["boxWidth"];
+            }
+            set
+            {
+                ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values["boxWidth"] = value;
+            }
+        }
+
+        public int BoxHeight
+        {
+            get
+            {
+                ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+                return (int)localSettings.Values["boxHeight"];
+            }
+            set
+            {
+                ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values["boxHeight"] = value;
+            }
+        }
+
+
         private AppConfig()
         {
             ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
@@ -69,6 +98,10 @@ namespace MIDAS_BAT
                 localSettings.Values["useJamoSeperation"] = (bool?)false;
             if (localSettings.Values["useHandWritingRecognition"] == null)
                 localSettings.Values["useHandWritingRecognition"] = (bool?)false;
+            if (localSettings.Values["boxWidth"] == null)
+                localSettings.Values["boxWidth"] = 40;
+            if (localSettings.Values["boxHeight"] == null)
+                localSettings.Values["boxHeight"] = 40;
         }
     }
 }

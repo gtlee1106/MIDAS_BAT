@@ -31,6 +31,15 @@ namespace MIDAS_BAT
             this.InitializeComponent();
 
             initBtn();
+            initBoxSize();
+        }
+
+        private void initBoxSize()
+        {
+            if (widthBox != null)
+                widthBox.Text = AppConfig.Instance.BoxWidth.ToString();
+            if (heightBox != null)
+                heightBox.Text = AppConfig.Instance.BoxHeight.ToString();
         }
 
         private void startTest_Click(object sender, RoutedEventArgs e)

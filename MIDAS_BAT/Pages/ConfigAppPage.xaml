@@ -14,6 +14,14 @@
                 <CheckBox x:Name="chkShowTargetWord" Content="실험시 대상 단어 보이기" IsChecked="False" Margin="5" Click="chkShowTargetWord_Click"/>
                 <CheckBox x:Name="chkUseJamoSeperation" Content="한글 자모 구분하기" IsChecked="False" Margin="5" Click="chkUseJamoSeperation_Click"/>
                 <CheckBox x:Name="chkUseHandWritingRecognition"  Content="필기 인식 사용하기" IsEnabled="False" IsChecked="False" Margin="5" Click="chkUseHandWritingRecognition_Click"/>
+                <TextBlock Text="기본 글상자 사이즈 " Margin="5"/>
+                <StackPanel 
+                    Orientation="Horizontal">
+                    <TextBlock Text="너비(mm): " Margin="10,5,5,5"/>
+                    <TextBox x:Name="boxWidth" Text="40" Width="15" TextChanged="boxSize_TextChanged"/>
+                    <TextBlock Text="높이(mm)" Margin="10,5,5,5"/>
+                    <TextBox x:Name="boxHeight" Text="40" Width="15" TextChanged="boxSize_TextChanged"/>
+                </StackPanel>
             </StackPanel>
             <Button x:Name="backBtn" Content="뒤로 돌아가기" Margin="5" RelativePanel.Below="btnPanel" Click="backBtn_Click"/>
         </RelativePanel>

@@ -41,6 +41,10 @@ namespace MIDAS_BAT
                 chkUseHandWritingRecognition.IsChecked = AppConfig.Instance.UseHandWritingRecognition;
             if (chkUseJamoSeperation != null)
                 chkUseJamoSeperation.IsChecked = AppConfig.Instance.UseJamoSeperation;
+            if (boxWidth != null)
+                boxWidth.Text = AppConfig.Instance.BoxWidth.ToString();
+            if (boxHeight != null)
+                boxHeight.Text = AppConfig.Instance.BoxHeight.ToString();
 
             DatabaseManager dbManager = DatabaseManager.Instance;
             dbManager.GetTestSet().ForEach(testSetList.Add);
@@ -138,6 +142,18 @@ namespace MIDAS_BAT
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
+        }
+
+        private void boxSize_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            int width = 0;
+            int height = 0;
+
+            if( Int32.TryParse(boxWidth.Text, out width ) )
+                AppConfig.Instance.BoxWidth = width;
+            if( Int32.TryParse(boxHeight.Text, out height) )
+                AppConfig.Instance.BoxHeight = height;
+            
         }
     }
 }

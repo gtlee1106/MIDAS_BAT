@@ -341,7 +341,7 @@ namespace MIDAS_BAT
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
             string file_name = testExec.TesterId + "_char_0.gif";
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
-            StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
             var displayInformation = DisplayInformation.GetForCurrentView();
             var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
