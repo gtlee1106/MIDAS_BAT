@@ -23,12 +23,12 @@ namespace MIDAS_BAT
             get
             {
                 ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-                return (bool?)localSettings.Values["useShowTargetWord"];
+                return (bool?)localSettings.Values["showTargetWord"];
             }
             set
             {
                 ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-                localSettings.Values["useShowTargetWord"] = value;
+                localSettings.Values["showTargetWord"] = value;
             }
         }
 
