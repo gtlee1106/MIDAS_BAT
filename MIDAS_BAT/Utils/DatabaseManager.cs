@@ -207,5 +207,14 @@ namespace MIDAS_BAT
         {
             conn.Insert(result);
         }
+
+        internal void DeleteTestExecResult(TestExec testExec, TestSetItem testSetItem )
+        {
+            IEnumerable<TestExecResult> results = conn.Query<TestExecResult>("SELECT * FROM TestExecResult " +
+                "WHERE TestExecId= '" + testExec.Id + "' and TestSetItemId = '" + testSetItem.Id + "'");
+
+            foreach (var item in results)
+                conn.Delete<TestExecResult>(results);
+        }
     }
 }

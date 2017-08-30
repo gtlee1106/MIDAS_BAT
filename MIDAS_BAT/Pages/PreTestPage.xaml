@@ -49,29 +49,37 @@
                     />
             </Grid>
             <Button 
-                x:Name="cleanBtn" 
-                Content="지우기" 
-                RelativePanel.AlignBottomWithPanel="True"
-                RelativePanel.AlignLeftWithPanel="True"
-                Margin="20,5,5,115"
-                Width="100"
-                Click="cleanBtn_Click"/>
-            <Button 
                 x:Name="nextBtn" 
                 Content="다음" 
-                RelativePanel.Above="closeBtn"
+                RelativePanel.AlignTopWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
                 Width="100"
-                Margin="10,10,20,10"
+                Margin="20"
                 Click="nextBtn_Click"/>
+            <Button 
+                x:Name="prevBtn" 
+                Content="이전" 
+                RelativePanel.AlignTopWithPanel="True"
+                RelativePanel.LeftOf="nextBtn"
+                Width="100"
+                Margin="20"
+                Click="prevBtn_Click"/>
             <Button 
                 x:Name="closeBtn" 
                 Content="중단" 
-                RelativePanel.AlignBottomWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                Margin="10,10,20,70"
+                RelativePanel.AlignTopWithPanel="True"
+                RelativePanel.LeftOf="prevBtn"
+                Margin="20"
                 Width="100"
                 Click="closeBtn_Click"/>
+            <Button 
+                x:Name="cleanBtn" 
+                Content="지우기" 
+                RelativePanel.AlignTopWithPanel="True"
+                RelativePanel.LeftOf="closeBtn"
+                Margin="20"
+                Width="100"
+                Click="cleanBtn_Click"/>
         </RelativePanel>
     </Grid>
 </Page>

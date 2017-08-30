@@ -55,6 +55,43 @@ namespace MIDAS_BAT
             return true;
         }
 
+        public static async Task<bool> ShowCannotGoBackAlertDlg()
+        {
+            var dialog = new MessageDialog("뒤로 돌아갈 수 없습니다.");
+            var res = await dialog.ShowAsync();
+
+            return true;
+        }
+
+        public static async Task<bool> ShowEraseAlertDlg()
+        {
+            var dialog = new MessageDialog("정말로 화면을 지우시겠습니까?");
+            dialog.Title = "지우기";
+            dialog.Commands.Add(new UICommand { Label = "예", Id = 0 });
+            dialog.Commands.Add(new UICommand { Label = "아니오", Id = 1 });
+
+            var res = await dialog.ShowAsync();
+            if ((int)res.Id != 0)
+                return false;
+
+            return true;
+        }
+
+        public static async Task<bool> ShowGoBackAlertDlg()
+        {
+            var dialog = new MessageDialog("현재 번호 및 이전 번호에 저장된 반응이 삭제됩니다. 이전번호로 돌아가시겠습니까?");
+            dialog.Title = "지우기";
+            dialog.Commands.Add(new UICommand { Label = "예", Id = 0 });
+            dialog.Commands.Add(new UICommand { Label = "아니오", Id = 1 });
+
+            var res = await dialog.ShowAsync();
+            if ((int)res.Id != 0)
+                return false;
+
+            return true;
+        }
+
+
         private static async Task<StorageFolder> GetSaveFolder()
         {
             var folderPicker = new Windows.Storage.Pickers.FolderPicker();

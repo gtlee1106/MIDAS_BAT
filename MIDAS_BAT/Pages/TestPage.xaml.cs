@@ -108,8 +108,52 @@ namespace MIDAS_BAT
             this.Frame.Navigate(typeof(MainPage));
         }
 
-        private void cleanBtn_Click(object sender, RoutedEventArgs e)
+        private async void cleanBtn_Click(object sender, RoutedEventArgs e)
         {
+            bool erase= await Util.ShowEraseAlertDlg();
+            if (!erase)
+                return;
+
+            ClearInkData();
+        }
+
+        private async void prevBtn_Click(object sender, RoutedEventArgs e)
+        {
+            bool goBack = await Util.ShowGoBackAlertDlg();
+            if (!goBack)
+                return;
+
+            if( m_curIdx == 0 )
+            {
+                this.Frame.Navigate(typeof(PreTestPage), m_testExec);
+                return;
+            }
+
+            m_curIdx--;
+
+            // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
+            string[] file_names = {
+                m_testExec.TesterId + "_char_" + m_wordList[m_curIdx].Number.ToString() + ".gif",
+                m_testExec.TesterId + "_char_" + m_wordList[m_curIdx].Number + "_last.png",
+                m_testExec.TesterId + "_" + m_wordList[m_curIdx].Number + ".gif",
+                m_testExec.TesterId + "_raw_time_" + m_wordList[m_curIdx].Number + ".txt",
+                m_testExec.TesterId + "_raw_time_" + m_wordList[m_curIdx].Number + ".csv",
+                m_testExec.TesterId + "_raw_pressure_" + m_wordList[m_curIdx].Number + ".csv"
+            };
+
+            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            foreach( var file_name in file_names )
+            {
+                StorageFile targetFile = await storageFolder.GetFileAsync(file_name);
+                if( targetFile != null )
+                    await targetFile.DeleteAsync();
+            }
+
+            m_saveUtil.deleteResultFromDB(m_testExec, m_wordList[m_curIdx]);
+
+            // UI 업데이트 
+            UpdateCurrnetStatus();
+            ResizeCanvas();
             ClearInkData();
         }
         /////// end of events ////////
@@ -224,5 +268,6 @@ namespace MIDAS_BAT
             inkCanvas.InkPresenter.StrokeContainer.Clear();
             m_Times.Clear();
         }
+
     }
 }

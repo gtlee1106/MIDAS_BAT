@@ -214,6 +214,16 @@ namespace MIDAS_BAT.Utils
             return true;
         }
 
+        internal void deleteResultFromDB( TestExec testExec, TestSetItem testSetItem )
+        {
+            // 자모 구분을 하지 않으면 DB에 저장할 데이터 만들기가 어려움... 
+            if ( TestExec.UseJamoSepartaion != true )
+                return;
+
+            DatabaseManager dbManager = DatabaseManager.Instance;
+            dbManager.DeleteTestExecResult(testExec, testSetItem);
+        }
+
         public async Task<bool> saveInkCanvas(InkCanvas inkCanvas)
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ

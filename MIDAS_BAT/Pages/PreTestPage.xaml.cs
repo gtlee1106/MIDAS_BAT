@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.Graphics.Display;
+using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Input.Inking.Core;
@@ -38,24 +39,42 @@ namespace MIDAS_BAT
 
         private void Core_PointerReleasing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
-            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
+            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
         }
 
         private void Core_PointerPressing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
-            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
+            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            ResizeCanvas();
+
             if (e.Parameter is TestExec)
             {
                 m_testExec = e.Parameter as TestExec;
                 m_saveUtil.TestExec = m_testExec;
+
+                string[] file_names = {
+                    m_testExec.TesterId + "_char_0.gif",
+                    m_testExec.TesterId + "_char_0_last.png",
+                    m_testExec.TesterId + "_0.gif",
+                    m_testExec.TesterId + "_raw_time_0.txt",
+                    m_testExec.TesterId + "_raw_time_0.csv",
+                    m_testExec.TesterId + "_raw_pressure_0.csv"
+                };
+
+                StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+                foreach (var file_name in file_names)
+                {
+                    var targetFile = await storageFolder.TryGetItemAsync(file_name);
+                    if (targetFile != null)
+                        await targetFile.DeleteAsync();
+                }
             }
 
-            ResizeCanvas();
         }
 
         private static bool nextLock = false;
@@ -84,6 +103,11 @@ namespace MIDAS_BAT
         {
             ClearInkData();
         }
+        private async void prevBtn_Click(object sender, RoutedEventArgs e)
+        {
+            await Util.ShowCannotGoBackAlertDlg();
+
+        }
         /////// end of events ////////
 
         private void ResizeCanvas()
@@ -111,17 +135,20 @@ namespace MIDAS_BAT
         {
             TestUtil testUtil = TestUtil.Instance;
 
-            m_saveUtil.TestSetItem = new TestSetItem(){ Id = 0,
+            m_saveUtil.TestSetItem = new TestSetItem()
+            {
+                Id = 0,
                 Number = 0,
                 TestSetId = 0,
-                Word = "사전테스트" };
+                Word = "사전테스트"
+            };
 
             await Util.CaptureInkCanvasForStroke_PreTest(inkCanvas, m_testExec);
             await Util.CaptureInkCanva_PreTest(inkCanvas, m_testExec);
-            
-            await m_saveUtil.saveStroke( inkCanvas );
-            await m_saveUtil.saveRawData( m_Times, inkCanvas );
-            m_saveUtil.saveResultIntoDB( m_Times, inkCanvas );
+
+            await m_saveUtil.saveStroke(inkCanvas);
+            await m_saveUtil.saveRawData(m_Times, inkCanvas);
+            m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
 
             //ResizeCanvas();
             //ClearInkData();
@@ -132,5 +159,6 @@ namespace MIDAS_BAT
             inkCanvas.InkPresenter.StrokeContainer.Clear();
             m_Times.Clear();
         }
+
     }
 }
