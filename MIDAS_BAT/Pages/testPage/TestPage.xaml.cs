@@ -1,4 +1,6 @@
 ﻿using Microsoft.Graphics.Canvas;
+using MIDAS_BAT.Data;
+using MIDAS_BAT.Pages;
 using MIDAS_BAT.Utils;
 using System;
 using System.Collections.Generic;
@@ -20,6 +22,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Shapes;
 
@@ -36,6 +39,10 @@ namespace MIDAS_BAT
         List<double> m_Times = new List<double>();
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
+
+        public static string TEST_NAME = "characterTest";
+        public static string TEST_NAME_KR = "글자 쓰기";
+        public static int TEST_ORDER = 6;
 
         public TestPage()
         {
@@ -54,6 +61,7 @@ namespace MIDAS_BAT
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            Window.Current.SizeChanged += Current_SizeChanged;
 
             if (e.Parameter is TestExec)
             {
@@ -70,6 +78,11 @@ namespace MIDAS_BAT
 
                 ResizeCanvas();
             }
+        }
+
+        private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
+        {
+            ResizeCanvas();
         }
 
         /////// events ////////
@@ -125,7 +138,7 @@ namespace MIDAS_BAT
 
             if( m_curIdx == 0 )
             {
-                this.Frame.Navigate(typeof(PreTestPage), m_testExec);
+                this.Frame.Navigate(typeof(ClockWiseFreeSpiralTestPage), m_testExec, new SuppressNavigationTransitionInfo());
                 return;
             }
 
@@ -172,6 +185,7 @@ namespace MIDAS_BAT
             inkCanvas.Width = bounds.Width;
             inkCanvas.Height = bounds.Height;
 
+            ClearInkData();
 
             if (m_testExec.ShowBorder)
             {
@@ -230,12 +244,12 @@ namespace MIDAS_BAT
                 return;
             }
 
-            await Util.CaptureInkCanvasForStroke(inkCanvas, borderCanvas, m_testExec, m_wordList[m_curIdx]);
-            await Util.CaptureInkCanvas(inkCanvas, borderCanvas, m_testExec, m_wordList[m_curIdx]);
+            await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, m_testExec, m_wordList[m_curIdx]);
+            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, null, m_testExec, m_wordList[m_curIdx]);
             
-            await m_saveUtil.saveStroke( inkCanvas);
-            await m_saveUtil.saveRawData( m_Times, inkCanvas );
-            m_saveUtil.saveResultIntoDB( m_Times, inkCanvas );
+            await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
+            await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, new List<DiffData>(), inkCanvas );
+            m_saveUtil.saveResultIntoDB(m_Times, inkCanvas );
 
             // index 증가
             if( AvailableToGoToNext() )

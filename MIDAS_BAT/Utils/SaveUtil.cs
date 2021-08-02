@@ -1,6 +1,13 @@
-﻿using Microsoft.Graphics.Canvas;
+﻿using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Drawing.Spreadsheet;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.Graphics.Canvas;
+using MIDAS_BAT.Data;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +18,7 @@ using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Input.Inking;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace MIDAS_BAT.Utils
 {
@@ -112,10 +120,10 @@ namespace MIDAS_BAT.Utils
             }
         }
 
-        public async Task<bool> saveStroke( InkCanvas inkCanvas )
+        public async Task<bool> saveStroke(int testOrder, string testName, InkCanvas inkCanvas)
         {
-            string file_name = TestExec.TesterId.ToString() + "_" + TestSetItem.Number.ToString() + ".gif";
-            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            string file_name = String.Format("{0}_{1}_{2}_{3}_canvas.gif", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(TestExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
             StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
             if (file == null)
@@ -140,14 +148,14 @@ namespace MIDAS_BAT.Utils
         }
 
 
-        public async Task<bool> saveRawData( List<double> times, InkCanvas inkCanvas )
+        public async Task<bool> saveRawData( int testOrder, string testName, List<double> times, List<DiffData> diffResults, InkCanvas inkCanvas )
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Encoding encoding = Encoding.GetEncoding("euc-kr");
 
             // pressure & time diff 저장...?
-            string file_name = TestExec.TesterId.ToString() + "_raw_time_" + TestSetItem.Number.ToString() + ".txt";
-            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            string file_name = String.Format("{0}_{1}_{2}_raw_time_{3}.txt", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(TestExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
             StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
             StringBuilder builder = new StringBuilder();
@@ -157,37 +165,39 @@ namespace MIDAS_BAT.Utils
             await FileIO.WriteTextAsync(file, builder.ToString());
 
             // 필기시간
-            file_name = TestExec.TesterId.ToString() + "_raw_time_" + TestSetItem.Number.ToString() + ".csv";
+            file_name = String.Format("{0}_{1}_{2}_raw_time_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
             StorageFile time_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
             IReadOnlyList<InkStroke> strokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             builder.Clear();
             builder.Append(TestSetItem.Word);
             builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
 
-            builder.AppendLine("Pressed(ms), Released(ms), Duration(ms), Transition(ms)");
+            builder.AppendLine("Index,Pressed(ms), Released(ms), Duration(ms), Transition(ms)");
             for( int i = 0; i < times.Count; i+=2 ) // 한 획당 2개씩 기록되어있어서... 
             {
+                builder.Append(String.Format("{0},", i + 1));
                 builder.Append((times[i] - times[0]).ToString("F3") + "," );
                 builder.Append((times[i+1] - times[0]).ToString("F3")  + "," );
                 builder.Append((times[i+1] - times[i]).ToString("F3")  + "," );
+               
                 if (i + 2 < times.Count )
                     builder.Append((times[i+2] - times[i+1]).ToString("F3")  + "," );
                 builder.AppendLine("");
             }
 
-
             byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
             await FileIO.WriteBytesAsync(time_file, fileBytes);
 
             // 필압
-            file_name = TestExec.TesterId.ToString() + "_raw_pressure_" + TestSetItem.Number.ToString() + ".csv";
+            file_name = String.Format("{0}_{1}_{2}_raw_pressure_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
             StorageFile pressure_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
             builder.Clear();
             builder.Append(TestSetItem.Word);
             builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
-            builder.AppendLine("총 획수,평균 필압,Raw값");
+            builder.AppendLine("Index,총 샘플링 수,평균 필압,Raw값");
             for (int i = 0; i < strokes.Count; ++i)
             {
+                builder.Append(String.Format("{0},", i + 1));
                 IReadOnlyList<InkStrokeRenderingSegment> segments = strokes[i].GetRenderingSegments();
                 builder.Append(segments.Count.ToString() + ", ");
 
@@ -205,11 +215,56 @@ namespace MIDAS_BAT.Utils
                 {
                     builder.Append(seg.Pressure.ToString("F6") + ", ");
                 }
+
                 builder.AppendLine("");
             }
 
             fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
             await FileIO.WriteBytesAsync(pressure_file, fileBytes);
+
+            // min / max
+            file_name = String.Format("{0}_{1}_{2}_minmax_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            StorageFile minmax_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+            builder.Clear();
+            builder.Append(TestSetItem.Word);
+            builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
+            builder.AppendLine("Index,Min X,Min Y,Max X,Max Y");
+            for (int i = 0; i < strokes.Count; ++i)
+            {
+                builder.Append(String.Format("{0},", i + 1));
+                // min x, min y, max x, max y
+                // (0,0) 이 좌상단이기에 보기 y축은 뒤집는다
+                // 그리고 pixel to cm로 바꾸도록 한다?
+                builder.Append(String.Format("{0},{1},{2},{3},",
+                    strokes[i].BoundingRect.X,
+                    strokes[i].BoundingRect.Y,
+                    strokes[i].BoundingRect.X + strokes[i].BoundingRect.Width,
+                    strokes[i].BoundingRect.Y + strokes[i].BoundingRect.Height));
+
+                builder.AppendLine("");
+            }
+
+            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            await FileIO.WriteBytesAsync(minmax_file, fileBytes);
+
+            // diff
+            file_name = String.Format("{0}_{1}_{2}_diff_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            StorageFile diff_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+            builder.Clear();
+            builder.Append(testName);
+            builder.AppendLine("Index,위치,템플릿X,템플릿Y,그린점X,그린점Y,거리차이");
+            for (int i = 0; i < diffResults.Count; ++i)
+            {
+                builder.Append(String.Format("{0},", i + 1));
+                builder.Append(String.Format("{0},{1},{2},", diffResults[i].name, diffResults[i].org.X, diffResults[i].org.Y));
+                if (diffResults[i].hasValue)
+                    builder.Append(String.Format("{0},{1},{2}", diffResults[i].drawn.X, diffResults[i].drawn.Y, diffResults[i].getDistance()));
+
+                builder.AppendLine("");
+            }
+
+            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            await FileIO.WriteBytesAsync(diff_file, fileBytes);
 
             return true;
         }
@@ -228,8 +283,8 @@ namespace MIDAS_BAT.Utils
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
             string file_name = TestExec.TesterId.ToString() + "_char_" + TestSetItem.Number.ToString() + ".gif";
-            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
-            StorageFile file = await storageFolder.CreateFileAsync(file_name, Windows.Storage.CreationCollisionOption.ReplaceExisting);
+            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(TestExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
             var displayInformation = DisplayInformation.GetForCurrentView();
             var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
@@ -257,7 +312,7 @@ namespace MIDAS_BAT.Utils
                     // 한프레임...?
                     using (var ds = rtb.CreateDrawingSession())
                     {
-                        ds.Clear(Colors.White);
+                        ds.Clear(Windows.UI.Colors.White);
                         ds.DrawInk(newStrokeList);
                     }
 
@@ -279,7 +334,7 @@ namespace MIDAS_BAT.Utils
 
             using (var ds = rtb.CreateDrawingSession())
             {
-                ds.Clear(Colors.White);
+                ds.Clear(Windows.UI.Colors.White);
                 ds.DrawInk(newStrokeList);
             }
 

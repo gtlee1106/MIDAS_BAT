@@ -1,4 +1,6 @@
-﻿using MIDAS_BAT.Utils;
+﻿using MIDAS_BAT.Data;
+using MIDAS_BAT.Pages;
+using MIDAS_BAT.Utils;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -25,6 +27,8 @@ namespace MIDAS_BAT
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
 
+        const string TEST_NAME = "preTest";
+        const int TEST_ORDER = 0;
         public PreTestPage()
         {
             this.InitializeComponent();
@@ -66,7 +70,7 @@ namespace MIDAS_BAT
                     m_testExec.TesterId + "_raw_pressure_0.csv"
                 };
 
-                StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+                StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(m_testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
                 foreach (var file_name in file_names)
                 {
                     var targetFile = await storageFolder.TryGetItemAsync(file_name);
@@ -86,7 +90,7 @@ namespace MIDAS_BAT
                 await nextHandling();
                 nextLock = false;
 
-                this.Frame.Navigate(typeof(TestPage), m_testExec);
+                this.Frame.Navigate(typeof(ClockWiseSpiralTestPage), m_testExec);
             }
         }
 
@@ -135,19 +139,21 @@ namespace MIDAS_BAT
         {
             TestUtil testUtil = TestUtil.Instance;
 
-            m_saveUtil.TestSetItem = new TestSetItem()
-            {
-                Id = 0,
-                Number = 0,
-                TestSetId = 0,
-                Word = "사전테스트"
-            };
+             TestSetItem testSetItem= new TestSetItem()
+             {
+                 Id = 0,
+                 Number = 0,
+                 TestSetId = 0,
+                 Word = "사전테스트"
+             };
 
-            await Util.CaptureInkCanvasForStroke_PreTest(inkCanvas, m_testExec);
-            await Util.CaptureInkCanva_PreTest(inkCanvas, m_testExec);
+            m_saveUtil.TestSetItem = testSetItem;
 
-            await m_saveUtil.saveStroke(inkCanvas);
-            await m_saveUtil.saveRawData(m_Times, inkCanvas);
+            await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, null, null, m_testExec, testSetItem);
+            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, null, null, null, m_testExec, testSetItem);
+
+            await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
+            await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, new List<DiffData>(), inkCanvas); ;
             m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
 
             //ResizeCanvas();
@@ -159,6 +165,5 @@ namespace MIDAS_BAT
             inkCanvas.InkPresenter.StrokeContainer.Clear();
             m_Times.Clear();
         }
-
     }
 }
