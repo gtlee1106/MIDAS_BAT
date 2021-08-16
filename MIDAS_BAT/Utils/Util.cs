@@ -352,6 +352,25 @@ namespace MIDAS_BAT
                     StorageFile pressureFile = await orgFolder.GetFileAsync(orgDiffName);
                     await pressureFile.CopyAsync(targetFolder, newDiffName, NameCollisionOption.ReplaceExisting);
                 }
+
+                // pngs
+                // 이건 몇 장이 될 지 알 수가 없어서...
+                List<string> fileTypeFilter = new List<string>();
+                fileTypeFilter.Add(".png");
+                var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, fileTypeFilter);
+
+                // Create query and retrieve files
+                var query = orgFolder.CreateFileQueryWithOptions(queryOptions);
+                IReadOnlyList<StorageFile> fileList = await query.GetFilesAsync();
+                string pngFileFormat = String.Format("{0}_{1}_{2}_stroke_", testerId, testNames[i, 0], 0);
+                foreach (StorageFile file in fileList)
+                {
+                    if (!file.Name.StartsWith(pngFileFormat))
+                        continue;
+
+                    string newPngName = file.Name.Replace(pngFileFormat, String.Format("{0}_{1}_획순_", testerName, testNames[i, 1]));
+                    await file.CopyAsync(targetFolder, newPngName, NameCollisionOption.ReplaceExisting);
+                }
             }
 
             string[] charTestNames = { String.Format("{0}_{1}", TestPage.TEST_ORDER, TestPage.TEST_NAME),
@@ -547,7 +566,7 @@ namespace MIDAS_BAT
                 if (orgLines != null)
                 {
                     for (int i = 0; i < orgLines.Count - 1; i++)
-                        ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Colors.Black, 2.0f);
+                        ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
                 }
 
                 ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
@@ -582,7 +601,7 @@ namespace MIDAS_BAT
                 if (orgLines != null)
                 {
                     for (int i = 0; i < orgLines.Count - 1; i++)
-                        ds.DrawLine(toVector(orgLines[i]), toVector(orgLines[i + 1]), Colors.Blue, 2.0f);
+                        ds.DrawLine(toVector(orgLines[i]), toVector(orgLines[i + 1]), Color.FromArgb(255, 73, 73, 73), 2.0f);
                 }
 
                 ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
@@ -685,7 +704,7 @@ namespace MIDAS_BAT
                 if( orgLines != null)
                 {
                     for( int i = 0; i < orgLines.Count - 1; i++)
-                        ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i+1].X, (float)orgLines[i + 1].Y, Colors.Black, 2.0f);
+                        ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i+1].X, (float)orgLines[i + 1].Y, Color.FromArgb(255,73,73,73), 2.0f);
                 }
 
                 
@@ -717,7 +736,7 @@ namespace MIDAS_BAT
                     if (orgLines != null)
                     {
                         for (int i = 0; i < orgLines.Count - 1; i++)
-                            ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Colors.Black, 2.0f);
+                            ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
                     }
                     ds.DrawInk(newStrokeList);
 
@@ -745,7 +764,7 @@ namespace MIDAS_BAT
                 if (orgLines != null)
                 {
                     for (int i = 0; i < orgLines.Count - 1; i++)
-                        ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Colors.Black, 2.0f);
+                        ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
                 }
                 ds.DrawInk(newStrokeList);
             }
@@ -785,7 +804,7 @@ namespace MIDAS_BAT
                     if (orgLines != null)
                     {
                         for (int i = 0; i < orgLines.Count - 1; i++)
-                            ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Colors.Black, 2.0f);
+                            ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
                     }
 
                     ds.DrawInk(newStrokeList);

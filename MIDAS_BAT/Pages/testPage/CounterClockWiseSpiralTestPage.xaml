@@ -24,9 +24,9 @@
                 RelativePanel.AlignVerticalCenterWithPanel="True"
                 >
                 <Polyline Name="polyline" 
+                          Stroke="#737373"
                           HorizontalAlignment="Center" 
                           VerticalAlignment="Center" 
-                          Stroke="{StaticResource ApplicationForegroundThemeBrush}" 
                           StrokeThickness="1" />
             </Grid>
             <InkCanvas 

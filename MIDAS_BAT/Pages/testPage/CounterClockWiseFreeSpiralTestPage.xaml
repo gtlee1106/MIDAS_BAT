@@ -27,8 +27,8 @@
                 <Ellipse Name="point" 
                          Height="5"
                          Width="5"
-                         Fill="Black"
-                         Stroke="Black"
+                         Fill="#737373"
+                         Stroke="#737373"
                          HorizontalAlignment="Center" 
                          VerticalAlignment="Center" 
                          StrokeThickness="1" />

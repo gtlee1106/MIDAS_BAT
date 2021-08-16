@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Foundation;
 using Windows.Graphics.Display;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -223,18 +224,32 @@ namespace MIDAS_BAT.Utils
             await FileIO.WriteBytesAsync(pressure_file, fileBytes);
 
             // min / max
+            // template은 1획밖에 없어서 하나만 쓴다. 
+            double templateMinX = 0.0;
+            double templateMinY = 0.0;
+            double templateMaxX = 0.0;
+            double templateMaxY = 0.0;
+            if ( diffResults.Count > 0)
+            {
+                templateMinX = diffResults.OrderByDescending(t => t.org.X).Last().org.X;
+                templateMinY = diffResults.OrderByDescending(t => t.org.Y).Last().org.Y;
+                templateMaxX = diffResults.OrderBy(t => t.org.X).Last().org.X;
+                templateMaxY = diffResults.OrderBy(t => t.org.Y).Last().org.Y;
+            }
+
             file_name = String.Format("{0}_{1}_{2}_minmax_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
             StorageFile minmax_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
             builder.Clear();
             builder.Append(TestSetItem.Word);
             builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
-            builder.AppendLine("Index,Min X,Min Y,Max X,Max Y");
+            builder.AppendLine("Index, 템플릿 Min X, 템플릿 Min Y, 템플릿 Max X, 템플릿 Max Y, Min X,Min Y,Max X,Max Y");
             for (int i = 0; i < strokes.Count; ++i)
             {
                 builder.Append(String.Format("{0},", i + 1));
+                // 탬플릿 쪽
+                builder.Append(String.Format("{0},{1},{2},{3},", templateMinX, templateMinY, templateMaxX, templateMaxY));
+
                 // min x, min y, max x, max y
-                // (0,0) 이 좌상단이기에 보기 y축은 뒤집는다
-                // 그리고 pixel to cm로 바꾸도록 한다?
                 builder.Append(String.Format("{0},{1},{2},{3},",
                     strokes[i].BoundingRect.X,
                     strokes[i].BoundingRect.Y,

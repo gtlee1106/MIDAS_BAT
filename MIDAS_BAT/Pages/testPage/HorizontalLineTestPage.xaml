@@ -33,7 +33,7 @@
                 >
                 <Line 
                     x:Name="horizontalLine"
-                    Stroke="Black"
+                    Stroke="#737373"
                     StrokeThickness="2"
                     X2="200"
                     RelativePanel.AlignHorizontalCenterWithPanel="True" 

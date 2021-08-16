@@ -32,7 +32,7 @@
                 >
                 <Line 
                     x:Name="verticalLine"
-                    Stroke="Black"
+                    Stroke="#737373"
                     StrokeThickness="2"
                     Y2="200"
                     RelativePanel.AlignHorizontalCenterWithPanel="True" 

@@ -27,7 +27,7 @@
                 <Polyline Name="polyline" 
                           HorizontalAlignment="Center" 
                           VerticalAlignment="Center" 
-                          Stroke="{StaticResource ApplicationForegroundThemeBrush}" 
+                          Stroke="#737373" 
                           StrokeThickness="1" />
             </Grid>
             <InkCanvas 
