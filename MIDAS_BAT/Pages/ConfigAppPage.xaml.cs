@@ -37,10 +37,10 @@ namespace MIDAS_BAT
 
             if (chkShowTargetWord != null)
                 chkShowTargetWord.IsChecked = AppConfig.Instance.ShowTargetWord;
-            if (chkUseHandWritingRecognition != null)
-                chkUseHandWritingRecognition.IsChecked = AppConfig.Instance.UseHandWritingRecognition;
-            if (chkUseJamoSeperation != null)
-                chkUseJamoSeperation.IsChecked = AppConfig.Instance.UseJamoSeperation;
+            //if (chkUseHandWritingRecognition != null)
+                //chkUseHandWritingRecognition.IsChecked = AppConfig.Instance.UseHandWritingRecognition;
+            //if (chkUseJamoSeperation != null)
+                //chkUseJamoSeperation.IsChecked = AppConfig.Instance.UseJamoSeperation;
             if (boxWidth != null)
                 boxWidth.Text = AppConfig.Instance.BoxWidth.ToString();
             if (boxHeight != null)
@@ -127,12 +127,12 @@ namespace MIDAS_BAT
 
         private void chkUseHandWritingRecognition_Click(object sender, RoutedEventArgs e)
         {
-            AppConfig.Instance.UseHandWritingRecognition = chkUseHandWritingRecognition.IsChecked;
+            //AppConfig.Instance.UseHandWritingRecognition = chkUseHandWritingRecognition.IsChecked;
         }
 
         private void chkUseJamoSeperation_Click(object sender, RoutedEventArgs e)
         {
-            AppConfig.Instance.UseJamoSeperation = chkUseJamoSeperation.IsChecked;
+            //AppConfig.Instance.UseJamoSeperation = chkUseJamoSeperation.IsChecked;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -46,6 +46,15 @@ namespace MIDAS_BAT
         public string SetName { get; set; }
 
         private bool? active;
+
+        public bool HorizontalLineTest { get; set; }
+        public bool VerticalLineTest { get; set; }
+        public bool CounterClockwiseSpiralTest { get; set; }
+        public bool ClockwiseSpiralTest { get; set; }
+        public bool CounterClockwiseFreeSpiralTest { get; set; }
+        public bool ClockwiseFreeSpiralTest { get; set; }
+        public bool TextWritingTest { get; set; }
+
         public Boolean? Active
         {
             get

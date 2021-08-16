@@ -16,6 +16,7 @@ using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Input.Inking;
 using Windows.UI.Input.Inking.Core;
+using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -101,7 +102,16 @@ namespace MIDAS_BAT.Pages
                 await nextHandling();
                 nextLock = false;
 
-                this.Frame.Navigate(typeof(VerticalLineTestPage), m_testExec, new SuppressNavigationTransitionInfo());
+                Type nextTest = Util.getNextTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
+                if (nextTest == null)
+                {
+                    await Util.ShowEndOfTestDlg();
+                    this.Frame.Navigate(typeof(MainPage));
+                }
+                else
+                {
+                    this.Frame.Navigate(nextTest, m_testExec, new SuppressNavigationTransitionInfo());
+                }
             }
         }
 
@@ -120,8 +130,9 @@ namespace MIDAS_BAT.Pages
         }
         private async void prevBtn_Click(object sender, RoutedEventArgs e)
         {
-            await Util.ShowCannotGoBackAlertDlg();
-
+            Type prevTest = Util.getPrevTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
+            if(prevTest == null)
+                await Util.ShowCannotGoBackAlertDlg();
         }
         /////// end of events ////////
 
@@ -134,7 +145,7 @@ namespace MIDAS_BAT.Pages
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
 
             // 12cm 
-            int lineWidth = (int)(di.RawDpiX * (120.0f / 25.4f) / (float)di.RawPixelsPerViewPixel);
+            double lineWidth = Util.mmToPixels(120.0);
 
             inkCanvas.Width = bounds.Width;
             inkCanvas.Height = bounds.Height;
@@ -161,7 +172,7 @@ namespace MIDAS_BAT.Pages
             Point orgPoint = ttv.TransformPoint(new Point(horizontalLine.X1, horizontalLine.Y1));
 
             DisplayInformation di = DisplayInformation.GetForCurrentView();
-            double unit = (int)(di.RawDpiX * (10.0f / 25.4f) / (float)di.RawPixelsPerViewPixel);
+            double unit = Util.mmToPixels(10.0);
 
             // 12 + 1 개의 포인트를 구해서 거리를 본다?
             IReadOnlyList<InkStroke> strokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();

@@ -49,13 +49,15 @@ namespace MIDAS_BAT
             foreach( var item in list)
             {
                 Tester tester = dbManager.GetTester(item.TesterId);
-                string testerStr = tester.Name + "(" + tester.Gender + ", " + tester.birthday + ")";
                 string execDatetime = item.Datetime.Substring(0, 4) + "." +
                                       item.Datetime.Substring(4, 2) + "." +
                                       item.Datetime.Substring(6, 2) + " " +
                                       item.Datetime.Substring(9, 2) + ":" +
                                       item.Datetime.Substring(11, 2) + ":" +
                                       item.Datetime.Substring(13, 2);
+
+                string testerStr = String.Format("{0}({1}, {2}, 만 {3}세, 교육년수 {4}년)", tester.Name, tester.Gender, tester.birthday,
+                    Util.calculateAge(tester.birthday, item.Datetime), Util.calculateEducation(tester.Education));
 
                 TestExecData data = new TestExecData()
                 {

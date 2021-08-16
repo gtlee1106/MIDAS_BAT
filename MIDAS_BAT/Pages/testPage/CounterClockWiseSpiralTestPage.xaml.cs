@@ -98,7 +98,16 @@ namespace MIDAS_BAT.Pages
                 await nextHandling();
                 nextLock = false;
 
-                this.Frame.Navigate(typeof(ClockWiseSpiralTestPage), m_testExec, new SuppressNavigationTransitionInfo());
+                Type nextTest = Util.getNextTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
+                if (nextTest == null)
+                {
+                    await Util.ShowEndOfTestDlg();
+                    this.Frame.Navigate(typeof(MainPage));
+                }
+                else
+                {
+                    this.Frame.Navigate(nextTest, m_testExec, new SuppressNavigationTransitionInfo());
+                }
             }
         }
 
@@ -117,12 +126,17 @@ namespace MIDAS_BAT.Pages
         }
         private async void prevBtn_Click(object sender, RoutedEventArgs e)
         {
-            bool goBack = await Util.ShowGoBackAlertDlg();
-            if (!goBack)
-                return;
+            Type prevTest = Util.getPrevTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
+            if (prevTest == null)
+                await Util.ShowCannotGoBackAlertDlg();
+            else
+            {
+                bool goBack = await Util.ShowGoBackAlertDlg();
+                if (!goBack)
+                    return;
 
-            this.Frame.Navigate(typeof(VerticalLineTestPage), m_testExec, new SuppressNavigationTransitionInfo());
-
+                this.Frame.Navigate(prevTest, m_testExec, new SuppressNavigationTransitionInfo());
+            }
         }
         /////// end of events ////////
 
@@ -131,7 +145,6 @@ namespace MIDAS_BAT.Pages
             title.Text = TEST_NAME_KR;
 
             // ui setup
-            DisplayInformation di = DisplayInformation.GetForCurrentView();
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             
             inkCanvas.Width = bounds.Width;
@@ -145,7 +158,7 @@ namespace MIDAS_BAT.Pages
             polyline.StrokeThickness = 2;
 
             // original line
-            int radiusStep = (int)(di.RawDpiX * (15.0f / 25.4f) / (float)di.RawPixelsPerViewPixel);
+            double radiusStep = Util.mmToPixels(15.0f);
             m_orgLines = Util.generateClockWiseSpiralPoints(new Point(bounds.Width / 2, bounds.Height / 2), radiusStep * 8, true);
             foreach (var pt in m_orgLines)
                 this.polyline.Points.Add(pt);
@@ -157,9 +170,8 @@ namespace MIDAS_BAT.Pages
         {
             List<DiffData> results = new List<DiffData>();
 
-            DisplayInformation di = DisplayInformation.GetForCurrentView();
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
-            int radiusStep = (int)(di.RawDpiX * (15.0f / 25.4f) / (float)di.RawPixelsPerViewPixel);
+            double radiusStep = Util.mmToPixels(15.0f);
 
             Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
             for (int angle = 0; angle < 360; angle += 10)

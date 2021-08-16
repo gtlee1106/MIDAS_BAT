@@ -98,7 +98,16 @@ namespace MIDAS_BAT.Pages
                 await nextHandling();
                 nextLock = false;
 
-                this.Frame.Navigate(typeof(TestPage), m_testExec, new SuppressNavigationTransitionInfo());
+                Type nextTest = Util.getNextTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
+                if (nextTest == null)
+                {
+                    await Util.ShowEndOfTestDlg();
+                    this.Frame.Navigate(typeof(MainPage));
+                }
+                else
+                {
+                    this.Frame.Navigate(nextTest, m_testExec, new SuppressNavigationTransitionInfo());
+                }
             }
         }
 
@@ -117,25 +126,28 @@ namespace MIDAS_BAT.Pages
         }
         private async void prevBtn_Click(object sender, RoutedEventArgs e)
         {
-            bool goBack = await Util.ShowGoBackAlertDlg();
-            if (!goBack)
-                return;
+            Type prevTest = Util.getPrevTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
+            if (prevTest == null)
+                await Util.ShowCannotGoBackAlertDlg();
+            else
+            {
+                bool goBack = await Util.ShowGoBackAlertDlg();
+                if (!goBack)
+                    return;
 
-            this.Frame.Navigate(typeof(CounterClockWiseFreeSpiralTestPage), m_testExec, new SuppressNavigationTransitionInfo());
+                this.Frame.Navigate(prevTest, m_testExec, new SuppressNavigationTransitionInfo());
+            }
         }
         /////// end of events ////////
 
         private void ResizeCanvas()
         {
             title.Text = TEST_NAME_KR;
-            // ui setup
-            DisplayInformation di = DisplayInformation.GetForCurrentView();
-            var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
-            var scaleFactor = DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
 
-            // 5cm 고정이긴한데.... 어쩔까 ㅋㅋㅋ
-            int width = (int)(di.RawDpiX * (1.0f / 25.4f) / (float)di.RawPixelsPerViewPixel);
-            int height = (int)(di.RawDpiY * (1.0f / 25.4f) / (float)di.RawPixelsPerViewPixel);
+            var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+
+            double width = Util.mmToPixels(1.0f);
+            double height = Util.mmToPixels(1.0f);
             point.Width = width;
             point.Height = height;
 
@@ -241,27 +253,27 @@ namespace MIDAS_BAT.Pages
             m_saveUtil.TestSetItem = testSetItem;
 
             List<DiffData> diffResults = null;
-            // 이 가정은 맞는 것일까? stroke 무조건 1개만 들어온다
+            // stroke 가 없는 경우 무시하도록 하고... 
             IReadOnlyList<InkStroke> strokeList = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             if(strokeList.Count > 0)
             {
                 var ttv = point.TransformToVisual(Window.Current.Content);
                 Point centerPt = ttv.TransformPoint(new Point(0, 0));
-                m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, strokeList[0].BoundingRect.Width, false);
+
+                Rect bbox;
+                foreach (var stroke in strokeList)
+                    bbox.Union(stroke.BoundingRect);
+
+                m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Width, false);
                 diffResults = calculateDifference(strokeList[0].BoundingRect.Width/8);
+
+                await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_testExec, testSetItem);
+                await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, diffResults, m_testExec, testSetItem);
+
+                await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
+                await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, diffResults, inkCanvas);
+                m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
             }
-
-            
-
-            await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_testExec, testSetItem);
-            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, diffResults, m_testExec, testSetItem);
-
-            await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
-            await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, diffResults, inkCanvas);
-            m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
-
-            //ResizeCanvas();
-            //ClearInkData();
         }
 
         private void ClearInkData()

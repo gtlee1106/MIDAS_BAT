@@ -94,9 +94,7 @@ namespace MIDAS_BAT
             };
             dbManager.InsertTestExec(testExec);
 
-            //this.Frame.Navigate(typeof(TestPage), testExec);
-            //this.Frame.Navigate(typeof(PreTestPage), testExec);
-            this.Frame.Navigate(typeof(HorizontalLineTestPage), testExec, new SuppressNavigationTransitionInfo());
+            this.Frame.Navigate(Util.getNextTest(testSet, -1), testExec, new SuppressNavigationTransitionInfo());
         }
 
         private void backBtn_Click(object sender, RoutedEventArgs e)

@@ -56,6 +56,15 @@ namespace MIDAS_BAT
             return true;
         }
 
+        public static async Task<bool> ShowEndOfTestDlg()
+        {
+            var dialog = new MessageDialog("검사가 끝났습니다. 수고하셨습니다.");
+            await dialog.ShowAsync();
+            return true;
+        }
+
+
+
 
         public static async Task<bool> ShowWrongWritingAlertDlg()
         {
@@ -118,6 +127,73 @@ namespace MIDAS_BAT
             }
             return null;
         }
+
+        public static Type getNextTest(TestSet testSet, int curTestOrder)
+        {
+            bool[] testOrder =
+            {
+                testSet.HorizontalLineTest,
+                testSet.VerticalLineTest,
+                testSet.CounterClockwiseSpiralTest,
+                testSet.ClockwiseSpiralTest,
+                testSet.CounterClockwiseFreeSpiralTest,
+                testSet.ClockwiseFreeSpiralTest,
+                testSet.TextWritingTest
+            };
+
+            Type[] testType =
+            {
+                typeof(HorizontalLineTestPage),
+                typeof(VerticalLineTestPage),
+                typeof(CounterClockWiseSpiralTestPage),
+                typeof(ClockWiseSpiralTestPage),
+                typeof(CounterClockWiseFreeSpiralTestPage),
+                typeof(ClockWiseFreeSpiralTestPage),
+                typeof(TestPage)
+            };
+
+            for(int i = curTestOrder+1; i < testOrder.Length; i++)
+            {
+                if (testOrder[i])
+                    return testType[i];
+            }
+
+            return null;
+        }
+
+        public static Type getPrevTest(TestSet testSet, int curTestOrder)
+        {
+            bool[] testOrder =
+            {
+                testSet.HorizontalLineTest,
+                testSet.VerticalLineTest,
+                testSet.CounterClockwiseSpiralTest,
+                testSet.ClockwiseSpiralTest,
+                testSet.CounterClockwiseFreeSpiralTest,
+                testSet.ClockwiseFreeSpiralTest,
+                testSet.TextWritingTest
+            };
+
+            Type[] testType =
+            {
+                typeof(HorizontalLineTestPage),
+                typeof(VerticalLineTestPage),
+                typeof(CounterClockWiseSpiralTestPage),
+                typeof(ClockWiseSpiralTestPage),
+                typeof(CounterClockWiseFreeSpiralTestPage),
+                typeof(ClockWiseFreeSpiralTestPage),
+                typeof(TestPage)
+            };
+
+            for (int i = curTestOrder - 1; i >= 0; i--)
+            {
+                if (testOrder[i])
+                    return testType[i];
+            }
+
+            return null;
+        }
+
 
         public static async Task<bool> SaveResults(List<int> testExecList)
         {
@@ -883,6 +959,71 @@ namespace MIDAS_BAT
         public static double getDistance(Point a, Point b)
         {
             return Math.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
+        }
+
+        public static double mmToPixels(double mm)
+        {
+            DisplayInformation di = DisplayInformation.GetForCurrentView();
+            // 1 inch == 25.4 mm
+            return di.RawDpiX * (mm / 25.4f) / di.RawPixelsPerViewPixel;
+        }
+
+        public static int calculateAge(string birthDate, string execDate)
+        {
+            var birthYear = Int32.Parse(birthDate.Substring(0, 4));
+            var birthMonth = Int32.Parse(birthDate.Substring(4, 2));
+            var birthDay = Int32.Parse(birthDate.Substring(6, 2));
+
+            var execYear = Int32.Parse(execDate.Substring(0, 4));
+            var execMonth = Int32.Parse(execDate.Substring(4, 2));
+            var execDay = Int32.Parse(execDate.Substring(6, 2));
+
+
+            int age = execYear - birthYear;
+            if ((execMonth < birthMonth)
+                || (execMonth == birthMonth && execDay < birthDay))
+                age -= 1;
+
+            return age;
+        }
+
+        public static int calculateEducation(string education)
+        {
+            int edu = 0;
+            if( education.StartsWith("초등학교 졸업"))
+            {
+                edu = 6;
+            }
+            else if(education.StartsWith("중학교 졸업"))
+            {
+                edu = 9;
+            }
+            else if (education.StartsWith("고등학교 졸업"))
+            {
+                edu = 12;
+            }
+            else if (education.StartsWith("대학교 이상 졸업"))
+            {
+                edu = 16;
+            }
+            else if (education.StartsWith("초등학교 중퇴"))
+            {
+                edu = Int32.Parse(education.Substring(8, 1));
+            }
+            else if (education.StartsWith("중학교 중퇴"))
+            {
+                edu = 6 + Int32.Parse(education.Substring(7, 1));
+            }
+            else if (education.StartsWith("고등학교 중퇴"))
+            {
+                edu = 9 + Int32.Parse(education.Substring(8, 1));
+            }
+            else if (education.StartsWith("대학교 이상 중퇴"))
+            {
+                edu = 12 + Int32.Parse(education.Substring(10, 1));
+            }
+
+            return edu;
         }
     }
 

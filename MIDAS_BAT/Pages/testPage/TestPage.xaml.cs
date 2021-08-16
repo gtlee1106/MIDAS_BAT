@@ -138,8 +138,13 @@ namespace MIDAS_BAT
 
             if( m_curIdx == 0 )
             {
-                this.Frame.Navigate(typeof(ClockWiseFreeSpiralTestPage), m_testExec, new SuppressNavigationTransitionInfo());
-                return;
+                Type prevTest = Util.getPrevTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
+                if (prevTest == null)
+                    await Util.ShowCannotGoBackAlertDlg();
+                else
+                {
+                    this.Frame.Navigate(prevTest, m_testExec, new SuppressNavigationTransitionInfo());
+                }
             }
 
             m_curIdx--;
