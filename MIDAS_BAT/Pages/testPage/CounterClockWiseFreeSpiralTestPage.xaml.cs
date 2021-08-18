@@ -38,7 +38,7 @@ namespace MIDAS_BAT.Pages
         List<double> m_Times = new List<double>();
 
         // original line
-        List<Point> m_orgLines = new List<Point>();
+        List<List<Point>> m_orgLines = new List<List<Point>>();
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
 
@@ -163,10 +163,16 @@ namespace MIDAS_BAT.Pages
         private List<DiffData> calculateDifference(double radiusStep)
         {
             List<DiffData> results = new List<DiffData>();
-
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
 
             Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
+
+
+
+
+            /*
+
+
             for (int angle = 0; angle < 360; angle += 10)
             {
                 Point center = orgCenter;
@@ -234,6 +240,7 @@ namespace MIDAS_BAT.Pages
                     }
                 }
             }
+            */
 
             return results;
         }
@@ -266,7 +273,7 @@ namespace MIDAS_BAT.Pages
                 foreach(var stroke in strokeList)
                     bbox.Union(stroke.BoundingRect);
 
-                m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Width, true);
+                m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Width, 4, true);
 
                 diffResults = calculateDifference(strokeList[0].BoundingRect.Width/8);
 

@@ -547,7 +547,7 @@ namespace MIDAS_BAT
             return true;
         }
 
-        public static async Task<bool> CaptureInkCanvas(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<Point> orgLines, List<DiffData> diffResults, TestExec testExec, TestSetItem setItem)
+        public static async Task<bool> CaptureInkCanvas(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<DiffData> diffResults, TestExec testExec, TestSetItem setItem)
         {
             string file_name = String.Format("{0}_{1}_{2}_{3}_last.png", testExec.TesterId, testOrder, testName, setItem.Number);
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
@@ -565,8 +565,12 @@ namespace MIDAS_BAT
                 ds.Clear(Colors.White);
                 if (orgLines != null)
                 {
-                    for (int i = 0; i < orgLines.Count - 1; i++)
-                        ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
+                    foreach(var points in orgLines)
+                    {
+                        for (int i = 0; i < points.Count - 1; i++)
+                            ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
+                    }
+                    
                 }
 
                 ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
@@ -600,8 +604,11 @@ namespace MIDAS_BAT
                 ds.Clear(Colors.White);
                 if (orgLines != null)
                 {
-                    for (int i = 0; i < orgLines.Count - 1; i++)
-                        ds.DrawLine(toVector(orgLines[i]), toVector(orgLines[i + 1]), Color.FromArgb(255, 73, 73, 73), 2.0f);
+                    foreach(var points in orgLines) 
+                    {
+                        for (int i = 0; i < points.Count - 1; i++)
+                            ds.DrawLine(toVector(points[i]), toVector(points[i + 1]), Color.FromArgb(255, 73, 73, 73), 2.0f);
+                    }
                 }
 
                 ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
@@ -670,7 +677,7 @@ namespace MIDAS_BAT
             return new Vector2((float)p.X, (float)p.Y);
         }
 
-        public static async Task<bool> CaptureInkCanvasForStroke(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<Point> orgLines, TestExec testExec, TestSetItem setItem)
+        public static async Task<bool> CaptureInkCanvasForStroke(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, TestExec testExec, TestSetItem setItem)
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
             string file_name = String.Format("{0}_{1}_{2}_{3}.gif", testExec.TesterId, testOrder, testName, setItem.Number);
@@ -703,8 +710,12 @@ namespace MIDAS_BAT
                 ds.Clear(Colors.White);
                 if( orgLines != null)
                 {
-                    for( int i = 0; i < orgLines.Count - 1; i++)
-                        ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i+1].X, (float)orgLines[i + 1].Y, Color.FromArgb(255,73,73,73), 2.0f);
+                    foreach(var points in orgLines)
+                    {
+                        for (int i = 0; i < points.Count - 1; i++)
+                            ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
+                    }
+                    
                 }
 
                 
@@ -735,8 +746,11 @@ namespace MIDAS_BAT
                     ds.Clear(Colors.White);
                     if (orgLines != null)
                     {
-                        for (int i = 0; i < orgLines.Count - 1; i++)
-                            ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
+                        foreach(var points in orgLines)
+                        {
+                            for (int i = 0; i < points.Count - 1; i++)
+                                ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
+                        }
                     }
                     ds.DrawInk(newStrokeList);
 
@@ -763,9 +777,12 @@ namespace MIDAS_BAT
                 ds.Clear(Colors.White);
                 if (orgLines != null)
                 {
-                    for (int i = 0; i < orgLines.Count - 1; i++)
-                        ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
-                }
+                    foreach(var points in orgLines)
+                    {
+                        for (int i = 0; i < points.Count - 1; i++)
+                            ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
+                    }
+                                    }
                 ds.DrawInk(newStrokeList);
             }
 
@@ -803,8 +820,11 @@ namespace MIDAS_BAT
                     ds.Clear(Colors.White);
                     if (orgLines != null)
                     {
-                        for (int i = 0; i < orgLines.Count - 1; i++)
-                            ds.DrawLine((float)orgLines[i].X, (float)orgLines[i].Y, (float)orgLines[i + 1].X, (float)orgLines[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
+                        foreach(var points in orgLines)
+                        {
+                            for (int i = 0; i < points.Count - 1; i++)
+                                ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
+                        }
                     }
 
                     ds.DrawInk(newStrokeList);
@@ -913,9 +933,9 @@ namespace MIDAS_BAT
             }
         }
 
-        public static List<Point> generateClockWiseSpiralPoints(Point startPt, double totalRadius, bool counterClockWise)
+        public static List<List<Point>> generateClockWiseSpiralPoints(Point startPt, double totalRadius, int cycleCount, bool counterClockWise)
         {
-            List<Point> points = new List<Point>();
+            List<List<Point>> totalPoints = new List<List<Point>>();
 
             double radius2 = totalRadius / 8;
             double radius1 = radius2 / 2;
@@ -924,8 +944,9 @@ namespace MIDAS_BAT
             if (counterClockWise)
             {
                 Point start2Pt = new Point(startPt.X - radius1, startPt.Y);
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < cycleCount; i++)
                 {
+                    List<Point> points = new List<Point>();
                     for (double angle = 0; angle >= -180; angle -= 0.5)
                     {
                         double radian = Math.PI * angle / 180;
@@ -943,13 +964,16 @@ namespace MIDAS_BAT
                         points.Add(new Point(x, y));
                     }
                     radius2 += radiusStep;
+
+                    totalPoints.Add(points);
                 }
             }
             else
             {
                 Point start2Pt = new Point(startPt.X + radius1, startPt.Y);
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < cycleCount; i++)
                 {
+                    List<Point> points = new List<Point>();
                     for (double angle = 180; angle <= 360; angle += 0.5)
                     {
                         double radian = Math.PI * angle / 180;
@@ -968,11 +992,11 @@ namespace MIDAS_BAT
                     }
                     radius2 += radiusStep;
 
+                    totalPoints.Add(points);
                 }
             }
-            
 
-            return points;
+            return totalPoints;
         }
 
         public static double getDistance(Point a, Point b)
@@ -1043,6 +1067,44 @@ namespace MIDAS_BAT
             }
 
             return edu;
+        }
+
+        public static List<List<InkStrokeRenderingSegment>> splitStrokes(Point orgCenter, IReadOnlyList<InkStroke> strokeList)
+        {
+            List<List<InkStrokeRenderingSegment>> strokeSplits = new List<List<InkStrokeRenderingSegment>>();
+
+            List<InkStrokeRenderingSegment> strokeSplit = new List<InkStrokeRenderingSegment>();
+            double prevDegree = 0.0;
+            foreach (var stroke in strokeList)
+            {
+                IReadOnlyList<InkStrokeRenderingSegment> segments = stroke.GetRenderingSegments();
+                foreach (var segment in segments)
+                {
+                    double x = segment.Position.X - orgCenter.X;
+                    double y = orgCenter.Y - segment.Position.Y; // 헷갈려서 반전해서 계산
+
+                    double dist = Math.Sqrt(x * x + y * y);
+
+                    double degree = Math.Acos(x / dist) * 180 / Math.PI;
+                    if (y < 0)
+                        degree = 360 - degree;
+
+                    if (prevDegree > 270 && degree - prevDegree <= 0)
+                    {
+                        strokeSplits.Add(strokeSplit);
+                        strokeSplit = new List<InkStrokeRenderingSegment>();
+                    }
+
+                    strokeSplit.Add(segment);
+                    prevDegree = degree;
+                }
+            }
+            strokeSplits.Add(strokeSplit);
+
+            // 적은 개수의 친구는 merge 를 해야되나? 
+            // 우선은 놔둔다...? 
+
+            return strokeSplits;
         }
     }
 

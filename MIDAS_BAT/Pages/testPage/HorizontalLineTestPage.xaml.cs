@@ -42,7 +42,7 @@ namespace MIDAS_BAT.Pages
         List<double> m_Times = new List<double>();
 
         // original line
-        List<Point> m_orgLines = new List<Point>();
+        List<List<Point>> m_orgLines = new List<List<Point>>();
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
         public static string TEST_NAME = "horizontalLineTest";
@@ -228,8 +228,10 @@ namespace MIDAS_BAT.Pages
             var ttv = horizontalLine.TransformToVisual(Window.Current.Content);
 
             m_orgLines.Clear();
-            m_orgLines.Add(ttv.TransformPoint(new Point(horizontalLine.X1, horizontalLine.Y1)));
-            m_orgLines.Add(ttv.TransformPoint(new Point(horizontalLine.X2, horizontalLine.Y2)));
+            List<Point> points = new List<Point>();
+            points.Add(ttv.TransformPoint(new Point(horizontalLine.X1, horizontalLine.Y1)));
+            points.Add(ttv.TransformPoint(new Point(horizontalLine.X2, horizontalLine.Y2)));
+            m_orgLines.Add(points);
 
             List<DiffData> diffResults = calculateDifference();
 

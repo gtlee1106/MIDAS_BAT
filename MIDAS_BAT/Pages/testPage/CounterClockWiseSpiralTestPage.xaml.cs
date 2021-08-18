@@ -37,10 +37,12 @@ namespace MIDAS_BAT.Pages
         // 획 시작 - 끝 시간 기록
         List<double> m_Times = new List<double>();
 
+        List<TImePoint> m_TImePoints = new List<TImePoint>();
+
         SaveUtil m_saveUtil = SaveUtil.Instance;
 
         // original line
-        List<Point> m_orgLines = new List<Point>();
+        List<List<Point>> m_orgLines = new List<List<Point>>();
 
         public static string TEST_NAME = "counterClockwiseSpiralTest";
         public static string TEST_NAME_KR = "나선 따라그리기(반시계방향)";
@@ -54,6 +56,7 @@ namespace MIDAS_BAT.Pages
 
             CoreInkIndependentInputSource core = CoreInkIndependentInputSource.Create(inkCanvas.InkPresenter);
             core.PointerPressing += Core_PointerPressing;
+            core.PointerMoving += Core_PointerMoving;
             core.PointerReleasing += Core_PointerReleasing;
         }
 
@@ -65,6 +68,10 @@ namespace MIDAS_BAT.Pages
         private void Core_PointerPressing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
             m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+        }
+        private void Core_PointerMoving(CoreInkIndependentInputSource sender, PointerEventArgs args)
+        {
+            m_TImePoints.Add(new TImePoint((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond, args.CurrentPoint.Position));
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -159,9 +166,13 @@ namespace MIDAS_BAT.Pages
 
             // original line
             double radiusStep = Util.mmToPixels(15.0f);
-            m_orgLines = Util.generateClockWiseSpiralPoints(new Point(bounds.Width / 2, bounds.Height / 2), radiusStep * 8, true);
-            foreach (var pt in m_orgLines)
-                this.polyline.Points.Add(pt);
+            m_orgLines = Util.generateClockWiseSpiralPoints(new Point(bounds.Width / 2, bounds.Height / 2), radiusStep * 8, 4, true);
+            foreach (var points in m_orgLines)
+            {
+                foreach(var point in points)
+                    this.polyline.Points.Add(point);
+            }
+                
 
             ClearInkData();
         }
@@ -170,6 +181,7 @@ namespace MIDAS_BAT.Pages
         {
             List<DiffData> results = new List<DiffData>();
 
+            /*
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             double radiusStep = Util.mmToPixels(15.0f);
 
@@ -240,6 +252,24 @@ namespace MIDAS_BAT.Pages
                     }
                 }
             }
+            */
+
+            return results;
+        }
+
+        private List<DiffData> calculateDifference2()
+        {
+            List<DiffData> results = new List<DiffData>();
+
+            var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+            double radiusStep = Util.mmToPixels(15.0f);
+            Point orgCenter = new Point(bounds.Width / 2 - radiusStep / 2, bounds.Height / 2);
+
+            IReadOnlyList<InkStroke> strokeList = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+            List<List<InkStrokeRenderingSegment>> strokeSplits = Util.splitStrokes(orgCenter, strokeList);
+
+            // templateSplits도 필요함. 또는 음... 
+            
 
             return results;
         }
@@ -247,7 +277,6 @@ namespace MIDAS_BAT.Pages
         private async Task nextHandling()
         {
             TestUtil testUtil = TestUtil.Instance;
-
 
             TestSetItem testSetItem = new TestSetItem()
             {
@@ -260,6 +289,8 @@ namespace MIDAS_BAT.Pages
             m_saveUtil.TestSetItem = testSetItem;
 
             List<DiffData> diffResults = calculateDifference();
+
+            calculateDifference2();
 
             await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_testExec, testSetItem);
             await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, diffResults, m_testExec, testSetItem);

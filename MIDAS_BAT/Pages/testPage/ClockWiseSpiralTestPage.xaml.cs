@@ -38,7 +38,7 @@ namespace MIDAS_BAT.Pages
         List<double> m_Times = new List<double>();
 
         // original line
-        List<Point> m_orgLines = new List<Point>();
+        List<List<Point>> m_orgLines = new List<List<Point>>();
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
 
@@ -165,15 +165,19 @@ namespace MIDAS_BAT.Pages
             ClearInkData();
 
             double radiusStep = Util.mmToPixels(15.0);
-            m_orgLines = Util.generateClockWiseSpiralPoints(new Point(bounds.Width / 2, bounds.Height / 2), radiusStep * 8, false);
-            foreach(var pt in m_orgLines)
-                this.polyline.Points.Add(pt);
+            m_orgLines = Util.generateClockWiseSpiralPoints(new Point(bounds.Width / 2, bounds.Height / 2), radiusStep * 8, 4, false);
+            foreach(var points in m_orgLines)
+            {
+                foreach(var point in points)
+                    this.polyline.Points.Add(point);
+            }
         }
 
         private List<DiffData> calculateDifference()
         {
             List<DiffData> results = new List<DiffData>();
 
+            /*
             DisplayInformation di = DisplayInformation.GetForCurrentView();
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             double radiusStep = Util.mmToPixels(15.0);
@@ -246,6 +250,7 @@ namespace MIDAS_BAT.Pages
                     }
                 }
             }
+            */
 
             return results;
         }

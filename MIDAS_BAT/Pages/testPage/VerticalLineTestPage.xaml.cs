@@ -38,7 +38,7 @@ namespace MIDAS_BAT.Pages
         List<double> m_Times = new List<double>();
 
         // original line
-        List<Point> m_orgLines = new List<Point>();
+        List<List<Point>> m_orgLines = new List<List<Point>>();
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
 
@@ -230,8 +230,11 @@ namespace MIDAS_BAT.Pages
             // original line을 계산해둔다
             var ttv = verticalLine.TransformToVisual(Window.Current.Content);
             m_orgLines.Clear();
-            m_orgLines.Add(ttv.TransformPoint(new Point(verticalLine.X1, verticalLine.Y1)));
-            m_orgLines.Add(ttv.TransformPoint(new Point(verticalLine.X2, verticalLine.Y2)));
+
+            List<Point> points = new List<Point>();
+            points.Add(ttv.TransformPoint(new Point(verticalLine.X1, verticalLine.Y1)));
+            points.Add(ttv.TransformPoint(new Point(verticalLine.X2, verticalLine.Y2)));
+            m_orgLines.Add(points);
 
             List<DiffData> diffResults = calculateDifference();
 

@@ -107,6 +107,7 @@
     <Compile Include="Data\DiffData.cs" />
     <Compile Include="Data\TestModelList.cs" />
     <Compile Include="Data\TestModel.cs" />
+    <Compile Include="Data\TImePoint.cs" />
     <Compile Include="Pages\testPage\ClockWiseFreeSpiralTestPage.xaml.cs">
       <DependentUpon>ClockWiseFreeSpiralTestPage.xaml</DependentUpon>
     </Compile>

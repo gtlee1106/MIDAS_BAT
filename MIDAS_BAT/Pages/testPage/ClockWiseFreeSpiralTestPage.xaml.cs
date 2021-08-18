@@ -38,7 +38,7 @@ namespace MIDAS_BAT.Pages
         List<double> m_Times = new List<double>();
 
         // original line
-        List<Point> m_orgLines = new List<Point>();
+        List<List<Point>> m_orgLines = new List<List<Point>>();
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
 
@@ -164,6 +164,7 @@ namespace MIDAS_BAT.Pages
         {
             List<DiffData> results = new List<DiffData>();
 
+            /*
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
 
             Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
@@ -234,6 +235,7 @@ namespace MIDAS_BAT.Pages
                     }
                 }
             }
+            */
 
             return results;
         }
@@ -264,7 +266,7 @@ namespace MIDAS_BAT.Pages
                 foreach (var stroke in strokeList)
                     bbox.Union(stroke.BoundingRect);
 
-                m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Width, false);
+                m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Width, 4, false);
                 diffResults = calculateDifference(strokeList[0].BoundingRect.Width/8);
 
                 await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_testExec, testSetItem);
