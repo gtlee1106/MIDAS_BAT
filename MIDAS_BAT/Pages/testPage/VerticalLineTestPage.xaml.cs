@@ -39,6 +39,7 @@ namespace MIDAS_BAT.Pages
 
         // original line
         List<List<Point>> m_orgLines = new List<List<Point>>();
+        List<List<BATPoint>> m_drawLines = new List<List<BATPoint>>();
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
 
@@ -55,17 +56,33 @@ namespace MIDAS_BAT.Pages
 
             CoreInkIndependentInputSource core = CoreInkIndependentInputSource.Create(inkCanvas.InkPresenter);
             core.PointerPressing += Core_PointerPressing;
+            core.PointerMoving += Core_PointerMoving;
             core.PointerReleasing += Core_PointerReleasing;
         }
 
         private void Core_PointerReleasing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
             m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+            if (m_drawLines.Count() > 0)
+            {
+                BATPoint point = new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp);
+                point.isEnd = true;
+                m_drawLines.Last().Add(point);
+            }
+        }
+        private void Core_PointerMoving(CoreInkIndependentInputSource sender, PointerEventArgs args)
+        {
+            m_drawLines.Last().Add(new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp));
         }
 
         private void Core_PointerPressing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
             m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+
+            // 최초의 point 
+            List<BATPoint> list = new List<BATPoint>();
+            list.Add(new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp));
+            m_drawLines.Add(list);
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -238,8 +255,8 @@ namespace MIDAS_BAT.Pages
 
             List<DiffData> diffResults = calculateDifference();
 
-            await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_testExec, testSetItem);
-            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, diffResults, m_testExec, testSetItem);
+            await Util.CaptureInkCanvasForStroke2(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
+            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem);
 
             await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
             await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, diffResults, inkCanvas);
@@ -253,6 +270,7 @@ namespace MIDAS_BAT.Pages
         {
             inkCanvas.InkPresenter.StrokeContainer.Clear();
             m_Times.Clear();
+            m_drawLines.Clear();
         }
     }
 }

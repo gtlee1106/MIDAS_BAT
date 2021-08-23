@@ -128,7 +128,7 @@ namespace MIDAS_BAT.Utils
             StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
             if (file == null)
-                return false;
+                return false; 
 
             CachedFileManager.DeferUpdates(file);
             IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.ReadWrite);
@@ -274,6 +274,159 @@ namespace MIDAS_BAT.Utils
                 builder.Append(String.Format("{0},{1},{2},", diffResults[i].name, diffResults[i].org.X, diffResults[i].org.Y));
                 if (diffResults[i].hasValue)
                     builder.Append(String.Format("{0},{1},{2}", diffResults[i].drawn.X, diffResults[i].drawn.Y, diffResults[i].getDistance()));
+
+                builder.AppendLine("");
+            }
+
+            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            await FileIO.WriteBytesAsync(diff_file, fileBytes);
+
+            return true;
+        }
+
+
+        public async Task<bool> saveRawData2(int testOrder, string testName, List<List<BATPoint>> drawPoints, List<List<DiffData>> diffResults, InkCanvas inkCanvas)
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            Encoding encoding = Encoding.GetEncoding("euc-kr");
+
+            // pressure & time diff 저장...?
+            string file_name = String.Format("{0}_{1}_{2}_raw_time_{3}_2.txt", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(TestExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine(drawPoints.Count.ToString());
+            for (int i = 0; i < drawPoints.Count; ++i)
+            {
+                if (drawPoints[i].Count() == 0)
+                    continue;
+
+                builder.AppendLine((drawPoints[i].Last().timestamp - drawPoints[i].Last().timestamp).ToString("F3"));
+            }
+            await FileIO.WriteTextAsync(file, builder.ToString());
+
+            // 필기시간
+            file_name = String.Format("{0}_{1}_{2}_raw_time_{3}_2.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            StorageFile time_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+            builder.Clear();
+            builder.Append(TestSetItem.Word);
+            builder.AppendLine("( 총 " + drawPoints.Count.ToString() + " 획)");
+
+            builder.AppendLine("Index,Pressed(ms), Released(ms), Duration(ms), Transition(ms)");
+            for (int i = 0; i < drawPoints.Count; i++ )
+            {
+                if (drawPoints[i].Count() == 0)
+                    continue;
+
+                builder.Append(String.Format("{0},", i + 1));
+                builder.Append(BATPoint.getTimeDiffMs(drawPoints[i][0], drawPoints[0][0]).ToString("F3") + ",");
+                builder.Append(BATPoint.getTimeDiffMs(drawPoints[i].Last(), drawPoints[0][0]).ToString("F3") + ",");
+                builder.Append(BATPoint.getTimeDiffMs(drawPoints[i].Last(), drawPoints[i][0]).ToString("F3") + ",");
+                if (i < drawPoints.Count - 1)
+                {
+                    if( drawPoints[i+1].Count != 0)
+                        builder.Append(BATPoint.getTimeDiffMs(drawPoints[i + 1][0], drawPoints[i].Last()).ToString("F3") + ",");
+                }
+                    
+                builder.AppendLine("");
+            }
+
+            byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            await FileIO.WriteBytesAsync(time_file, fileBytes);
+
+            // 필압
+            file_name = String.Format("{0}_{1}_{2}_raw_pressure_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            StorageFile pressure_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+            builder.Clear();
+            builder.Append(TestSetItem.Word);
+            builder.AppendLine("( 총 " + drawPoints.Count.ToString() + " 획)");
+            builder.AppendLine("Index,총 샘플링 수,평균 필압,Raw값");
+            for (int i = 0; i < drawPoints.Count; ++i)
+            {
+                builder.Append(String.Format("{0},", i + 1));
+                builder.Append(drawPoints[i].Count.ToString() + ", ");
+
+                float avgPressure = 0.0f;
+                int pressure_cnt = 0;
+                foreach (var pt in drawPoints[i])
+                {
+                    avgPressure += pt.pressure;
+                    pressure_cnt++;
+                }
+                avgPressure = avgPressure / pressure_cnt;
+                builder.Append(avgPressure.ToString("F6") + ", ");
+
+                builder.AppendLine("");
+            }
+
+            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            await FileIO.WriteBytesAsync(pressure_file, fileBytes);
+
+            // min / max
+            // template은 1획밖에 없어서 하나만 쓴다. 
+            double templateMinX = 0.0;
+            double templateMinY = 0.0;
+            double templateMaxX = 0.0;
+            double templateMaxY = 0.0;
+
+            List<DiffData> flattenDiff = new List<DiffData>();
+            foreach(var diffResult in diffResults)
+            {
+                foreach (var item in diffResult)
+                    flattenDiff.Add(item);
+            }
+
+            if (diffResults.Count > 0)
+            {
+                templateMinX = flattenDiff.OrderByDescending(t => t.org.X).Last().org.X;
+                templateMinY = flattenDiff.OrderByDescending(t => t.org.Y).Last().org.Y;
+                templateMaxX = flattenDiff.OrderBy(t => t.org.X).Last().org.X;
+                templateMaxY = flattenDiff.OrderBy(t => t.org.Y).Last().org.Y;
+            }
+
+            file_name = String.Format("{0}_{1}_{2}_minmax_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            StorageFile minmax_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+            builder.Clear();
+            builder.Append(TestSetItem.Word);
+            builder.AppendLine("( 총 " + drawPoints.Count.ToString() + " 획)");
+            builder.AppendLine("Index, 템플릿 Min X, 템플릿 Min Y, 템플릿 Max X, 템플릿 Max Y, Min X,Min Y,Max X,Max Y");
+            for (int i = 0; i < drawPoints.Count; ++i)
+            {
+                builder.Append(String.Format("{0},", i + 1));
+                // 탬플릿 쪽
+                builder.Append(String.Format("{0},{1},{2},{3},", templateMinX, templateMinY, templateMaxX, templateMaxY));
+
+                Rect? boundingBox = Util.getBoundingBox(drawPoints[i]);
+
+                if(boundingBox.HasValue)
+                {
+                    // min x, min y, max x, max y
+                    builder.Append(String.Format("{0},{1},{2},{3},",
+                        boundingBox.Value.X,
+                        boundingBox.Value.Y,
+                        boundingBox.Value.X + boundingBox.Value.Width,
+                        boundingBox.Value.Y + boundingBox.Value.Height));
+                }
+
+                builder.AppendLine("");
+            }
+
+            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            await FileIO.WriteBytesAsync(minmax_file, fileBytes);
+
+            // diff
+            file_name = String.Format("{0}_{1}_{2}_diff_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            StorageFile diff_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+            builder.Clear();
+            builder.Append(testName);
+            builder.AppendLine("Index,위치,템플릿X,템플릿Y,그린점X,그린점Y,거리차이");
+            for (int i = 0; i < flattenDiff.Count; ++i)
+            {
+                builder.Append(String.Format("{0},", i + 1));
+                builder.Append(String.Format("{0},{1},{2},", flattenDiff[i].name, flattenDiff[i].org.X, flattenDiff[i].org.Y));
+                if (flattenDiff[i].hasValue)
+                    builder.Append(String.Format("{0},{1},{2}", flattenDiff[i].drawn.X, flattenDiff[i].drawn.Y, flattenDiff[i].getDistance()));
 
                 builder.AppendLine("");
             }

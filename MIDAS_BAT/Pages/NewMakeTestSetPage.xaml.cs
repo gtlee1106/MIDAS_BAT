@@ -17,7 +17,7 @@ namespace MIDAS_BAT
     /// </summary>
     public sealed partial class NewMakeTestSetPage : Page
     {
-        private const int MAX_ITEM_NUM = 45;
+        private const int MAX_ITEM_NUM = 100;
         private bool m_updateMode = false;
         private TestSet m_targetTestSet = new TestSet();
         private ObservableCollection<TestSetItem> m_testSetItemList = new ObservableCollection<TestSetItem>();

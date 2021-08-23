@@ -37,6 +37,7 @@ namespace MIDAS_BAT
 
         // 획 시작 - 끝 시간 기록
         List<double> m_Times = new List<double>();
+        List<List<BATPoint>> m_drawLines = new List<List<BATPoint>>();
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
 
@@ -55,6 +56,7 @@ namespace MIDAS_BAT
 
             CoreInkIndependentInputSource core = CoreInkIndependentInputSource.Create(inkCanvas.InkPresenter);
             core.PointerPressing += Core_PointerPressing;
+            core.PointerMoving += Core_PointerMoving;
             core.PointerReleasing += Core_PointerReleasing;
         }
 
@@ -88,12 +90,27 @@ namespace MIDAS_BAT
         /////// events ////////
         private void Core_PointerReleasing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
-            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
+            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+            if (m_drawLines.Count() > 0)
+            {
+                BATPoint point = new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp);
+                point.isEnd = true;
+                m_drawLines.Last().Add(point);
+            }
+        }
+        private void Core_PointerMoving(CoreInkIndependentInputSource sender, PointerEventArgs args)
+        {
+            m_drawLines.Last().Add(new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp));
         }
 
         private void Core_PointerPressing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
-            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
+            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+
+            // 최초의 point 
+            List<BATPoint> list = new List<BATPoint>();
+            list.Add(new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp));
+            m_drawLines.Add(list);
         }
 
         private void InkPresenter_StrokesCollected(InkPresenter sender, InkStrokesCollectedEventArgs args)
@@ -145,6 +162,7 @@ namespace MIDAS_BAT
                 {
                     this.Frame.Navigate(prevTest, m_testExec, new SuppressNavigationTransitionInfo());
                 }
+                return;
             }
 
             m_curIdx--;
@@ -162,9 +180,12 @@ namespace MIDAS_BAT
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
             foreach( var file_name in file_names )
             {
-                StorageFile targetFile = await storageFolder.GetFileAsync(file_name);
-                if( targetFile != null )
-                    await targetFile.DeleteAsync();
+                if (await storageFolder.TryGetItemAsync(file_name) != null)
+                {
+                    StorageFile targetFile = await storageFolder.GetFileAsync(file_name);
+                    if (targetFile != null)
+                        await targetFile.DeleteAsync();
+                }
             }
 
             m_saveUtil.deleteResultFromDB(m_testExec, m_wordList[m_curIdx]);
@@ -249,8 +270,8 @@ namespace MIDAS_BAT
                 return;
             }
 
-            await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, m_testExec, m_wordList[m_curIdx]);
-            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, null, m_testExec, m_wordList[m_curIdx]);
+            await Util.CaptureInkCanvasForStroke2(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, m_drawLines, m_testExec, m_wordList[m_curIdx]);
+            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, m_drawLines, null, m_testExec, m_wordList[m_curIdx]);
             
             await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
             await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, new List<DiffData>(), inkCanvas );
@@ -286,6 +307,7 @@ namespace MIDAS_BAT
         {
             inkCanvas.InkPresenter.StrokeContainer.Clear();
             m_Times.Clear();
+            m_drawLines.Clear();
         }
 
     }

@@ -149,12 +149,12 @@ namespace MIDAS_BAT
 
             m_saveUtil.TestSetItem = testSetItem;
 
-            await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, null, null, m_testExec, testSetItem);
-            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, null, null, null, m_testExec, testSetItem);
+            //await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, null, null, m_testExec, testSetItem);
+            //await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, null, null, null, m_testExec, testSetItem);
 
-            await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
-            await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, new List<DiffData>(), inkCanvas); ;
-            m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
+            //await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
+            //await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, new List<DiffData>(), inkCanvas); ;
+            //m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
 
             //ResizeCanvas();
             //ClearInkData();

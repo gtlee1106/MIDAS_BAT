@@ -5,6 +5,7 @@ using MIDAS_BAT.Data;
 using MIDAS_BAT.Pages;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -21,6 +22,7 @@ using Windows.UI;
 using Windows.UI.Input.Inking;
 using Windows.UI.Popups;
 using Windows.UI.Text;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Shapes;
@@ -546,8 +548,19 @@ namespace MIDAS_BAT
 
             return true;
         }
+        private static void DrawBezier(CanvasDrawingSession drawingSession, CanvasDevice device, Vector2 start, Vector2 ctrl0, Vector2 ctrl1, Vector2 end, Color color)
+        {
+            CanvasPathBuilder pathBuilder = new CanvasPathBuilder(device);
+            pathBuilder.BeginFigure(start);
+            pathBuilder.AddCubicBezier(ctrl0, ctrl1, end);
+            pathBuilder.EndFigure(CanvasFigureLoop.Open);
 
-        public static async Task<bool> CaptureInkCanvas(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<DiffData> diffResults, TestExec testExec, TestSetItem setItem)
+            CanvasGeometry geometry = CanvasGeometry.CreatePath(pathBuilder);
+            drawingSession.DrawGeometry(geometry, color, 5.0f);
+        }
+
+
+        public static async Task<bool> CaptureInkCanvas(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, List<DiffData> diffResults, TestExec testExec, TestSetItem setItem)
         {
             string file_name = String.Format("{0}_{1}_{2}_{3}_last.png", testExec.TesterId, testOrder, testName, setItem.Number);
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
@@ -563,17 +576,9 @@ namespace MIDAS_BAT
             using (var ds = rtb.CreateDrawingSession())
             {
                 ds.Clear(Colors.White);
-                if (orgLines != null)
-                {
-                    foreach(var points in orgLines)
-                    {
-                        for (int i = 0; i < points.Count - 1; i++)
-                            ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
-                    }
-                    
-                }
-
-                ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
+                drawOrgLine(ds, orgLines);
+                //ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
+                drawDrawLine(ds, drawLines);
                 if (borderUI != null && testExec.ShowBorder)
                     DrawGuideLineInImage(borderUI, ds);
             }
@@ -602,16 +607,9 @@ namespace MIDAS_BAT
             using (var ds = rtb.CreateDrawingSession())
             {
                 ds.Clear(Colors.White);
-                if (orgLines != null)
-                {
-                    foreach(var points in orgLines) 
-                    {
-                        for (int i = 0; i < points.Count - 1; i++)
-                            ds.DrawLine(toVector(points[i]), toVector(points[i + 1]), Color.FromArgb(255, 73, 73, 73), 2.0f);
-                    }
-                }
-
-                ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
+                drawOrgLine(ds, orgLines);
+                //ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
+                drawDrawLine(ds, drawLines);
 
                 if (diffResults != null)
                 {
@@ -641,6 +639,123 @@ namespace MIDAS_BAT
 
             await calcEncoder.FlushAsync();
             calcStream.Dispose();
+
+            return true;
+        }
+
+
+        public static async Task<bool> CaptureInkCanvasForSpiral(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, List<List<DiffData>> diffResults, TestExec testExec, TestSetItem setItem, bool counterClockWise)
+        {
+            string file_name = String.Format("{0}_{1}_{2}_{3}_last.png", testExec.TesterId, testOrder, testName, setItem.Number);
+            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+
+            var displayInformation = DisplayInformation.GetForCurrentView();
+            var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
+
+            CanvasDevice device = CanvasDevice.GetSharedDevice();
+            CanvasRenderTarget rtb = new CanvasRenderTarget(device, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight, 96); // 96 쓰는게 맞나? or dpi 받아서 써야되나?
+
+            using (var ds = rtb.CreateDrawingSession())
+            {
+                ds.Clear(Colors.White);
+                drawOrgLine(ds, orgLines);
+
+                var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+                double radiusStep = Util.mmToPixels(15.0f);
+
+                List<List<BATPoint>> splitDrawLines = null;
+                if( counterClockWise )
+                {
+                    Point orgCenter = new Point(bounds.Width / 2 - radiusStep / 2, bounds.Height / 2);
+                    splitDrawLines = Util.splitDrawing(orgCenter, drawLines, false, true);
+                }
+                else
+                {
+                    Point orgCenter = new Point(bounds.Width / 2 + radiusStep / 2, bounds.Height / 2);
+                    splitDrawLines = Util.splitDrawing(orgCenter, drawLines, false, false);
+                }
+
+                Color[] colors = { Color.FromArgb(255, 255, 73, 73), Color.FromArgb(255, 73, 255, 73), Color.FromArgb(255, 73, 73, 255), Color.FromArgb(255, 73, 255, 255), Color.FromArgb(255, 255, 73, 255) };
+                int colorIndex = 0;
+                foreach (var splitDrawLine in splitDrawLines)
+                {
+                    for (int i = 0; i < splitDrawLine.Count - 1; i++)
+                    {
+                        if (splitDrawLine[i].isEnd)
+                            continue;
+
+                        ds.DrawLine(toVector(splitDrawLine[i].point), toVector(splitDrawLine[i+1].point), colors[colorIndex]);
+                    }
+                    colorIndex += 1;
+                    if (colorIndex >= colors.Length)
+                        colorIndex = 0;
+                }
+                //ds.DrawInk(strokes);
+                if (borderUI != null && testExec.ShowBorder)
+                    DrawGuideLineInImage(borderUI, ds);
+            }
+
+            var pixelBuffer = rtb.GetPixelBytes();
+            var pixels = pixelBuffer.ToArray();
+
+            encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                BitmapAlphaMode.Premultiplied,
+                (uint)inkCanvas.ActualWidth,
+                (uint)inkCanvas.ActualHeight,
+                displayInformation.RawDpiX,
+                displayInformation.RawDpiY,
+                pixels);
+
+            await encoder.FlushAsync();
+            stream.Dispose();
+
+            for (int i = 0; i < diffResults.Count; i++)
+            {
+                file_name = String.Format("{0}_{1}_{2}_{3}_diff_{4}.png", testExec.TesterId, testOrder, testName, setItem.Number, i);
+                StorageFile calcFile = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+
+                var calcStream = await calcFile.OpenAsync(FileAccessMode.ReadWrite);
+                var calcEncoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, calcStream);
+
+                using (var ds = rtb.CreateDrawingSession())
+                {
+                    ds.Clear(Colors.White);
+                    drawOrgLine(ds, orgLines);
+
+                    //ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
+                    drawDrawLine(ds, drawLines);
+
+                    if (diffResults != null)
+                    {
+                        foreach(var item in diffResults[i])
+                        {
+                            if (item.hasValue)
+                                ds.DrawLine(toVector(item.org), toVector(item.drawn), Colors.Red);
+                            else
+                                ds.DrawCircle(toVector(item.org), 2, Colors.Red);
+                        }
+                    }
+
+                    if (borderUI != null && testExec.ShowBorder)
+                        DrawGuideLineInImage(borderUI, ds);
+                }
+
+                pixelBuffer = rtb.GetPixelBytes();
+                pixels = pixelBuffer.ToArray();
+
+                calcEncoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                    BitmapAlphaMode.Premultiplied,
+                    (uint)inkCanvas.ActualWidth,
+                    (uint)inkCanvas.ActualHeight,
+                    displayInformation.RawDpiX,
+                    displayInformation.RawDpiY,
+                    pixels);
+
+                await calcEncoder.FlushAsync();
+                calcStream.Dispose();
+            }
 
             return true;
         }
@@ -677,6 +792,7 @@ namespace MIDAS_BAT
             return new Vector2((float)p.X, (float)p.Y);
         }
 
+
         public static async Task<bool> CaptureInkCanvasForStroke(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, TestExec testExec, TestSetItem setItem)
         {
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
@@ -708,17 +824,18 @@ namespace MIDAS_BAT
             using (var ds = rtb.CreateDrawingSession())
             {
                 ds.Clear(Colors.White);
-                if( orgLines != null)
+                drawOrgLine(ds, orgLines);
+                if (orgLines != null)
                 {
-                    foreach(var points in orgLines)
+                    foreach (var points in orgLines)
                     {
                         for (int i = 0; i < points.Count - 1; i++)
                             ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
                     }
-                    
+
                 }
 
-                
+
                 ds.DrawInk(newStrokeList);
             }
 
@@ -744,16 +861,8 @@ namespace MIDAS_BAT
                 using (var ds = rtb.CreateDrawingSession())
                 {
                     ds.Clear(Colors.White);
-                    if (orgLines != null)
-                    {
-                        foreach(var points in orgLines)
-                        {
-                            for (int i = 0; i < points.Count - 1; i++)
-                                ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
-                        }
-                    }
+                    drawOrgLine(ds, orgLines);
                     ds.DrawInk(newStrokeList);
-
                 }
 
                 pixelBuffer = rtb.GetPixelBytes();
@@ -775,14 +884,7 @@ namespace MIDAS_BAT
             using (var ds = rtb.CreateDrawingSession())
             {
                 ds.Clear(Colors.White);
-                if (orgLines != null)
-                {
-                    foreach(var points in orgLines)
-                    {
-                        for (int i = 0; i < points.Count - 1; i++)
-                            ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
-                    }
-                                    }
+                drawOrgLine(ds, orgLines);
                 ds.DrawInk(newStrokeList);
             }
 
@@ -818,14 +920,7 @@ namespace MIDAS_BAT
                 using (var ds = rtb.CreateDrawingSession())
                 {
                     ds.Clear(Colors.White);
-                    if (orgLines != null)
-                    {
-                        foreach(var points in orgLines)
-                        {
-                            for (int i = 0; i < points.Count - 1; i++)
-                                ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
-                        }
-                    }
+                    drawOrgLine(ds, orgLines);
 
                     ds.DrawInk(newStrokeList);
 
@@ -844,6 +939,220 @@ namespace MIDAS_BAT
             }
 
             return true;
+        }
+
+        private static void drawOrgLine(CanvasDrawingSession ds, List<List<Point>> orgLines)
+        {
+            if (orgLines == null)
+                return;
+
+            foreach (var points in orgLines)
+            {
+                for (int i = 0; i < points.Count - 1; i++)
+                    ds.DrawLine((float)points[i].X, (float)points[i].Y, (float)points[i + 1].X, (float)points[i + 1].Y, Color.FromArgb(255, 73, 73, 73), 2.0f);
+            }
+        }
+
+
+        private static void drawDrawLine(CanvasDrawingSession ds, List<List<BATPoint>> drawLines)
+        {
+            foreach (var drawLine in drawLines)
+            {
+                for (int i = 0; i < drawLine.Count - 1; i++)
+                {
+                    if (drawLine[i].isEnd)
+                        continue;
+
+                    ds.DrawLine(toVector(drawLine[i].point), toVector(drawLine[i + 1].point), Colors.Black);
+                }
+            }
+        }
+
+        public static async Task<bool> CaptureInkCanvasForStroke2(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawPoints, TestExec testExec, TestSetItem setItem)
+        {
+            // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
+            string file_name = String.Format("{0}_{1}_{2}_{3}.gif", testExec.TesterId, testOrder, testName, setItem.Number);
+            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+
+            var displayInformation = DisplayInformation.GetForCurrentView();
+            var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.GifEncoderId, stream);
+
+            CanvasDevice device = CanvasDevice.GetSharedDevice();
+            CanvasRenderTarget rtb = new CanvasRenderTarget(device, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight, 96); // 96 쓰는게 맞나? or dpi 받아서 써야되나?
+            //IReadOnlyList<InkStroke> strokeList = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+            List<List<BATPoint>> newStrokeList = new List<List<BATPoint>>();
+
+            var propertySet = new BitmapPropertySet();
+            var propertyValue = new BitmapTypedValue(
+                100, // multiple of 10ms
+                PropertyType.UInt16
+                );
+            propertySet.Add("/grctlext/Delay", propertyValue);
+
+            // 아오 복붙 ㅋㅋㅋ... ㅠㅠ
+
+            // 초기화면
+            // 한프레임...?
+            using (var ds = rtb.CreateDrawingSession())
+            {
+                ds.Clear(Colors.White);
+                drawOrgLine(ds, orgLines);
+                // ds.DrawInk(newStrokeList);
+            }
+
+            var pixelBuffer = rtb.GetPixelBytes();
+            var pixels = pixelBuffer.ToArray();
+
+            encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                 BitmapAlphaMode.Premultiplied,
+                                 (uint)inkCanvas.ActualWidth,
+                                 (uint)inkCanvas.ActualHeight,
+                                 displayInformation.RawDpiX,
+                                 displayInformation.RawDpiY,
+                                 pixels);
+            await encoder.BitmapProperties.SetPropertiesAsync(propertySet);
+            await encoder.GoToNextFrameAsync();
+
+            // 중간
+            foreach (var drawPoint in drawPoints)
+            {
+                newStrokeList.Add(drawPoint);
+
+                // 한프레임...?
+                using (var ds = rtb.CreateDrawingSession())
+                {
+                    ds.Clear(Colors.White);
+                    drawOrgLine(ds, orgLines);
+                    drawDrawLine(ds, newStrokeList);
+                }
+
+                pixelBuffer = rtb.GetPixelBytes();
+                pixels = pixelBuffer.ToArray();
+
+                encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                     BitmapAlphaMode.Premultiplied,
+                                     (uint)inkCanvas.ActualWidth,
+                                     (uint)inkCanvas.ActualHeight,
+                                     displayInformation.RawDpiX,
+                                     displayInformation.RawDpiY,
+                                     pixels);
+                await encoder.BitmapProperties.SetPropertiesAsync(propertySet);
+
+                await encoder.GoToNextFrameAsync();
+            }
+
+            // 마지막 샷 
+            using (var ds = rtb.CreateDrawingSession())
+            {
+                ds.Clear(Colors.White);
+                drawOrgLine(ds, orgLines);
+                drawDrawLine(ds, newStrokeList);
+            }
+
+            pixelBuffer = rtb.GetPixelBytes();
+            pixels = pixelBuffer.ToArray();
+
+            encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                BitmapAlphaMode.Premultiplied,
+                                (uint)inkCanvas.ActualWidth,
+                                (uint)inkCanvas.ActualHeight,
+                                displayInformation.RawDpiX,
+                                displayInformation.RawDpiY,
+                                pixels);
+            var lastPropertySet = new BitmapPropertySet();
+            var lastPropertyValue = new BitmapTypedValue(
+                500, // multiple of 10ms
+                Windows.Foundation.PropertyType.UInt16
+                );
+            lastPropertySet.Add("/grctlext/Delay", lastPropertyValue);
+            await encoder.BitmapProperties.SetPropertiesAsync(lastPropertySet);
+
+            await encoder.FlushAsync();
+            stream.Dispose();
+
+            // 개별 stroke들은 한번 넘어갈 때 마다 png 이미지로 생성을 한다. 
+            var format = getTextFormat();
+            newStrokeList.Clear();
+            foreach (var drawPoint in drawPoints)
+            {
+                newStrokeList.Add(drawPoint);
+                // png 이미지 생성
+                using (var ds = rtb.CreateDrawingSession())
+                {
+                    ds.Clear(Colors.White);
+                    drawOrgLine(ds, orgLines);
+                    drawDrawLine(ds, newStrokeList);
+
+                    var point = new Vector2((float)inkCanvas.ActualWidth - 100, 30);
+                    ds.DrawText(newStrokeList.Count().ToString(), point, Colors.Black, format);
+
+                    Rect? rect = getBoundingBox(drawPoint);
+                    if( rect.HasValue )
+                        ds.DrawRectangle(rect.Value, Colors.Red);
+
+                    if (borderUI != null && testExec.ShowBorder)
+                        DrawGuideLineInImage(borderUI, ds);
+                }
+                pixelBuffer = rtb.GetPixelBytes();
+                string filename = String.Format("{0}_{1}_{2}_{3}_stroke_{4}.png", testExec.TesterId, testOrder, testName, setItem.Number.ToString(), newStrokeList.Count());
+
+                await SaveStrokeAsImage(storageFolder, filename, pixelBuffer, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight);
+            }
+
+            return true;
+        }
+
+        public static Rect? getBoundingBox(List<Point> points)
+        {
+            if (points.Count == 0 )
+            {
+                return null;
+            }
+
+            double minX = points.Min(p => p.X);
+            double minY = points.Min(p => p.Y);
+            double maxX = points.Max(p => p.X);
+            double maxY = points.Max(p => p.Y);
+
+            return new Rect(minX, minY, maxX - minX, maxY - minY);
+        }
+        public static Rect? getBoundingBox(List<BATPoint> points)
+        {
+            if (points.Count == 0)
+            {
+                return null;
+            }
+
+            double minX = points.Min(p => p.point.X);
+            double minY = points.Min(p => p.point.Y);
+            double maxX = points.Max(p => p.point.X);
+            double maxY = points.Max(p => p.point.Y);
+
+            return new Rect(minX, minY, maxX - minX, maxY - minY);
+        }
+
+        public static Rect? getBoundingBox2(List<List<BATPoint>> points)
+        {
+            List<BATPoint> flattenDrawLines = new List<BATPoint>();
+            foreach (var drawLine in points)
+            {
+                foreach (var drawPoint in drawLine)
+                    flattenDrawLines.Add(drawPoint);
+            }
+
+            if (flattenDrawLines.Count == 0)
+            {
+                return null;
+            }
+
+            double minX = flattenDrawLines.Min(p => p.point.X);
+            double minY = flattenDrawLines.Min(p => p.point.Y);
+            double maxX = flattenDrawLines.Max(p => p.point.X);
+            double maxY = flattenDrawLines.Max(p => p.point.Y);
+
+            return new Rect(minX, minY, maxX - minX, maxY - minY);
         }
 
         // p1->p2, p3->p4
@@ -937,7 +1246,7 @@ namespace MIDAS_BAT
         {
             List<List<Point>> totalPoints = new List<List<Point>>();
 
-            double radius2 = totalRadius / 8;
+            double radius2 = totalRadius / ( cycleCount * 2 );
             double radius1 = radius2 / 2;
             double radiusStep = radius2;
 
@@ -1069,43 +1378,61 @@ namespace MIDAS_BAT
             return edu;
         }
 
-        public static List<List<InkStrokeRenderingSegment>> splitStrokes(Point orgCenter, IReadOnlyList<InkStroke> strokeList)
+        public static List<List<BATPoint>> splitDrawing(Point orgCenter, List<List<BATPoint>> drawLines, bool cutSmallFirst, bool counterClockwise)
         {
-            List<List<InkStrokeRenderingSegment>> strokeSplits = new List<List<InkStrokeRenderingSegment>>();
+            List<List<BATPoint>> splitDrawLines = new List<List<BATPoint>>();
 
-            List<InkStrokeRenderingSegment> strokeSplit = new List<InkStrokeRenderingSegment>();
+            List<BATPoint> splitDrawLine = new List<BATPoint>();
             double prevDegree = 0.0;
-            foreach (var stroke in strokeList)
+            double prevDegree2 = 0.0;
+            BATPoint prevPoint = null;
+            foreach (var drawLine in drawLines)
             {
-                IReadOnlyList<InkStrokeRenderingSegment> segments = stroke.GetRenderingSegments();
-                foreach (var segment in segments)
+                foreach (var point in drawLine)
                 {
-                    double x = segment.Position.X - orgCenter.X;
-                    double y = orgCenter.Y - segment.Position.Y; // 헷갈려서 반전해서 계산
-
+                    double x = point.point.X - orgCenter.X;
+                    if (!counterClockwise)
+                        x = -x;
+                    double y = orgCenter.Y - point.point.Y; // 헷갈려서 반전해서 계산
                     double dist = Math.Sqrt(x * x + y * y);
-
                     double degree = Math.Acos(x / dist) * 180 / Math.PI;
                     if (y < 0)
                         degree = 360 - degree;
 
-                    if (prevDegree > 270 && degree - prevDegree <= 0)
+                    if (prevDegree > 350 && degree - prevDegree < 0 && degree - prevDegree2 < 0 )
                     {
-                        strokeSplits.Add(strokeSplit);
-                        strokeSplit = new List<InkStrokeRenderingSegment>();
+                        if (splitDrawLine.Count < 50 && splitDrawLines.Count == 0)
+                        {
+                            if (cutSmallFirst)
+                            {
+                                splitDrawLine.Clear();
+                                splitDrawLine.Add(prevPoint);
+                            }
+                        }
+                        else
+                        {
+                            splitDrawLines.Add(splitDrawLine);
+                            splitDrawLine = new List<BATPoint>();
+
+                            // 아마도 null 은 아니겠지만
+                            if (prevPoint != null)
+                                splitDrawLine.Add(prevPoint);
+                        }
                     }
 
-                    strokeSplit.Add(segment);
+                    splitDrawLine.Add(point);
+                    prevDegree2 = prevDegree;
                     prevDegree = degree;
+                    prevPoint = point;
                 }
             }
-            strokeSplits.Add(strokeSplit);
+            // 끝처리
+            if(splitDrawLines.Count <= 3)
+                splitDrawLines.Add(splitDrawLine);
+            else
+                splitDrawLines.Last().AddRange(splitDrawLine);
 
-            // 적은 개수의 친구는 merge 를 해야되나? 
-            // 우선은 놔둔다...? 
-
-            return strokeSplits;
+            return splitDrawLines;
         }
     }
-
 }

@@ -39,6 +39,7 @@ namespace MIDAS_BAT.Pages
 
         // original line
         List<List<Point>> m_orgLines = new List<List<Point>>();
+        List<List<BATPoint>> m_drawLines = new List<List<BATPoint>>();
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
 
@@ -54,17 +55,33 @@ namespace MIDAS_BAT.Pages
 
             CoreInkIndependentInputSource core = CoreInkIndependentInputSource.Create(inkCanvas.InkPresenter);
             core.PointerPressing += Core_PointerPressing;
+            core.PointerMoving += Core_PointerMoving;
             core.PointerReleasing += Core_PointerReleasing;
         }
 
         private void Core_PointerReleasing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
             m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+            if (m_drawLines.Count() > 0)
+            {
+                BATPoint point = new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp);
+                point.isEnd = true;
+                m_drawLines.Last().Add(point);
+            }
+        }
+        private void Core_PointerMoving(CoreInkIndependentInputSource sender, PointerEventArgs args)
+        {
+            m_drawLines.Last().Add(new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp));
         }
 
         private void Core_PointerPressing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
             m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+
+            // 최초의 point 
+            List<BATPoint> list = new List<BATPoint>();
+            list.Add(new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp));
+            m_drawLines.Add(list);
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -173,84 +190,136 @@ namespace MIDAS_BAT.Pages
             }
         }
 
-        private List<DiffData> calculateDifference()
+        private List<List<DiffData>> calculateDifference()
         {
-            List<DiffData> results = new List<DiffData>();
+            List<List<DiffData>> results = new List<List<DiffData>>();
 
-            /*
-            DisplayInformation di = DisplayInformation.GetForCurrentView();
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
-            double radiusStep = Util.mmToPixels(15.0);
+            double radiusStep = Util.mmToPixels(15.0f);
+            Point orgCenter = new Point(bounds.Width / 2 + radiusStep / 2, bounds.Height / 2);
 
-            Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
-            for (int angle = 0; angle < 360; angle += 10)
+            List<List<BATPoint>> drawSplits = Util.splitDrawing(orgCenter, m_drawLines, true, false);
+
+            orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
+            for (int i = 0; i < m_orgLines.Count; i++)
             {
-                Point center = orgCenter;
-                if (angle >= 180)
-                    center.X = orgCenter.X + radiusStep / 2;
-
-                double radian = Math.PI * angle / 180;
-                Point targetPt = new Point(center.X + bounds.Width * Math.Cos(radian), center.Y + bounds.Width * Math.Sin(radian));
-
-                List<Point> orgIntersected = new List<Point>();
-                for(int i = 0; i < m_orgLines.Count - 1;i++ )
+                List<DiffData> result = new List<DiffData>();
+                int orgIdx = 0;
+                int drawIdx = 0;
+                for (int angle = 180; angle < 540; angle += 10)
                 {
-                    Util.FindIntersection(center, targetPt, m_orgLines[i], m_orgLines[i+1], out bool isIntersected, out Point intersectedPt);
-                    if (isIntersected)
-                    {
-                        if (orgIntersected.Count == 0)
-                            orgIntersected.Add(intersectedPt);
-                        else if (orgIntersected.Last() != intersectedPt) 
-                            orgIntersected.Add(intersectedPt);
-                    }
-                }
+                    Point center = orgCenter;
+                    if (angle < 360)
+                        center.X = orgCenter.X + radiusStep / 2;
+                    double radian = Math.PI * angle / 180;
+                    Point targetPt = new Point(center.X + bounds.Width * Math.Cos(radian), center.Y + bounds.Width * Math.Sin(radian));
 
-                List<Point> drawIntersected = new List<Point>();
-                IReadOnlyList<InkStroke> strokeList = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
-                foreach(var stroke in strokeList)
-                {
-                    IReadOnlyList<InkStrokeRenderingSegment> segments = stroke.GetRenderingSegments();
-                    for(int i = 0; i < segments.Count - 1; i++)
+                    Point? orgIntersected = null;
+                    for (int j = orgIdx; j < m_orgLines[i].Count - 1; j++)
                     {
-                        Util.FindIntersection(center, targetPt, segments[i].Position, segments[i+1].Position, out bool isIntersected, out Point intersectedPt);
+                        Util.FindIntersection(center, targetPt, m_orgLines[i][j], m_orgLines[i][j + 1], out bool isIntersected, out Point intersectedPt);
+
                         if (isIntersected)
-                            drawIntersected.Add(intersectedPt);
+                        {
+                            // 최초 한 점은 뺄 것 
+                            if (Util.getDistance(intersectedPt, center) < 0.000001)
+                                continue;
+
+                            orgIntersected = intersectedPt;
+                            orgIdx = j + 1; // 다음 각도는 j + 1 부터 시작
+                            break;
+                        }
+                    }
+
+                    Point? drawIntersected = null;
+                    if (i < drawSplits.Count)
+                    {
+                        for (int j = drawIdx; j < drawSplits[i].Count - 1; j++)
+                        {
+                            if (drawSplits[i][j].isEnd)
+                                continue;
+
+                            Util.FindIntersection(center, targetPt, drawSplits[i][j].point, drawSplits[i][j + 1].point, out bool isIntersected, out Point intersectedPt);
+                            if (isIntersected)
+                            {
+                                drawIntersected = intersectedPt;
+                                drawIdx = j + 1; // 다음 각도는 j + 1 부터 시작
+                                break;
+                            }
+                        }
+                    }
+
+                    // 최초 매칭만 최소거리로 찾는다.
+                    // 그 이후는 동일하게 매핑 된다고 가정
+                    if (drawIntersected != null && orgIntersected != null)
+                    {
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value, drawIntersected.Value));
+                    }
+                    else
+                    {
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value)); // 설마 이게 없으려나... 
                     }
                 }
 
-                // 최초 매칭만 최소거리로 찾는다.
-                // 그 이후는 동일하게 매핑 된다고 가정
-                if (drawIntersected.Count > 0)
+                if (i == m_orgLines.Count - 1) // 마지막 바퀴인 경우 제일 끝에 360 도를 한 번 더 체크
                 {
-                    int idx = -1;
-                    double minDist = bounds.Width * 100;
-                    for (int i = 0; i < orgIntersected.Count; i++)
+                    int angle = 180;
+
+                    Point center = orgCenter;
+                    if (angle < 360)
+                        center.X = orgCenter.X + radiusStep / 2;
+                    double radian = Math.PI * angle / 180;
+                    Point targetPt = new Point(center.X + bounds.Width * Math.Cos(radian), center.Y + bounds.Width * Math.Sin(radian));
+
+                    Point? orgIntersected = null;
+                    for (int j = orgIdx; j < m_orgLines[i].Count - 1; j++)
                     {
-                        double dist = Util.getDistance(drawIntersected[0], orgIntersected[i]);
-                        if (minDist > dist)
+                        Util.FindIntersection(center, targetPt, m_orgLines[i][j], m_orgLines[i][j + 1], out bool isIntersected, out Point intersectedPt);
+
+                        if (isIntersected)
                         {
-                            idx = i;
-                            minDist = dist;
+                            // 최초 한 점은 뺄 것 
+                            if (Util.getDistance(intersectedPt, center) < 0.000001)
+                                continue;
+
+                            orgIntersected = intersectedPt;
+                            orgIdx = j + 1; // 다음 각도는 j + 1 부터 시작
+                            break;
                         }
                     }
 
-                    if (idx >= 0)
+                    Point? drawIntersected = null;
+                    if (i < drawSplits.Count)
                     {
-                        for (int i = 0; i < Math.Min(orgIntersected.Count - idx, drawIntersected.Count); i++)
+                        for (int j = drawIdx; j < drawSplits[i].Count - 1; j++)
                         {
-                            if (Util.getDistance(orgIntersected[i + idx], drawIntersected[i]) <= radiusStep)
+                            if (drawSplits[i][j].isEnd)
+                                continue;
+
+                            Util.FindIntersection(center, targetPt, drawSplits[i][j].point, drawSplits[i][j + 1].point, out bool isIntersected, out Point intersectedPt);
+                            if (isIntersected)
                             {
-                                results.Add(new DiffData(String.Format("Angle: {0} / Num: {1}", angle, i), orgIntersected[i + idx], drawIntersected[i]));
-                            }
-                            else
-                            {
-                                results.Add(new DiffData(String.Format("Angle: {0} / Num: {1}", angle, i), orgIntersected[i + idx]));
+                                drawIntersected = intersectedPt;
+                                drawIdx = j + 1; // 다음 각도는 j + 1 부터 시작
+                                break;
                             }
                         }
                     }
+
+                    // 최초 매칭만 최소거리로 찾는다.
+                    // 그 이후는 동일하게 매핑 된다고 가정
+                    if (drawIntersected != null && orgIntersected != null)
+                    {
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value, drawIntersected.Value));
+                    }
+                    else
+                    {
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value)); // 설마 이게 없으려나... 
+                    }
                 }
+
+                results.Add(result);
             }
-            */
 
             return results;
         }
@@ -269,13 +338,13 @@ namespace MIDAS_BAT.Pages
 
             m_saveUtil.TestSetItem = testSetItem;
 
-            List<DiffData> diffResults = calculateDifference();
+            List<List<DiffData>> diffResults = calculateDifference();
 
-            await Util.CaptureInkCanvasForStroke(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_testExec, testSetItem);
-            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, diffResults, m_testExec, testSetItem);
+            await Util.CaptureInkCanvasForStroke2(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
+            await Util.CaptureInkCanvasForSpiral(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, false);
 
             await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
-            await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, diffResults, inkCanvas);
+            await m_saveUtil.saveRawData2(TEST_ORDER, TEST_NAME, m_drawLines, diffResults, inkCanvas);
             m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
 
             //ResizeCanvas();
@@ -285,6 +354,7 @@ namespace MIDAS_BAT.Pages
         private void ClearInkData()
         {
             inkCanvas.InkPresenter.StrokeContainer.Clear();
+            m_drawLines.Clear();
             m_Times.Clear();
         }
     }
