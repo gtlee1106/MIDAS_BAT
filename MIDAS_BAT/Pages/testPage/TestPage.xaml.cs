@@ -271,10 +271,10 @@ namespace MIDAS_BAT
             }
 
             await Util.CaptureInkCanvasForStroke2(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, m_drawLines, m_testExec, m_wordList[m_curIdx]);
-            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, m_drawLines, null, m_testExec, m_wordList[m_curIdx]);
+            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, m_drawLines, new List<List<DiffData>>(), m_testExec, m_wordList[m_curIdx]);
             
             await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
-            await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, new List<DiffData>(), inkCanvas );
+            await m_saveUtil.saveRawData2(TEST_ORDER, TEST_NAME, null, m_drawLines, new List<List<DiffData>>(), inkCanvas );
             m_saveUtil.saveResultIntoDB(m_Times, inkCanvas );
 
             // index 증가

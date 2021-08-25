@@ -154,7 +154,7 @@ namespace MIDAS_BAT
                 typeof(TestPage)
             };
 
-            for(int i = curTestOrder+1; i < testOrder.Length; i++)
+            for (int i = curTestOrder + 1; i < testOrder.Length; i++)
             {
                 if (testOrder[i])
                     return testType[i];
@@ -212,7 +212,8 @@ namespace MIDAS_BAT
 
                 StorageFolder orgSourceFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(tester.Id.ToString(), CreationCollisionOption.OpenIfExists);
 
-                string newFolderName = tester.Name + "_" + tester.birthday + "_" + tester.Gender;
+                string newFolderName = String.Format("{0}({1}, {2}, 만 {3}세, 교육년수 {4}년)", tester.Name, tester.Gender, tester.birthday,
+                    Util.calculateAge(tester.birthday, testExec.Datetime), Util.calculateEducation(tester.Education));
 
                 StorageFolder subFolder = await rootFolder.CreateFolderAsync(newFolderName, CreationCollisionOption.OpenIfExists);
                 await SaveResult(orgSourceFolder, subFolder, testExecId);
@@ -285,11 +286,11 @@ namespace MIDAS_BAT
                     String.Format("{0}_{1}", ClockWiseSpiralTestPage.TEST_ORDER, ClockWiseSpiralTestPage.TEST_NAME_KR) },
                 { String.Format("{0}_{1}", CounterClockWiseFreeSpiralTestPage.TEST_ORDER, CounterClockWiseFreeSpiralTestPage.TEST_NAME) ,
                     String.Format("{0}_{1}", CounterClockWiseFreeSpiralTestPage.TEST_ORDER, CounterClockWiseFreeSpiralTestPage.TEST_NAME_KR) },
-                { String.Format("{0}_{1}", ClockWiseFreeSpiralTestPage.TEST_ORDER, ClockWiseFreeSpiralTestPage.TEST_NAME) , 
+                { String.Format("{0}_{1}", ClockWiseFreeSpiralTestPage.TEST_ORDER, ClockWiseFreeSpiralTestPage.TEST_NAME) ,
                     String.Format("{0}_{1}", ClockWiseFreeSpiralTestPage.TEST_ORDER, ClockWiseFreeSpiralTestPage.TEST_NAME_KR) }
             };
 
-            for( int i = 0; i < testNames.GetLength(0); i++ )
+            for (int i = 0; i < testNames.GetLength(0); i++)
             {
                 string gifFileName = String.Format("{0}_{1}_{2}.gif", testerId, testNames[i, 0], 0);
                 if (await orgFolder.TryGetItemAsync(gifFileName) != null)
@@ -299,7 +300,7 @@ namespace MIDAS_BAT
                     await charGifFile.CopyAsync(targetFolder, newGifName, NameCollisionOption.ReplaceExisting);
                 }
 
-                string orgPngName = String.Format("{0}_{1}_{2}_last.png", testerId, testNames[i, 0], 0); 
+                string orgPngName = String.Format("{0}_{1}_{2}_last.png", testerId, testNames[i, 0], 0);
                 if (await orgFolder.TryGetItemAsync(orgPngName) != null)
                 {
                     string newPngName = String.Format("{0}_{1}_최종.png", testerName, testNames[i, 1]);
@@ -307,6 +308,36 @@ namespace MIDAS_BAT
                     await charPngFile.CopyAsync(targetFolder, newPngName, NameCollisionOption.ReplaceExisting);
                 }
 
+                // ink
+                string orgInkName = String.Format("{0}_{1}_{2}_ink.png", testerId, testNames[i, 0], 0);
+                if (await orgFolder.TryGetItemAsync(orgInkName) != null)
+                {
+                    string newInkName = String.Format("{0}_{1}_잉크.png", testerName, testNames[i, 1]);
+
+                    StorageFile pressureFile = await orgFolder.GetFileAsync(orgInkName);
+                    await pressureFile.CopyAsync(targetFolder, newInkName, NameCollisionOption.ReplaceExisting);
+                }
+
+
+                {
+                    List<string> fileTypeFilter = new List<string>();
+                    fileTypeFilter.Add(".png");
+                    var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, fileTypeFilter);
+
+                    // Create query and retrieve files
+                    var query = orgFolder.CreateFileQueryWithOptions(queryOptions);
+                    IReadOnlyList<StorageFile> fileList = await query.GetFilesAsync();
+                    string pngFileFormat = String.Format("{0}_{1}_{2}_diff_", testerId, testNames[i, 0], 0);
+                    foreach (StorageFile file in fileList)
+                    {
+                        if (!file.Name.StartsWith(pngFileFormat))
+                            continue;
+
+                        string newPngName = file.Name.Replace(pngFileFormat, String.Format("{0}_{1}_차이_", testerName, testNames[i, 1]));
+                        await file.CopyAsync(targetFolder, newPngName, NameCollisionOption.ReplaceExisting);
+                    }
+                }
+                /*
                 string diffPngName = String.Format("{0}_{1}_{2}_diff.png", testerId, testNames[i, 0], 0);
                 if (await orgFolder.TryGetItemAsync(diffPngName) != null)
                 {
@@ -314,6 +345,7 @@ namespace MIDAS_BAT
                     StorageFile charPngFile = await orgFolder.GetFileAsync(diffPngName);
                     await charPngFile.CopyAsync(targetFolder, newDiffPngName, NameCollisionOption.ReplaceExisting);
                 }
+                */
 
                 // time
                 string orgTimeName = String.Format("{0}_{1}_raw_time_{2}.csv", testerId, testNames[i, 0], 0);
@@ -356,29 +388,31 @@ namespace MIDAS_BAT
                 }
 
                 // pngs
-                // 이건 몇 장이 될 지 알 수가 없어서...
-                List<string> fileTypeFilter = new List<string>();
-                fileTypeFilter.Add(".png");
-                var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, fileTypeFilter);
-
-                // Create query and retrieve files
-                var query = orgFolder.CreateFileQueryWithOptions(queryOptions);
-                IReadOnlyList<StorageFile> fileList = await query.GetFilesAsync();
-                string pngFileFormat = String.Format("{0}_{1}_{2}_stroke_", testerId, testNames[i, 0], 0);
-                foreach (StorageFile file in fileList)
                 {
-                    if (!file.Name.StartsWith(pngFileFormat))
-                        continue;
+                    // 이건 몇 장이 될 지 알 수가 없어서...
+                    List<string> fileTypeFilter = new List<string>();
+                    fileTypeFilter.Add(".png");
+                    var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, fileTypeFilter);
 
-                    string newPngName = file.Name.Replace(pngFileFormat, String.Format("{0}_{1}_획순_", testerName, testNames[i, 1]));
-                    await file.CopyAsync(targetFolder, newPngName, NameCollisionOption.ReplaceExisting);
+                    // Create query and retrieve files
+                    var query = orgFolder.CreateFileQueryWithOptions(queryOptions);
+                    IReadOnlyList<StorageFile> fileList = await query.GetFilesAsync();
+                    string pngFileFormat = String.Format("{0}_{1}_{2}_stroke_", testerId, testNames[i, 0], 0);
+                    foreach (StorageFile file in fileList)
+                    {
+                        if (!file.Name.StartsWith(pngFileFormat))
+                            continue;
+
+                        string newPngName = file.Name.Replace(pngFileFormat, String.Format("{0}_{1}_획순_", testerName, testNames[i, 1]));
+                        await file.CopyAsync(targetFolder, newPngName, NameCollisionOption.ReplaceExisting);
+                    }
                 }
             }
 
             string[] charTestNames = { String.Format("{0}_{1}", TestPage.TEST_ORDER, TestPage.TEST_NAME),
                     String.Format("{0}_{1}", TestPage.TEST_ORDER, TestPage.TEST_NAME_KR) };
 
-            foreach( var item in testSetItems)
+            foreach (var item in testSetItems)
             {
                 string gifFileName = String.Format("{0}_{1}_{2}.gif", testerId, charTestNames[0], item.Number);
                 if (await orgFolder.TryGetItemAsync(gifFileName) != null)
@@ -512,10 +546,18 @@ namespace MIDAS_BAT
             return await SaveResult(orgFolder, targetFolder, testExecId);
         }
 
-        public static async Task<bool> CaptureInkCanva_PreTest(InkCanvas inkCanvas, TestExec testExec)
+        public static async Task<bool> CaptureInkCanvas(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, List<List<DiffData>> diffResults, TestExec testExec, TestSetItem setItem)
         {
-            // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
-            string file_name = testExec.TesterId + "_char_0_last.png";
+            await SaveInkPng(testOrder, testName, inkCanvas, borderUI, orgLines, testExec, setItem);
+            await SaveLastDrawLinePng(testOrder, testName, inkCanvas, borderUI, orgLines, drawLines, testExec, setItem);
+            await SaveDiffResult(testOrder, testName, inkCanvas, borderUI, orgLines, drawLines, diffResults, testExec, setItem);
+
+            return true;
+        }
+
+        public static async Task SaveInkPng(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, TestExec testExec, TestSetItem setItem)
+        {
+            string file_name = String.Format("{0}_{1}_{2}_{3}_ink.png", testExec.TesterId, testOrder, testName, setItem.Number);
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
             StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
@@ -529,7 +571,14 @@ namespace MIDAS_BAT
             using (var ds = rtb.CreateDrawingSession())
             {
                 ds.Clear(Colors.White);
+                drawOrgLine(ds, orgLines);
+
+                var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+                double radiusStep = Util.mmToPixels(15.0f);
+
                 ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
+                if (borderUI != null && testExec.ShowBorder)
+                    DrawGuideLineInImage(borderUI, ds);
             }
 
             var pixelBuffer = rtb.GetPixelBytes();
@@ -545,22 +594,9 @@ namespace MIDAS_BAT
 
             await encoder.FlushAsync();
             stream.Dispose();
-
-            return true;
-        }
-        private static void DrawBezier(CanvasDrawingSession drawingSession, CanvasDevice device, Vector2 start, Vector2 ctrl0, Vector2 ctrl1, Vector2 end, Color color)
-        {
-            CanvasPathBuilder pathBuilder = new CanvasPathBuilder(device);
-            pathBuilder.BeginFigure(start);
-            pathBuilder.AddCubicBezier(ctrl0, ctrl1, end);
-            pathBuilder.EndFigure(CanvasFigureLoop.Open);
-
-            CanvasGeometry geometry = CanvasGeometry.CreatePath(pathBuilder);
-            drawingSession.DrawGeometry(geometry, color, 5.0f);
         }
 
-
-        public static async Task<bool> CaptureInkCanvas(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, List<DiffData> diffResults, TestExec testExec, TestSetItem setItem)
+        public static async Task SaveLastDrawLinePng(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, TestExec testExec, TestSetItem setItem)
         {
             string file_name = String.Format("{0}_{1}_{2}_{3}_last.png", testExec.TesterId, testOrder, testName, setItem.Number);
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
@@ -596,55 +632,9 @@ namespace MIDAS_BAT
 
             await encoder.FlushAsync();
             stream.Dispose();
-
-
-            file_name = String.Format("{0}_{1}_{2}_{3}_diff.png", testExec.TesterId, testOrder, testName, setItem.Number);
-            StorageFile calcFile = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
-
-            var calcStream = await calcFile.OpenAsync(FileAccessMode.ReadWrite);
-            var calcEncoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, calcStream);
-
-            using (var ds = rtb.CreateDrawingSession())
-            {
-                ds.Clear(Colors.White);
-                drawOrgLine(ds, orgLines);
-                //ds.DrawInk(inkCanvas.InkPresenter.StrokeContainer.GetStrokes());
-                drawDrawLine(ds, drawLines);
-
-                if (diffResults != null)
-                {
-                    foreach (var diffResult in diffResults)
-                    {
-                        if (diffResult.hasValue)
-                            ds.DrawLine(toVector(diffResult.org), toVector(diffResult.drawn), Colors.Red);
-                        else
-                            ds.DrawCircle(toVector(diffResult.org), 2, Colors.Red);
-                    }
-                }
-
-                if (borderUI != null && testExec.ShowBorder)
-                    DrawGuideLineInImage(borderUI, ds);
-            }
-
-            pixelBuffer = rtb.GetPixelBytes();
-            pixels = pixelBuffer.ToArray();
-
-            calcEncoder.SetPixelData(BitmapPixelFormat.Bgra8,
-                BitmapAlphaMode.Premultiplied,
-                (uint)inkCanvas.ActualWidth,
-                (uint)inkCanvas.ActualHeight,
-                displayInformation.RawDpiX,
-                displayInformation.RawDpiY,
-                pixels);
-
-            await calcEncoder.FlushAsync();
-            calcStream.Dispose();
-
-            return true;
         }
 
-
-        public static async Task<bool> CaptureInkCanvasForSpiral(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, List<List<DiffData>> diffResults, TestExec testExec, TestSetItem setItem, bool counterClockWise)
+        public static async Task SaveLastDrawLinePngForSpiral(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, TestExec testExec, TestSetItem setItem, bool counterClockWise)
         {
             string file_name = String.Format("{0}_{1}_{2}_{3}_last.png", testExec.TesterId, testOrder, testName, setItem.Number);
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
@@ -666,7 +656,7 @@ namespace MIDAS_BAT
                 double radiusStep = Util.mmToPixels(15.0f);
 
                 List<List<BATPoint>> splitDrawLines = null;
-                if( counterClockWise )
+                if (counterClockWise)
                 {
                     Point orgCenter = new Point(bounds.Width / 2 - radiusStep / 2, bounds.Height / 2);
                     splitDrawLines = Util.splitDrawing(orgCenter, drawLines, false, true);
@@ -677,7 +667,7 @@ namespace MIDAS_BAT
                     splitDrawLines = Util.splitDrawing(orgCenter, drawLines, false, false);
                 }
 
-                Color[] colors = { Color.FromArgb(255, 255, 73, 73), Color.FromArgb(255, 73, 255, 73), Color.FromArgb(255, 73, 73, 255), Color.FromArgb(255, 73, 255, 255), Color.FromArgb(255, 255, 73, 255) };
+                Color[] colors = { Color.FromArgb(255, 255, 0, 0), Color.FromArgb(255, 255, 255, 73), Color.FromArgb(255, 73, 73, 255), Color.FromArgb(255, 0, 255, 0), Color.FromArgb(255, 255, 0, 255) };
                 int colorIndex = 0;
                 foreach (var splitDrawLine in splitDrawLines)
                 {
@@ -686,7 +676,7 @@ namespace MIDAS_BAT
                         if (splitDrawLine[i].isEnd)
                             continue;
 
-                        ds.DrawLine(toVector(splitDrawLine[i].point), toVector(splitDrawLine[i+1].point), colors[colorIndex]);
+                        ds.DrawLine(toVector(splitDrawLine[i].point), toVector(splitDrawLine[i + 1].point), colors[colorIndex]);
                     }
                     colorIndex += 1;
                     if (colorIndex >= colors.Length)
@@ -710,10 +700,17 @@ namespace MIDAS_BAT
 
             await encoder.FlushAsync();
             stream.Dispose();
+        }
 
+        public static async Task SaveDiffResult(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, List<List<DiffData>> diffResults, TestExec testExec, TestSetItem setItem)
+        {
+            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
+            CanvasDevice device = CanvasDevice.GetSharedDevice();
+            CanvasRenderTarget rtb = new CanvasRenderTarget(device, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight, 96); // 96 쓰는게 맞나? or dpi 받아서 써야되나?
+            var displayInformation = DisplayInformation.GetForCurrentView();
             for (int i = 0; i < diffResults.Count; i++)
             {
-                file_name = String.Format("{0}_{1}_{2}_{3}_diff_{4}.png", testExec.TesterId, testOrder, testName, setItem.Number, i);
+                string file_name = String.Format("{0}_{1}_{2}_{3}_diff_{4}.png", testExec.TesterId, testOrder, testName, setItem.Number, i);
                 StorageFile calcFile = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
                 var calcStream = await calcFile.OpenAsync(FileAccessMode.ReadWrite);
@@ -729,7 +726,7 @@ namespace MIDAS_BAT
 
                     if (diffResults != null)
                     {
-                        foreach(var item in diffResults[i])
+                        foreach (var item in diffResults[i])
                         {
                             if (item.hasValue)
                                 ds.DrawLine(toVector(item.org), toVector(item.drawn), Colors.Red);
@@ -742,8 +739,8 @@ namespace MIDAS_BAT
                         DrawGuideLineInImage(borderUI, ds);
                 }
 
-                pixelBuffer = rtb.GetPixelBytes();
-                pixels = pixelBuffer.ToArray();
+                var pixelBuffer = rtb.GetPixelBytes();
+                var pixels = pixelBuffer.ToArray();
 
                 calcEncoder.SetPixelData(BitmapPixelFormat.Bgra8,
                     BitmapAlphaMode.Premultiplied,
@@ -756,6 +753,13 @@ namespace MIDAS_BAT
                 await calcEncoder.FlushAsync();
                 calcStream.Dispose();
             }
+        }
+
+        public static async Task<bool> CaptureInkCanvasForSpiral(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, List<List<DiffData>> diffResults, TestExec testExec, TestSetItem setItem, bool counterClockWise)
+        {
+            await SaveInkPng(testOrder, testName, inkCanvas, borderUI, orgLines, testExec, setItem);
+            await SaveLastDrawLinePngForSpiral(testOrder, testName, inkCanvas, borderUI, orgLines, drawLines, testExec, setItem, counterClockWise);
+            await SaveDiffResult(testOrder, testName, inkCanvas, borderUI, orgLines, drawLines, diffResults, testExec, setItem);
 
             return true;
         }
@@ -1433,6 +1437,16 @@ namespace MIDAS_BAT
                 splitDrawLines.Last().AddRange(splitDrawLine);
 
             return splitDrawLines;
+        }
+
+        public static double getLength(List<BATPoint> drawLine)
+        {
+            double dist = 0.0;
+            for( int i = 0; i < drawLine.Count - 1; i++)
+            {
+               dist += Util.getDistance(drawLine[i].point, drawLine[i + 1].point);
+            }
+            return dist;
         }
     }
 }

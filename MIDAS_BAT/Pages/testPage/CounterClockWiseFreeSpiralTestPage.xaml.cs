@@ -177,10 +177,8 @@ namespace MIDAS_BAT.Pages
             ClearInkData();
         }
 
-        private List<List<DiffData>> calculateDifference()
+        private List<List<BATPoint>> getSplitDrawing()
         {
-            List<List<DiffData>> results = new List<List<DiffData>>();
-
             Rect? bbox = Util.getBoundingBox2(m_drawLines);
             double radiusStep = bbox.Value.Width / 8; // 이거 실제로는 8로 나눌 것이 아니라 splitDrawing에서 나온 결과로 나눠야함. 우선은 8로 나누고 다시 계산하도록 한다?
 
@@ -193,6 +191,18 @@ namespace MIDAS_BAT.Pages
             orgCenter = new Point(bounds.Width / 2 - radiusStep / 2, bounds.Height / 2);
             drawSplits = Util.splitDrawing(orgCenter, m_drawLines, true, true);
 
+            return drawSplits;
+        }
+
+        private List<List<DiffData>> calculateDifference()
+        {
+            List<List<DiffData>> results = new List<List<DiffData>>();
+
+            Rect? bbox = Util.getBoundingBox2(m_drawLines);
+
+            List<List<BATPoint>> drawSplits = getSplitDrawing();
+            double radiusStep = bbox.Value.Width / (2 * drawSplits.Count);
+            var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             var ttv = point.TransformToVisual(Window.Current.Content);
             Point centerPt = ttv.TransformPoint(new Point(0, 0));
             // point 자체 사이즈가 있어서 아래 작업 해줘야 함 
@@ -202,7 +212,7 @@ namespace MIDAS_BAT.Pages
             // stroke 전체의 사이즈를 구함 
             m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Value.Width, drawSplits.Count, true);
 
-            orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
+            Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
             for (int i = 0; i < m_orgLines.Count; i++)
             {
                 List<DiffData> result = new List<DiffData>();
@@ -351,7 +361,8 @@ namespace MIDAS_BAT.Pages
                 await Util.CaptureInkCanvasForSpiral(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, true);
 
                 await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
-                await m_saveUtil.saveRawData2(TEST_ORDER, TEST_NAME, m_drawLines, diffResults, inkCanvas);
+                
+                await m_saveUtil.saveRawData2(TEST_ORDER, TEST_NAME, m_orgLines, getSplitDrawing(), diffResults, inkCanvas);
                 m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
             }
         }

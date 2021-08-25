@@ -1,9 +1,4 @@
-﻿using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Drawing;
-using DocumentFormat.OpenXml.Drawing.Spreadsheet;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.Graphics.Canvas;
+﻿using Microsoft.Graphics.Canvas;
 using MIDAS_BAT.Data;
 using System;
 using System.Collections.Generic;
@@ -149,257 +144,119 @@ namespace MIDAS_BAT.Utils
         }
 
 
-        public async Task<bool> saveRawData( int testOrder, string testName, List<double> times, List<DiffData> diffResults, InkCanvas inkCanvas )
+        private async Task SaveTimeCsv(StorageFolder storageFolder, int testOrder, string testName, List<List<BATPoint>> drawLines)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Encoding encoding = Encoding.GetEncoding("euc-kr");
-
-            // pressure & time diff 저장...?
-            string file_name = String.Format("{0}_{1}_{2}_raw_time_{3}.txt", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
-            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(TestExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
-            StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
-
             StringBuilder builder = new StringBuilder();
-            builder.AppendLine(times.Count.ToString());
-            for (int i = 0; i < times.Count; ++i)
-                builder.AppendLine(times[i].ToString("F3"));
-            await FileIO.WriteTextAsync(file, builder.ToString());
 
-            // 필기시간
-            file_name = String.Format("{0}_{1}_{2}_raw_time_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            string file_name = String.Format("{0}_{1}_{2}_raw_time_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
             StorageFile time_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
-            IReadOnlyList<InkStroke> strokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             builder.Clear();
             builder.Append(TestSetItem.Word);
-            builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
+            builder.AppendLine("( 총 " + drawLines.Count.ToString() + " 획)");
 
-            builder.AppendLine("Index,Pressed(ms), Released(ms), Duration(ms), Transition(ms)");
-            for( int i = 0; i < times.Count; i+=2 ) // 한 획당 2개씩 기록되어있어서... 
+            builder.AppendLine("Index,Pressed(ms),Released(ms),Duration(ms),Transition(ms),획 길이,");
+            for (int i = 0; i < drawLines.Count; i++)
             {
+                if (drawLines[i].Count() == 0)
+                    continue;
+
                 builder.Append(String.Format("{0},", i + 1));
-                builder.Append((times[i] - times[0]).ToString("F3") + "," );
-                builder.Append((times[i+1] - times[0]).ToString("F3")  + "," );
-                builder.Append((times[i+1] - times[i]).ToString("F3")  + "," );
-               
-                if (i + 2 < times.Count )
-                    builder.Append((times[i+2] - times[i+1]).ToString("F3")  + "," );
+                builder.Append(BATPoint.getTimeDiffMs(drawLines[i][0], drawLines[0][0]).ToString("F3") + ",");
+                builder.Append(BATPoint.getTimeDiffMs(drawLines[i].Last(), drawLines[0][0]).ToString("F3") + ",");
+                builder.Append(BATPoint.getTimeDiffMs(drawLines[i].Last(), drawLines[i][0]).ToString("F3") + ",");
+                if (i < drawLines.Count - 1 && drawLines[i + 1].Count != 0 )
+                {
+                    builder.Append(BATPoint.getTimeDiffMs(drawLines[i + 1][0], drawLines[i].Last()).ToString("F3") + ",");
+                }
+                else
+                {
+                    builder.Append(",");
+                }
+
+                builder.Append(Util.getLength(drawLines[i]).ToString("F6") + ",");
+
                 builder.AppendLine("");
+                
             }
 
             byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
             await FileIO.WriteBytesAsync(time_file, fileBytes);
-
-            // 필압
-            file_name = String.Format("{0}_{1}_{2}_raw_pressure_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
-            StorageFile pressure_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
-            builder.Clear();
-            builder.Append(TestSetItem.Word);
-            builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
-            builder.AppendLine("Index,총 샘플링 수,평균 필압,Raw값");
-            for (int i = 0; i < strokes.Count; ++i)
-            {
-                builder.Append(String.Format("{0},", i + 1));
-                IReadOnlyList<InkStrokeRenderingSegment> segments = strokes[i].GetRenderingSegments();
-                builder.Append(segments.Count.ToString() + ", ");
-
-                float avgPressure = 0.0f;
-                int pressure_cnt = 0;
-                foreach (var seg in segments)
-                {
-                    avgPressure += seg.Pressure;
-                    pressure_cnt++;
-                }
-                avgPressure = avgPressure / pressure_cnt;
-                builder.Append(avgPressure.ToString("F6") + ", ");
-
-                foreach (var seg in segments)
-                {
-                    builder.Append(seg.Pressure.ToString("F6") + ", ");
-                }
-
-                builder.AppendLine("");
-            }
-
-            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
-            await FileIO.WriteBytesAsync(pressure_file, fileBytes);
-
-            // min / max
-            // template은 1획밖에 없어서 하나만 쓴다. 
-            double templateMinX = 0.0;
-            double templateMinY = 0.0;
-            double templateMaxX = 0.0;
-            double templateMaxY = 0.0;
-            if ( diffResults.Count > 0)
-            {
-                templateMinX = diffResults.OrderByDescending(t => t.org.X).Last().org.X;
-                templateMinY = diffResults.OrderByDescending(t => t.org.Y).Last().org.Y;
-                templateMaxX = diffResults.OrderBy(t => t.org.X).Last().org.X;
-                templateMaxY = diffResults.OrderBy(t => t.org.Y).Last().org.Y;
-            }
-
-            file_name = String.Format("{0}_{1}_{2}_minmax_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
-            StorageFile minmax_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
-            builder.Clear();
-            builder.Append(TestSetItem.Word);
-            builder.AppendLine("( 총 " + strokes.Count.ToString() + " 획)");
-            builder.AppendLine("Index, 템플릿 Min X, 템플릿 Min Y, 템플릿 Max X, 템플릿 Max Y, Min X,Min Y,Max X,Max Y");
-            for (int i = 0; i < strokes.Count; ++i)
-            {
-                builder.Append(String.Format("{0},", i + 1));
-                // 탬플릿 쪽
-                builder.Append(String.Format("{0},{1},{2},{3},", templateMinX, templateMinY, templateMaxX, templateMaxY));
-
-                // min x, min y, max x, max y
-                builder.Append(String.Format("{0},{1},{2},{3},",
-                    strokes[i].BoundingRect.X,
-                    strokes[i].BoundingRect.Y,
-                    strokes[i].BoundingRect.X + strokes[i].BoundingRect.Width,
-                    strokes[i].BoundingRect.Y + strokes[i].BoundingRect.Height));
-
-                builder.AppendLine("");
-            }
-
-            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
-            await FileIO.WriteBytesAsync(minmax_file, fileBytes);
-
-            // diff
-            file_name = String.Format("{0}_{1}_{2}_diff_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
-            StorageFile diff_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
-            builder.Clear();
-            builder.Append(testName);
-            builder.AppendLine("Index,위치,템플릿X,템플릿Y,그린점X,그린점Y,거리차이");
-            for (int i = 0; i < diffResults.Count; ++i)
-            {
-                builder.Append(String.Format("{0},", i + 1));
-                builder.Append(String.Format("{0},{1},{2},", diffResults[i].name, diffResults[i].org.X, diffResults[i].org.Y));
-                if (diffResults[i].hasValue)
-                    builder.Append(String.Format("{0},{1},{2}", diffResults[i].drawn.X, diffResults[i].drawn.Y, diffResults[i].getDistance()));
-
-                builder.AppendLine("");
-            }
-
-            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
-            await FileIO.WriteBytesAsync(diff_file, fileBytes);
-
-            return true;
         }
 
-
-        public async Task<bool> saveRawData2(int testOrder, string testName, List<List<BATPoint>> drawPoints, List<List<DiffData>> diffResults, InkCanvas inkCanvas)
+        private async Task SavePressureCsv(StorageFolder storageFolder, int testOrder, string testName, List<List<BATPoint>> drawLines)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Encoding encoding = Encoding.GetEncoding("euc-kr");
 
-            // pressure & time diff 저장...?
-            string file_name = String.Format("{0}_{1}_{2}_raw_time_{3}_2.txt", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
-            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(TestExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
-            StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
-
             StringBuilder builder = new StringBuilder();
-            builder.AppendLine(drawPoints.Count.ToString());
-            for (int i = 0; i < drawPoints.Count; ++i)
-            {
-                if (drawPoints[i].Count() == 0)
-                    continue;
-
-                builder.AppendLine((drawPoints[i].Last().timestamp - drawPoints[i].Last().timestamp).ToString("F3"));
-            }
-            await FileIO.WriteTextAsync(file, builder.ToString());
-
-            // 필기시간
-            file_name = String.Format("{0}_{1}_{2}_raw_time_{3}_2.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
-            StorageFile time_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
-            builder.Clear();
-            builder.Append(TestSetItem.Word);
-            builder.AppendLine("( 총 " + drawPoints.Count.ToString() + " 획)");
-
-            builder.AppendLine("Index,Pressed(ms), Released(ms), Duration(ms), Transition(ms)");
-            for (int i = 0; i < drawPoints.Count; i++ )
-            {
-                if (drawPoints[i].Count() == 0)
-                    continue;
-
-                builder.Append(String.Format("{0},", i + 1));
-                builder.Append(BATPoint.getTimeDiffMs(drawPoints[i][0], drawPoints[0][0]).ToString("F3") + ",");
-                builder.Append(BATPoint.getTimeDiffMs(drawPoints[i].Last(), drawPoints[0][0]).ToString("F3") + ",");
-                builder.Append(BATPoint.getTimeDiffMs(drawPoints[i].Last(), drawPoints[i][0]).ToString("F3") + ",");
-                if (i < drawPoints.Count - 1)
-                {
-                    if( drawPoints[i+1].Count != 0)
-                        builder.Append(BATPoint.getTimeDiffMs(drawPoints[i + 1][0], drawPoints[i].Last()).ToString("F3") + ",");
-                }
-                    
-                builder.AppendLine("");
-            }
-
-            byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
-            await FileIO.WriteBytesAsync(time_file, fileBytes);
-
-            // 필압
-            file_name = String.Format("{0}_{1}_{2}_raw_pressure_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            string file_name = String.Format("{0}_{1}_{2}_raw_pressure_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
             StorageFile pressure_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
             builder.Clear();
             builder.Append(TestSetItem.Word);
-            builder.AppendLine("( 총 " + drawPoints.Count.ToString() + " 획)");
-            builder.AppendLine("Index,총 샘플링 수,평균 필압,Raw값");
-            for (int i = 0; i < drawPoints.Count; ++i)
+            builder.AppendLine("( 총 " + drawLines.Count.ToString() + " 획)");
+            builder.AppendLine("Index,총 샘플링 수,평균 필압");
+            for (int i = 0; i < drawLines.Count; ++i)
             {
                 builder.Append(String.Format("{0},", i + 1));
-                builder.Append(drawPoints[i].Count.ToString() + ", ");
+                builder.Append(drawLines[i].Count.ToString() + ", ");
 
                 float avgPressure = 0.0f;
                 int pressure_cnt = 0;
-                foreach (var pt in drawPoints[i])
+                foreach (var pt in drawLines[i])
                 {
                     avgPressure += pt.pressure;
                     pressure_cnt++;
                 }
                 avgPressure = avgPressure / pressure_cnt;
                 builder.Append(avgPressure.ToString("F6") + ", ");
+                
 
                 builder.AppendLine("");
             }
 
-            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
             await FileIO.WriteBytesAsync(pressure_file, fileBytes);
+        }
 
-            // min / max
-            // template은 1획밖에 없어서 하나만 쓴다. 
-            double templateMinX = 0.0;
-            double templateMinY = 0.0;
-            double templateMaxX = 0.0;
-            double templateMaxY = 0.0;
-
-            List<DiffData> flattenDiff = new List<DiffData>();
-            foreach(var diffResult in diffResults)
-            {
-                foreach (var item in diffResult)
-                    flattenDiff.Add(item);
-            }
-
-            if (diffResults.Count > 0)
-            {
-                templateMinX = flattenDiff.OrderByDescending(t => t.org.X).Last().org.X;
-                templateMinY = flattenDiff.OrderByDescending(t => t.org.Y).Last().org.Y;
-                templateMaxX = flattenDiff.OrderBy(t => t.org.X).Last().org.X;
-                templateMaxY = flattenDiff.OrderBy(t => t.org.Y).Last().org.Y;
-            }
-
-            file_name = String.Format("{0}_{1}_{2}_minmax_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+        private async Task SaveMinMaxCsv(StorageFolder storageFolder, int testOrder, string testName, List<List<Point>> orgLines, List<List<BATPoint>> drawLines)
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            Encoding encoding = Encoding.GetEncoding("euc-kr");
+            
+            string file_name = String.Format("{0}_{1}_{2}_minmax_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
             StorageFile minmax_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+            StringBuilder builder = new StringBuilder();
             builder.Clear();
             builder.Append(TestSetItem.Word);
-            builder.AppendLine("( 총 " + drawPoints.Count.ToString() + " 획)");
-            builder.AppendLine("Index, 템플릿 Min X, 템플릿 Min Y, 템플릿 Max X, 템플릿 Max Y, Min X,Min Y,Max X,Max Y");
-            for (int i = 0; i < drawPoints.Count; ++i)
+            builder.AppendLine("( 총 " + drawLines.Count.ToString() + " 획)");
+            builder.AppendLine("Index, 템플릿 Min X, 템플릿 Min Y, 템플릿 Max X, 템플릿 Max Y, Min X,Min Y,Max X,Max Y,획 길이");
+            for (int i = 0; i < drawLines.Count; ++i)
             {
                 builder.Append(String.Format("{0},", i + 1));
                 // 탬플릿 쪽
-                builder.Append(String.Format("{0},{1},{2},{3},", templateMinX, templateMinY, templateMaxX, templateMaxY));
 
-                Rect? boundingBox = Util.getBoundingBox(drawPoints[i]);
+                if( orgLines  != null && i < orgLines.Count )
+                {
+                    Rect? rect = Util.getBoundingBox(orgLines[i]);
+                    if(rect.HasValue)
+                    {
+                        builder.Append(String.Format("{0},{1},{2},{3},", rect.Value.X, rect.Value.Y, rect.Value.X + rect.Value.Width, rect.Value.Y + rect.Value.Height));
+                    }
+                    else
+                    {
+                        builder.Append(",,,,");
+                    }
+                }
+                else
+                {
+                    builder.Append(",,,,");
+                }
 
-                if(boundingBox.HasValue)
+                Rect? boundingBox = Util.getBoundingBox(drawLines[i]);
+
+                if (boundingBox.HasValue)
                 {
                     // min x, min y, max x, max y
                     builder.Append(String.Format("{0},{1},{2},{3},",
@@ -408,16 +265,33 @@ namespace MIDAS_BAT.Utils
                         boundingBox.Value.X + boundingBox.Value.Width,
                         boundingBox.Value.Y + boundingBox.Value.Height));
                 }
-
+                else
+                {
+                    builder.Append(",,,,");
+                }
+                builder.Append(Util.getLength(drawLines[i]).ToString("F6") + ",");
                 builder.AppendLine("");
             }
 
-            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
             await FileIO.WriteBytesAsync(minmax_file, fileBytes);
+        }
 
-            // diff
-            file_name = String.Format("{0}_{1}_{2}_diff_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+        private async Task SaveDiffCsv(StorageFolder storageFolder, int testOrder, string testName, List<List<Point>> orgLines, List<List<BATPoint>> drawPoints, List<List<DiffData>> diffResults)
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            Encoding encoding = Encoding.GetEncoding("euc-kr");
+
+            List<DiffData> flattenDiff = new List<DiffData>();
+            foreach(var diffResult in diffResults)
+            {
+                foreach(var diffItem in diffResult)
+                    flattenDiff.Add(diffItem);
+            }
+
+            string file_name = String.Format("{0}_{1}_{2}_diff_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
             StorageFile diff_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+            StringBuilder builder = new StringBuilder();
             builder.Clear();
             builder.Append(testName);
             builder.AppendLine("Index,위치,템플릿X,템플릿Y,그린점X,그린점Y,거리차이");
@@ -431,8 +305,21 @@ namespace MIDAS_BAT.Utils
                 builder.AppendLine("");
             }
 
-            fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+            byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
             await FileIO.WriteBytesAsync(diff_file, fileBytes);
+        }
+
+        public async Task<bool> saveRawData2(int testOrder, string testName, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, List<List<DiffData>> diffResults, InkCanvas inkCanvas)
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            Encoding encoding = Encoding.GetEncoding("euc-kr");
+
+            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(TestExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
+
+            await SaveTimeCsv(storageFolder, testOrder, testName, drawLines);
+            await SavePressureCsv(storageFolder, testOrder, testName, drawLines);
+            await SaveMinMaxCsv(storageFolder, testOrder, testName, orgLines, drawLines);
+            await SaveDiffCsv(storageFolder, testOrder, testName, orgLines, drawLines, diffResults);
 
             return true;
         }

@@ -177,7 +177,7 @@ namespace MIDAS_BAT.Pages
             ClearInkData();
         }
 
-        private List<DiffData> calculateDifference()
+        private List<List<DiffData>> calculateDifference()
         {
             List<DiffData> results = new List<DiffData>();
 
@@ -192,7 +192,6 @@ namespace MIDAS_BAT.Pages
             double unit = Util.mmToPixels(10.0);
 
             // 12 + 1 개의 포인트를 구해서 거리를 본다?
-            IReadOnlyList<InkStroke> strokes = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
             for (int i = 0; i <= 12; i++)
             {
                 Point p1 = l_s;
@@ -202,12 +201,11 @@ namespace MIDAS_BAT.Pages
 
                 bool found = false;
                 Point intersectedPoint;
-                for (int j = 0; j < strokes.Count; j++)
+                for (int j = 0; j < m_drawLines.Count; j++)
                 {
-                    IReadOnlyList<InkStrokeRenderingSegment> segments = strokes[j].GetRenderingSegments();
-                    for (int k = 0; k < segments.Count - 1; k++)
+                    for (int k = 0; k < m_drawLines[j].Count - 1; k++)
                     {
-                        Util.FindIntersection(p1, p2, segments[k].Position, segments[k + 1].Position, out bool isIntersected, out intersectedPoint);
+                        Util.FindIntersection(p1, p2, m_drawLines[j][k].point, m_drawLines[j][k + 1].point, out bool isIntersected, out intersectedPoint);
                         if (isIntersected)
                         {
                             found = true;
@@ -224,7 +222,7 @@ namespace MIDAS_BAT.Pages
                     results.Add(new DiffData(String.Format("Num: {0}", i), new Point(p1.X, orgPoint.Y)));
             }
 
-            return results;
+            return new List<List<DiffData>> { results };
         }
 
         private async Task nextHandling()
@@ -250,13 +248,13 @@ namespace MIDAS_BAT.Pages
             points.Add(ttv.TransformPoint(new Point(horizontalLine.X2, horizontalLine.Y2)));
             m_orgLines.Add(points);
 
-            List<DiffData> diffResults = calculateDifference();
+            List<List<DiffData>> diffResults = calculateDifference();
 
             await Util.CaptureInkCanvasForStroke2(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
             await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem);
 
             await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
-            await m_saveUtil.saveRawData(TEST_ORDER, TEST_NAME, m_Times, diffResults, inkCanvas);
+            await m_saveUtil.saveRawData2(TEST_ORDER, TEST_NAME, m_orgLines, m_drawLines, diffResults, inkCanvas);
             m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
 
             //ResizeCanvas();
