@@ -193,9 +193,7 @@ namespace MIDAS_BAT.Pages
         private List<List<BATPoint>> getSplitDrawing()
         {
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
-            double radiusStep = Util.mmToPixels(15.0f);
-            Point orgCenter = new Point(bounds.Width / 2 + radiusStep / 2, bounds.Height / 2);
-
+            Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
             List<List<BATPoint>> drawSplits = Util.splitDrawing(orgCenter, m_drawLines, true, false);
             return drawSplits;
         }
@@ -243,7 +241,8 @@ namespace MIDAS_BAT.Pages
                     Point? drawIntersected = null;
                     if (i < drawSplits.Count)
                     {
-                        for (int j = drawIdx; j < drawSplits[i].Count - 1; j++)
+                        int prevDrawIdx = drawIdx;
+                        for (int j = drawIdx; j < drawSplits[i].Count - 1 - 1; j++) // 가장 마지막점은 빼도록 한다. 그린 선 가장 마지막 점은 보통 다음 바퀴의 시작점임. 
                         {
                             if (drawSplits[i][j].isEnd)
                                 continue;
@@ -252,10 +251,13 @@ namespace MIDAS_BAT.Pages
                             if (isIntersected)
                             {
                                 drawIntersected = intersectedPt;
-                                drawIdx = j + 1; // 다음 각도는 j + 1 부터 시작
+                                drawIdx = j; // 다음 각도는 j + 1 부터 시작
                                 break;
                             }
                         }
+
+                        if (drawIdx >= drawSplits[i].Count - 2)
+                            drawIdx = prevDrawIdx;
                     }
 
                     // 최초 매칭만 최소거리로 찾는다.

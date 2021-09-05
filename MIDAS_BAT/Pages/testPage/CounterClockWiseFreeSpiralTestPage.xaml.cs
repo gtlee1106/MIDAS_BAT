@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -180,17 +181,9 @@ namespace MIDAS_BAT.Pages
         private List<List<BATPoint>> getSplitDrawing()
         {
             Rect? bbox = Util.getBoundingBox2(m_drawLines);
-            double radiusStep = bbox.Value.Width / 8; // 이거 실제로는 8로 나눌 것이 아니라 splitDrawing에서 나온 결과로 나눠야함. 우선은 8로 나누고 다시 계산하도록 한다?
-
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
-            Point orgCenter = new Point(bounds.Width / 2 - radiusStep / 2, bounds.Height / 2);
+            Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
             List<List<BATPoint>> drawSplits = Util.splitDrawing(orgCenter, m_drawLines, true, true);
-
-            // 다시 계산한다. 위에서는 radiusStep을 4 cycle로 가정하고 품
-            radiusStep = bbox.Value.Width / (2 * drawSplits.Count);
-            orgCenter = new Point(bounds.Width / 2 - radiusStep / 2, bounds.Height / 2);
-            drawSplits = Util.splitDrawing(orgCenter, m_drawLines, true, true);
-
             return drawSplits;
         }
 
@@ -246,7 +239,8 @@ namespace MIDAS_BAT.Pages
                     Point? drawIntersected = null;
                     if (i < drawSplits.Count)
                     {
-                        for (int j = drawIdx; j < drawSplits[i].Count - 1; j++)
+                        int prevDrawIdx = drawIdx;
+                        for (int j = drawIdx; j < drawSplits[i].Count - 1 - 1; j++) // 가장 마지막점은 빼도록 한다. 그린 선 가장 마지막 점은 보통 다음 바퀴의 시작점임. 
                         {
                             if (drawSplits[i][j].isEnd)
                                 continue;
@@ -255,10 +249,13 @@ namespace MIDAS_BAT.Pages
                             if (isIntersected)
                             {
                                 drawIntersected = intersectedPt;
-                                drawIdx = j + 1; // 다음 각도는 j + 1 부터 시작
+                                drawIdx = j; // 다음 각도는 j + 1 부터 시작
                                 break;
                             }
                         }
+
+                        if (drawIdx >= drawSplits[i].Count - 2)
+                            drawIdx = prevDrawIdx;
                     }
 
                     // 최초 매칭만 최소거리로 찾는다.
@@ -267,9 +264,13 @@ namespace MIDAS_BAT.Pages
                     {
                         result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value, drawIntersected.Value));
                     }
-                    else
+                    else if (orgIntersected != null)
                     {
                         result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value)); // 설마 이게 없으려나... 
+                    }
+                    else
+                    {
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), new Point(0, 0))); // 설마 이게 없으려나... 
                     }
                 }
 
@@ -324,9 +325,13 @@ namespace MIDAS_BAT.Pages
                     {
                         result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value, drawIntersected.Value));
                     }
-                    else
+                    else if (orgIntersected != null)
                     {
                         result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value)); // 설마 이게 없으려나... 
+                    }
+                    else
+                    {
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), new Point(0, 0))); // 설마 이게 없으려나... 
                     }
                 }
 
@@ -350,19 +355,33 @@ namespace MIDAS_BAT.Pages
 
             m_saveUtil.TestSetItem = testSetItem;
 
-            List<List<DiffData>> diffResults = null;
+            List<List<DiffData>> diffResults = new List<List<DiffData>>();
 
             // stroke 가 없는 경우 무시하도록 하고... 
             if (m_drawLines.Count > 0 && m_drawLines[0].Count > 2) // 점 하나만 찍히는 케이스 
             {
-                diffResults = calculateDifference();
+                try
+                {
+                    diffResults = calculateDifference();
+                } catch (Exception e)
+                {
+                    StringBuilder builder = new StringBuilder();
+                    builder.Append(e.ToString());
+                    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                    Encoding encoding = Encoding.GetEncoding("euc-kr");
 
+
+                    byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+                    StorageFolder orgFolder = ApplicationData.Current.LocalFolder;
+                    StorageFile resultFile = await orgFolder.CreateFileAsync("log.txt", CreationCollisionOption.ReplaceExisting);
+                    await FileIO.WriteBytesAsync(resultFile, fileBytes);
+                }
                 await Util.CaptureInkCanvasForStroke2(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
-                await Util.CaptureInkCanvasForSpiral(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, true);
 
+                await Util.CaptureInkCanvasForSpiral(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, true);
                 await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
-                
                 await m_saveUtil.saveRawData2(TEST_ORDER, TEST_NAME, m_orgLines, getSplitDrawing(), diffResults, inkCanvas);
+               
                 m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
             }
         }

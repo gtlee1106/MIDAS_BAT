@@ -188,15 +188,11 @@ namespace MIDAS_BAT.Pages
 
         private List<List<BATPoint>> getSplitDrawing()
         {
-            List<List<DiffData>> results = new List<List<DiffData>>();
-
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
-            double radiusStep = Util.mmToPixels(15.0f);
-            Point orgCenter = new Point(bounds.Width / 2 - radiusStep / 2, bounds.Height / 2);
+            Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
 
             return Util.splitDrawing(orgCenter, m_drawLines, true, true);
         }
-
 
         private List<List<DiffData>> calculateDifference()
         {
@@ -222,7 +218,7 @@ namespace MIDAS_BAT.Pages
                     Point targetPt = new Point(center.X + bounds.Width * Math.Cos(radian), center.Y + bounds.Width * Math.Sin(radian));
 
                     Point? orgIntersected = null;
-                    for (int j = orgIdx; j < m_orgLines[i].Count - 1; j++)
+                    for (int j = 0; j < m_orgLines[i].Count - 1; j++)
                     {
                         Util.FindIntersection(center, targetPt, m_orgLines[i][j], m_orgLines[i][j + 1], out bool isIntersected, out Point intersectedPt);
 
@@ -239,9 +235,11 @@ namespace MIDAS_BAT.Pages
                     }
 
                     Point? drawIntersected = null;
-                    if( i < drawSplits.Count )
+                    if (i < drawSplits.Count)
                     {
-                        for (int j = drawIdx; j < drawSplits[i].Count - 1; j++)
+                        int prevDrawIdx = drawIdx;
+                        bool found = false;
+                        for (int j = drawIdx ; j < drawSplits[i].Count - 1 - 1; j++)
                         {
                             if (drawSplits[i][j].isEnd)
                                 continue;
@@ -250,10 +248,14 @@ namespace MIDAS_BAT.Pages
                             if (isIntersected)
                             {
                                 drawIntersected = intersectedPt;
-                                drawIdx = j + 1; // 다음 각도는 j + 1 부터 시작
+                                drawIdx = j; // 다음 각도는 j + 1 부터 시작
+                                found = true;
                                 break;
                             }
                         }
+
+                        if (!found) 
+                            drawIdx = prevDrawIdx;
                     }
 
                     // 최초 매칭만 최소거리로 찾는다.

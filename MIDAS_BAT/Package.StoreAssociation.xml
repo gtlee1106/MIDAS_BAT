@@ -361,11 +361,13 @@
     <Language Code="zu-za" InMinimumRequirementSet="true" />
   </SupportedLocales>
   <ProductReservedInfo>
-    <MainPackageIdentityName>11075GTLEE.GTLEEMIDASBAT</MainPackageIdentityName>
+    <MainPackageIdentityName>11075GTLEE.MIDASBAT</MainPackageIdentityName>
     <ReservedNames>
-      <ReservedName>GTLEE_MIDAS_BAT</ReservedName>
+      <ReservedName>MIDAS_BAT</ReservedName>
     </ReservedNames>
   </ProductReservedInfo>
-  <AccountPackageIdentityNames />
-  <PackageInfoList LandingUrl="https://developer.microsoft.com/dashboard/Application?appId=9MZ590PCFF80" />
+  <AccountPackageIdentityNames>
+    <MainPackageIdentityName>11075GTLEE.GTLEEMIDASBAT</MainPackageIdentityName>
+  </AccountPackageIdentityNames>
+  <PackageInfoList LandingUrl="https://developer.microsoft.com/dashboard/Application?appId=9PFCDKVR8DZW" />
 </StoreAssociation>

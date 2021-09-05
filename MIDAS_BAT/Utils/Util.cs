@@ -656,15 +656,16 @@ namespace MIDAS_BAT
                 double radiusStep = Util.mmToPixels(15.0f);
 
                 List<List<BATPoint>> splitDrawLines = null;
+                Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
                 if (counterClockWise)
                 {
-                    Point orgCenter = new Point(bounds.Width / 2 - radiusStep / 2, bounds.Height / 2);
                     splitDrawLines = Util.splitDrawing(orgCenter, drawLines, false, true);
+                    //splitDrawLines = Util.splitDrawing(orgCenter, drawLines, true, true);
                 }
                 else
                 {
-                    Point orgCenter = new Point(bounds.Width / 2 + radiusStep / 2, bounds.Height / 2);
                     splitDrawLines = Util.splitDrawing(orgCenter, drawLines, false, false);
+                    //splitDrawLines = Util.splitDrawing(orgCenter, drawLines, true, false);
                 }
 
                 Color[] colors = { Color.FromArgb(255, 255, 0, 0), Color.FromArgb(255, 255, 255, 73), Color.FromArgb(255, 73, 73, 255), Color.FromArgb(255, 0, 255, 0), Color.FromArgb(255, 255, 0, 255) };
@@ -1387,51 +1388,65 @@ namespace MIDAS_BAT
             List<List<BATPoint>> splitDrawLines = new List<List<BATPoint>>();
 
             List<BATPoint> splitDrawLine = new List<BATPoint>();
-            double prevDegree = 0.0;
-            double prevDegree2 = 0.0;
-            BATPoint prevPoint = null;
+
+            Point endPoint = orgCenter;
+            if (counterClockwise)
+                endPoint.X += 100000;
+            else
+                endPoint.X -= 100000;
+
+            int cycleCnt = 0;
+            bool hasSmallFirst = false;
             foreach (var drawLine in drawLines)
             {
-                foreach (var point in drawLine)
+                for( int i = 0; i < drawLine.Count - 1; i++)
                 {
-                    double x = point.point.X - orgCenter.X;
-                    if (!counterClockwise)
-                        x = -x;
-                    double y = orgCenter.Y - point.point.Y; // 헷갈려서 반전해서 계산
-                    double dist = Math.Sqrt(x * x + y * y);
-                    double degree = Math.Acos(x / dist) * 180 / Math.PI;
-                    if (y < 0)
-                        degree = 360 - degree;
-
-                    if (prevDegree > 350 && degree - prevDegree < 0 && degree - prevDegree2 < 0 )
+                    // 초반 조금 무시할 것인지 말것인지
+                    if ( cycleCnt == 0
+                        && splitDrawLine.Count == 0
+                        && drawLine[i].point.Y > orgCenter.Y)
                     {
-                        if (splitDrawLine.Count < 50 && splitDrawLines.Count == 0)
-                        {
-                            if (cutSmallFirst)
-                            {
-                                splitDrawLine.Clear();
-                                splitDrawLine.Add(prevPoint);
-                            }
-                        }
-                        else
-                        {
-                            splitDrawLines.Add(splitDrawLine);
-                            splitDrawLine = new List<BATPoint>();
-
-                            // 아마도 null 은 아니겠지만
-                            if (prevPoint != null)
-                                splitDrawLine.Add(prevPoint);
-                        }
+                        hasSmallFirst = true;
+                        if (cutSmallFirst)
+                            continue;
                     }
 
-                    splitDrawLine.Add(point);
-                    prevDegree2 = prevDegree;
-                    prevDegree = degree;
-                    prevPoint = point;
+                    // cutSmallHead인 경우, 첫번째 바퀴에서 y가 0 과 겹치는 line을 만들 수 없기에 바로 전 점은 붙여준다.
+                    if(cutSmallFirst
+                        && cycleCnt == 0
+                        && splitDrawLine.Count == 0
+                        && hasSmallFirst 
+                        && i > 0)
+                    {
+                        splitDrawLine.Add(drawLine[i - 1]);
+                    }
+
+
+                    splitDrawLine.Add(drawLine[i]);
+
+                    Util.FindIntersection(orgCenter, endPoint, drawLine[i].point, drawLine[i+1].point, out bool isIntersected, out Point intersectedPt);
+                    if( isIntersected )
+                    {
+                        BATPoint point = new BATPoint(intersectedPt, (drawLine[i].pressure + drawLine[i + 1].pressure) / 2, (drawLine[i].timestamp + drawLine[i + 1].timestamp) / 2);
+                        splitDrawLine.Add(point);
+                        splitDrawLines.Add(splitDrawLine);
+
+                        splitDrawLine = new List<BATPoint>();
+                        splitDrawLine.Add(point);
+                    }
                 }
+                splitDrawLine.Add(drawLine.Last() );
+
+                cycleCnt += 1;
             }
-            // 끝처리
-            if(splitDrawLines.Count <= 3)
+
+            if( !cutSmallFirst && hasSmallFirst && splitDrawLines.Count >= 2)
+            {
+                splitDrawLines[0].AddRange(splitDrawLines[1]);
+                splitDrawLines.RemoveAt(1);
+            }
+
+            if (splitDrawLines.Count <= 3)
                 splitDrawLines.Add(splitDrawLine);
             else
                 splitDrawLines.Last().AddRange(splitDrawLine);
@@ -1447,6 +1462,17 @@ namespace MIDAS_BAT
                dist += Util.getDistance(drawLine[i].point, drawLine[i + 1].point);
             }
             return dist;
+        }
+
+        public static double getAngle(Point org, Point target)
+        {
+            double dist = Util.getDistance(org, target);
+            double x = target.X - org.X;  // 역으로 계산함
+            double angle = Math.Acos(x / dist) * 180 / Math.PI;
+            if (org.Y - target.Y < 0)
+                angle = 360 - angle;
+
+            return angle;
         }
     }
 }

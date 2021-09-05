@@ -179,17 +179,10 @@ namespace MIDAS_BAT.Pages
 
         private List<List<BATPoint>> getSplitDrawing()
         {
-            Rect? bbox = Util.getBoundingBox2(m_drawLines);
-            double radiusStep = bbox.Value.Width / 8; // 이거 실제로는 8로 나눌 것이 아니라 splitDrawing에서 나온 결과로 나눠야함. 우선은 8로 나누고 다시 계산하도록 한다?
-
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
-            Point orgCenter = new Point(bounds.Width / 2 + radiusStep / 2, bounds.Height / 2);
+            Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
             List<List<BATPoint>> drawSplits = Util.splitDrawing(orgCenter, m_drawLines, true, false);
 
-            // 다시 계산한다. 위에서는 radiusStep을 4 cycle로 가정하고 품
-            radiusStep = bbox.Value.Width / (2 * drawSplits.Count);
-            orgCenter = new Point(bounds.Width / 2 + radiusStep / 2, bounds.Height / 2);
-            drawSplits = Util.splitDrawing(orgCenter, m_drawLines, true, false);
             return drawSplits;
         }
 
@@ -245,7 +238,8 @@ namespace MIDAS_BAT.Pages
                     Point? drawIntersected = null;
                     if (i < drawSplits.Count)
                     {
-                        for (int j = drawIdx; j < drawSplits[i].Count - 1; j++)
+                        int prevDrawIdx = drawIdx;
+                        for (int j = drawIdx; j < drawSplits[i].Count - 1 - 1; j++) // 가장 마지막점은 빼도록 한다. 그린 선 가장 마지막 점은 보통 다음 바퀴의 시작점임. 
                         {
                             if (drawSplits[i][j].isEnd)
                                 continue;
@@ -254,10 +248,13 @@ namespace MIDAS_BAT.Pages
                             if (isIntersected)
                             {
                                 drawIntersected = intersectedPt;
-                                drawIdx = j + 1; // 다음 각도는 j + 1 부터 시작
+                                drawIdx = j; // 다음 각도는 j + 1 부터 시작
                                 break;
                             }
                         }
+
+                        if (drawIdx >= drawSplits[i].Count - 2)
+                            drawIdx = prevDrawIdx;
                     }
 
                     // 최초 매칭만 최소거리로 찾는다.
@@ -266,9 +263,13 @@ namespace MIDAS_BAT.Pages
                     {
                         result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value, drawIntersected.Value));
                     }
-                    else
+                    else if (orgIntersected != null)
                     {
                         result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value)); // 설마 이게 없으려나... 
+                    }
+                    else
+                    {
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), new Point(0, 0))); // 설마 이게 없으려나... 
                     }
                 }
 
@@ -323,9 +324,13 @@ namespace MIDAS_BAT.Pages
                     {
                         result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value, drawIntersected.Value));
                     }
-                    else
+                    else if( orgIntersected != null )
                     {
                         result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value)); // 설마 이게 없으려나... 
+                    }
+                    else
+                    {
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), new Point(0,0))); // 설마 이게 없으려나... 
                     }
                 }
 
@@ -349,7 +354,7 @@ namespace MIDAS_BAT.Pages
 
             m_saveUtil.TestSetItem = testSetItem;
 
-            List<List<DiffData>> diffResults = null;
+            List<List<DiffData>> diffResults = new List<List<DiffData>>();
             if (m_drawLines.Count > 0 && m_drawLines[0].Count > 2) // 점 하나만 찍히는 케이스 
             {
                 diffResults = calculateDifference();
