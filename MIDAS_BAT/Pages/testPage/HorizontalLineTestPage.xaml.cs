@@ -65,6 +65,9 @@ namespace MIDAS_BAT.Pages
 
         private void Core_PointerReleasing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
+            if (nextLock)
+                return;
+
             m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
             if (m_drawLines.Count() > 0)
             {
@@ -75,11 +78,17 @@ namespace MIDAS_BAT.Pages
         }
         private void Core_PointerMoving(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
+            if (nextLock)
+                return;
+
             m_drawLines.Last().Add(new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp));
         }
 
         private void Core_PointerPressing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
+            if (nextLock)
+                return;
+
             m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
 
             // 최초의 point 
@@ -102,12 +111,24 @@ namespace MIDAS_BAT.Pages
 
                 await Util.deleteFiles(m_testExec.TesterId, TEST_ORDER, TEST_NAME);
             }
-
         }
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
             ResizeCanvas();
+        }
+
+        private void enableInkCanvas(bool enable)
+        {
+            if (enable)
+            {
+                inkCanvas.InkPresenter.InputDeviceTypes = CoreInputDeviceTypes.Mouse
+                                                        | CoreInputDeviceTypes.Pen;
+            }
+            else
+            {
+                inkCanvas.InkPresenter.InputDeviceTypes = CoreInputDeviceTypes.None;
+            }
         }
 
         private static bool nextLock = false;
@@ -116,7 +137,9 @@ namespace MIDAS_BAT.Pages
             if (nextLock == false)
             {
                 nextLock = true;
+                enableInkCanvas(false);
                 await nextHandling();
+                enableInkCanvas(true);
                 nextLock = false;
 
                 Type nextTest = Util.getNextTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
