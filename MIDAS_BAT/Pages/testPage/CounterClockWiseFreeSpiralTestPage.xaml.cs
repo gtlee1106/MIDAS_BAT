@@ -216,10 +216,15 @@ namespace MIDAS_BAT.Pages
             List<List<DiffData>> results = new List<List<DiffData>>();
 
             Rect? bbox = Util.getBoundingBox2(m_drawLines);
-
-            List<List<BATPoint>> drawSplits = getSplitDrawing();
-            double radiusStep = bbox.Value.Width / (2 * drawSplits.Count);
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
+            List<List<BATPoint>> drawSplits = getSplitDrawing();
+            if(drawSplits.Count > 4)
+            {
+                bbox = Util.getBoundingBox2(drawSplits.GetRange(0, 4)); // 4바퀴까지만 사용한다
+            }
+            //double radiusStep = bbox.Value.Width / (2 * drawSplits.Count);
+            double radiusStep = bbox.Value.Width / (2 * 4); // 4바퀴로 고정하기로 함
+
             var ttv = point.TransformToVisual(Window.Current.Content);
             Point centerPt = ttv.TransformPoint(new Point(0, 0));
             // point 자체 사이즈가 있어서 아래 작업 해줘야 함 
@@ -227,7 +232,8 @@ namespace MIDAS_BAT.Pages
             centerPt.Y += point.ActualHeight / 2;
 
             // stroke 전체의 사이즈를 구함 
-            m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Value.Width, drawSplits.Count, true);
+            //m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Value.Width, drawSplits.Count, true);
+            m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Value.Width, 4, true);
 
             Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
             for (int i = 0; i < m_orgLines.Count; i++)
@@ -255,7 +261,7 @@ namespace MIDAS_BAT.Pages
                                 continue;
 
                             orgIntersected = intersectedPt;
-                            orgIdx = j + 1; // 다음 각도는 j + 1 부터 시작
+                            orgIdx = j; // 다음 각도는 j 부터 시작
                             break;
                         }
                     }
@@ -264,21 +270,23 @@ namespace MIDAS_BAT.Pages
                     if (i < drawSplits.Count)
                     {
                         int prevDrawIdx = drawIdx;
-                        for (int j = drawIdx; j < drawSplits[i].Count - 1 - 1; j++) // 가장 마지막점은 빼도록 한다. 그린 선 가장 마지막 점은 보통 다음 바퀴의 시작점임. 
+                        bool found = false;
+                        for (int j = drawIdx; j < drawSplits[i].Count - 1; j++) 
                         {
                             if (drawSplits[i][j].isEnd)
                                 continue;
 
                             Util.FindIntersection(center, targetPt, drawSplits[i][j].point, drawSplits[i][j + 1].point, out bool isIntersected, out Point intersectedPt);
-                            if (isIntersected)
+                            if (isIntersected && !(angle == 360 && j == drawSplits[i].Count - 1 - 1)) // 나선 한 바퀴의 가장 마지막에 제일 첫 각도가 걸릴 수 있어서 이를 배제하기 위한 조건
                             {
                                 drawIntersected = intersectedPt;
-                                drawIdx = j; // 다음 각도는 j + 1 부터 시작
+                                drawIdx = j; // 다음 각도는 j 부터 시작
+                                found = true;
                                 break;
                             }
                         }
 
-                        if (drawIdx >= drawSplits[i].Count - 2)
+                        if (!found)
                             drawIdx = prevDrawIdx;
                     }
 

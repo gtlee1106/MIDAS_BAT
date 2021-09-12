@@ -258,7 +258,7 @@ namespace MIDAS_BAT.Pages
                                 continue;
 
                             orgIntersected = intersectedPt;
-                            orgIdx = j + 1; // 다음 각도는 j + 1 부터 시작
+                            orgIdx = j; // 다음 각도는 j 부터 시작
                             break;
                         }
                     }
@@ -267,21 +267,23 @@ namespace MIDAS_BAT.Pages
                     if (i < drawSplits.Count)
                     {
                         int prevDrawIdx = drawIdx;
-                        for (int j = drawIdx; j < drawSplits[i].Count - 1 - 1; j++) // 가장 마지막점은 빼도록 한다. 그린 선 가장 마지막 점은 보통 다음 바퀴의 시작점임. 
+                        bool found = false;
+                        for (int j = drawIdx; j < drawSplits[i].Count - 1; j++) // 가장 마지막점은 빼도록 한다. 그린 선 가장 마지막 점은 보통 다음 바퀴의 시작점임. 
                         {
                             if (drawSplits[i][j].isEnd)
                                 continue;
 
                             Util.FindIntersection(center, targetPt, drawSplits[i][j].point, drawSplits[i][j + 1].point, out bool isIntersected, out Point intersectedPt);
-                            if (isIntersected)
+                            if (isIntersected && !(angle == 180 && j == drawSplits[i].Count - 1 - 1)) // 나선 한 바퀴의 가장 마지막에 제일 첫 각도가 걸릴 수 있어서 이를 배제하기 위한 조건
                             {
                                 drawIntersected = intersectedPt;
-                                drawIdx = j; // 다음 각도는 j + 1 부터 시작
+                                drawIdx = j; // 다음 각도는 j 부터 시작
+                                found = true;
                                 break;
                             }
                         }
 
-                        if (drawIdx >= drawSplits[i].Count - 2)
+                        if (!found) 
                             drawIdx = prevDrawIdx;
                     }
 
