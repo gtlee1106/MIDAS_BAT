@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -233,7 +234,7 @@ namespace MIDAS_BAT.Pages
                 List<DiffData> result = new List<DiffData>();
                 int orgIdx = 0;
                 int drawIdx = 0;
-                for (int angle = 360; angle > 0; angle -= 10)
+                for (int angle = 360; angle > 0; angle -= 1)
                 {
                     Point center = orgCenter;
                     if (angle >= 180)
@@ -359,25 +360,44 @@ namespace MIDAS_BAT.Pages
 
         private async Task nextHandling()
         {
-            TestUtil testUtil = TestUtil.Instance;
-
-            TestSetItem testSetItem = new TestSetItem()
+            try
             {
-                Id = 0,
-                Number = 0,
-                TestSetId = 0,
-                Word = "반시계방향 나선 따라그리기"
-            };
+                TestUtil testUtil = TestUtil.Instance;
 
-            m_saveUtil.TestSetItem = testSetItem;
+                TestSetItem testSetItem = new TestSetItem()
+                {
+                    Id = 0,
+                    Number = 0,
+                    TestSetId = 0,
+                    Word = "반시계방향 나선 따라그리기"
+                };
 
-            List<List<DiffData>> diffResults = calculateDifference();
-            await Util.CaptureInkCanvasForStroke2(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
-            await Util.CaptureInkCanvasForSpiral(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, true);
+                m_saveUtil.TestSetItem = testSetItem;
 
-            await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
-            await m_saveUtil.saveRawData2(TEST_ORDER, TEST_NAME, m_orgLines, getSplitDrawing(), diffResults, inkCanvas);
-            m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
+                string testName = String.Format("{0}_{1}", TEST_ORDER, TEST_NAME_KR);
+
+                List<List<DiffData>> diffResults = calculateDifference();
+                await Util.CaptureInkCanvasForStroke2(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
+                await Util.CaptureInkCanvasForSpiral(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, true);
+
+                await m_saveUtil.saveStroke(TEST_ORDER, testName, inkCanvas);
+                await m_saveUtil.saveRawData2(TEST_ORDER, testName, m_orgLines, getSplitDrawing(), diffResults, inkCanvas);
+                m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
+            }
+            catch (Exception e)
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.Append(e.ToString());
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                Encoding encoding = Encoding.GetEncoding("euc-kr");
+
+                string logFileName = String.Format("log_{0}_{1}.txt", TEST_NAME, DateTime.Now.ToString());
+
+                byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+                StorageFolder orgFolder = ApplicationData.Current.LocalFolder;
+                StorageFile resultFile = await orgFolder.CreateFileAsync(logFileName, CreationCollisionOption.ReplaceExisting);
+                await FileIO.WriteBytesAsync(resultFile, fileBytes);
+            }
         }
 
         private void ClearInkData()

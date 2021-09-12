@@ -15,27 +15,10 @@ namespace MIDAS_BAT
         public string birthday { get; set; }
         public string Education { get; set; }
 
-        public string GetTesterName(bool useBirthday= false, bool useGender = false, bool useEducation = false )
+        public string GetTesterName(string execDateTime)
         {
-            StringBuilder builder = new StringBuilder(Name);
-            bool useParenthesis = useBirthday || useGender || useEducation;
-
-            if (useParenthesis)
-                builder.Append("( ");
-
-            if (useBirthday)
-                builder.Append(birthday).Append(" ");
-
-            if (useGender)
-                builder.Append(Gender).Append(" ");
-
-            if (useEducation)
-                builder.Append(Education).Append(" ");
-
-            if(useParenthesis)
-                builder.Append(")");
-
-            return builder.ToString();
+            return String.Format("{0}({1}, {2}, 만 {3}세, 교육년수 {4}년)", this.Name, this.Gender, this.birthday,
+                    Util.calculateAge(this.birthday, execDateTime), Util.calculateEducation(this.Education));
         }
     }
 
@@ -98,6 +81,17 @@ namespace MIDAS_BAT
         public bool ShowBorder { get; set; }
         public int ScreenWidth { get; set; }
         public int ScreenHeight{ get; set; }
+
+        public string getExecDateTimeStr()
+        {
+            string execDatetime = this.Datetime.Substring(0, 4) + "." +
+                                      this.Datetime.Substring(4, 2) + "." +
+                                      this.Datetime.Substring(6, 2) + " " +
+                                      this.Datetime.Substring(9, 2) + ":" +
+                                      this.Datetime.Substring(11, 2) + ":" +
+                                      this.Datetime.Substring(13, 2);
+            return execDatetime;
+        }
     }
 
     public class TestExecResult

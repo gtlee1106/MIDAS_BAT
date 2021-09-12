@@ -190,8 +190,8 @@ namespace MIDAS_BAT.Pages
             // ui setup
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             
-            point.Width = Util.mmToPixels(1.0);
-            point.Height = Util.mmToPixels(1.0);
+            point.Width = Util.mmToPixels(3.0);
+            point.Height = Util.mmToPixels(3.0);
 
             inkCanvas.Width = bounds.Width;
             inkCanvas.Height = bounds.Height;
@@ -235,7 +235,7 @@ namespace MIDAS_BAT.Pages
                 List<DiffData> result = new List<DiffData>();
                 int orgIdx = 0;
                 int drawIdx = 0;
-                for (int angle = 360; angle > 0; angle -= 10)
+                for (int angle = 360; angle > 0; angle -= 1)
                 {
                     Point center = orgCenter;
                     if (angle >= 180)
@@ -367,46 +367,51 @@ namespace MIDAS_BAT.Pages
 
         private async Task nextHandling()
         {
-            TestUtil testUtil = TestUtil.Instance;
-
-            TestSetItem testSetItem = new TestSetItem()
+            try
             {
-                Id = 0,
-                Number = 0,
-                TestSetId = 0,
-                Word = "반시계방향 자유 나선 그리기"
-            };
-
-            m_saveUtil.TestSetItem = testSetItem;
-
-            List<List<DiffData>> diffResults = new List<List<DiffData>>();
-
-            // stroke 가 없는 경우 무시하도록 하고... 
-            if (m_drawLines.Count > 0 && m_drawLines[0].Count > 2) // 점 하나만 찍히는 케이스 
-            {
-                try
+                TestUtil testUtil = TestUtil.Instance;
+                TestSetItem testSetItem = new TestSetItem()
                 {
+                    Id = 0,
+                    Number = 0,
+                    TestSetId = 0,
+                    Word = "반시계방향 자유 나선 그리기"
+                };
+
+                m_saveUtil.TestSetItem = testSetItem;
+
+                List<List<DiffData>> diffResults = new List<List<DiffData>>();
+
+                // stroke 가 없는 경우 무시하도록 하고... 
+                if (m_drawLines.Count > 0 && m_drawLines[0].Count > 2) // 점 하나만 찍히는 케이스 
+                {
+
                     diffResults = calculateDifference();
-                } catch (Exception e)
-                {
-                    StringBuilder builder = new StringBuilder();
-                    builder.Append(e.ToString());
-                    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                    Encoding encoding = Encoding.GetEncoding("euc-kr");
 
+                    string testName = String.Format("{0}_{1}", TEST_ORDER, TEST_NAME_KR);
 
-                    byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
-                    StorageFolder orgFolder = ApplicationData.Current.LocalFolder;
-                    StorageFile resultFile = await orgFolder.CreateFileAsync("log.txt", CreationCollisionOption.ReplaceExisting);
-                    await FileIO.WriteBytesAsync(resultFile, fileBytes);
+                    await Util.CaptureInkCanvasForStroke2(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
+                    await Util.CaptureInkCanvasForSpiral(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, true);
+
+                    await m_saveUtil.saveStroke(TEST_ORDER, testName, inkCanvas);
+                    await m_saveUtil.saveRawData2(TEST_ORDER, testName, m_orgLines, getSplitDrawing(), diffResults, inkCanvas);
+
+                    m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
                 }
-                await Util.CaptureInkCanvasForStroke2(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
+            }
+            catch (Exception e)
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.Append(e.ToString());
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                Encoding encoding = Encoding.GetEncoding("euc-kr");
 
-                await Util.CaptureInkCanvasForSpiral(TEST_ORDER, TEST_NAME, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, true);
-                await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
-                await m_saveUtil.saveRawData2(TEST_ORDER, TEST_NAME, m_orgLines, getSplitDrawing(), diffResults, inkCanvas);
-               
-                m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
+                string logFileName = String.Format("log_{0}_{1}.txt", TEST_NAME, DateTime.Now.ToString());
+
+                byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+                StorageFolder orgFolder = ApplicationData.Current.LocalFolder;
+                StorageFile resultFile = await orgFolder.CreateFileAsync(logFileName, CreationCollisionOption.ReplaceExisting);
+                await FileIO.WriteBytesAsync(resultFile, fileBytes);
             }
         }
 

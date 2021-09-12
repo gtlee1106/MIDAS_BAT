@@ -285,39 +285,58 @@ namespace MIDAS_BAT
 
         private async Task nextHandling()
         {
-            TestUtil testUtil = TestUtil.Instance;
-            if( ! await testUtil.IsCorrectWriting( m_targetWord, inkCanvas ) )
+            try
             {
-                await Util.ShowWrongWritingAlertDlg();
-                ClearInkData();
 
-                return;
+                TestUtil testUtil = TestUtil.Instance;
+                if (!await testUtil.IsCorrectWriting(m_targetWord, inkCanvas))
+                {
+                    await Util.ShowWrongWritingAlertDlg();
+                    ClearInkData();
+
+                    return;
+                }
+
+                string testName = String.Format("{0}_{1}", TEST_ORDER, TEST_NAME_KR);
+
+                await Util.CaptureInkCanvasForStroke2(TEST_ORDER, testName, inkCanvas, borderCanvas, null, m_drawLines, m_testExec, m_wordList[m_curIdx]);
+                await Util.CaptureInkCanvas(TEST_ORDER, testName, inkCanvas, borderCanvas, null, m_drawLines, new List<List<DiffData>>(), m_testExec, m_wordList[m_curIdx]);
+
+                await m_saveUtil.saveStroke(TEST_ORDER, testName, inkCanvas);
+                await m_saveUtil.saveRawData2(TEST_ORDER, testName, null, m_drawLines, new List<List<DiffData>>(), inkCanvas);
+                m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
+
+                // index 증가
+                if (AvailableToGoToNext())
+                {
+                    m_curIdx++;
+
+                    // 새로운 단어 지정 및 전체 초기화.
+                    UpdateCurrnetStatus();
+                    ResizeCanvas();
+                    ClearInkData();
+                }
+                else
+                {
+                    var dialog = new MessageDialog("검사가 끝났습니다. 수고하셨습니다.");
+                    await dialog.ShowAsync();
+                    this.Frame.Navigate(typeof(MainPage));
+                    return;
+                }
             }
-            
-
-            await Util.CaptureInkCanvasForStroke2(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, m_drawLines, m_testExec, m_wordList[m_curIdx]);
-            await Util.CaptureInkCanvas(TEST_ORDER, TEST_NAME, inkCanvas, borderCanvas, null, m_drawLines, new List<List<DiffData>>(), m_testExec, m_wordList[m_curIdx]);
-            
-            await m_saveUtil.saveStroke(TEST_ORDER, TEST_NAME, inkCanvas);
-            await m_saveUtil.saveRawData2(TEST_ORDER, TEST_NAME, null, m_drawLines, new List<List<DiffData>>(), inkCanvas );
-            m_saveUtil.saveResultIntoDB(m_Times, inkCanvas );
-
-            // index 증가
-            if( AvailableToGoToNext() )
+            catch (Exception e)
             {
-                m_curIdx++;
+                StringBuilder builder = new StringBuilder();
+                builder.Append(e.ToString());
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                Encoding encoding = Encoding.GetEncoding("euc-kr");
 
-                // 새로운 단어 지정 및 전체 초기화.
-                UpdateCurrnetStatus();
-                ResizeCanvas();
-                ClearInkData();
-            }
-            else
-            {
-                var dialog = new MessageDialog("검사가 끝났습니다. 수고하셨습니다.");
-                await dialog.ShowAsync();
-                this.Frame.Navigate(typeof(MainPage));
-                return;
+                string logFileName = String.Format("log_{0}_{1}.txt", TEST_NAME, DateTime.Now.ToString());
+
+                byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+                StorageFolder orgFolder = ApplicationData.Current.LocalFolder;
+                StorageFile resultFile = await orgFolder.CreateFileAsync(logFileName, CreationCollisionOption.ReplaceExisting);
+                await FileIO.WriteBytesAsync(resultFile, fileBytes);
             }
         }
 

@@ -146,11 +146,17 @@ namespace MIDAS_BAT.Utils
 
         private async Task SaveTimeCsv(StorageFolder storageFolder, int testOrder, string testName, List<List<BATPoint>> drawLines)
         {
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(TestExec.TesterId);
+
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Encoding encoding = Encoding.GetEncoding("euc-kr");
             StringBuilder builder = new StringBuilder();
 
-            string file_name = String.Format("{0}_{1}_{2}_raw_time_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            string file_name = String.Format("{0}_{1}_time.csv", tester.GetTesterName(TestExec.Datetime), testName); 
+            if(testOrder.Equals(TestPage.TEST_ORDER))
+                file_name = String.Format("{0}_{1}_{2}_{3}_time.csv", tester.GetTesterName(TestExec.Datetime), testName, TestSetItem.Number, TestSetItem.Word);
+
             StorageFile time_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
             builder.Clear();
             builder.Append(TestSetItem.Word);
@@ -187,31 +193,51 @@ namespace MIDAS_BAT.Utils
 
         private async Task SavePressureCsv(StorageFolder storageFolder, int testOrder, string testName, List<List<BATPoint>> drawLines)
         {
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(TestExec.TesterId);
+
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Encoding encoding = Encoding.GetEncoding("euc-kr");
 
             StringBuilder builder = new StringBuilder();
-            string file_name = String.Format("{0}_{1}_{2}_raw_pressure_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            string file_name = String.Format("{0}_{1}_pressure.csv", tester.GetTesterName(TestExec.Datetime), testName);
+            if (testOrder.Equals(TestPage.TEST_ORDER))
+                file_name = String.Format("{0}_{1}_{2}_{3}_pressure.csv", tester.GetTesterName(TestExec.Datetime), testName, TestSetItem.Number, TestSetItem.Word);
+            
             StorageFile pressure_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
             builder.Clear();
             builder.Append(TestSetItem.Word);
             builder.AppendLine("( 총 " + drawLines.Count.ToString() + " 획)");
-            builder.AppendLine("Index,총 샘플링 수,평균 필압");
+            builder.AppendLine("Index,총 샘플링 수,필압 평균,필압 표준편차,raw pressure");
             for (int i = 0; i < drawLines.Count; ++i)
             {
                 builder.Append(String.Format("{0},", i + 1));
                 builder.Append(drawLines[i].Count.ToString() + ", ");
 
-                float avgPressure = 0.0f;
-                int pressure_cnt = 0;
+                List<double> pressures = new List<double>();
                 foreach (var pt in drawLines[i])
                 {
-                    avgPressure += pt.pressure;
-                    pressure_cnt++;
+                    if (Math.Abs(pt.pressure) < 0.000001)
+                        continue;
+
+                    pressures.Add(pt.pressure);
                 }
-                avgPressure = avgPressure / pressure_cnt;
-                builder.Append(avgPressure.ToString("F6") + ", ");
+                if( pressures.Count > 0 )
+                {
+                    builder.Append(pressures.Average().ToString("F6") + ",");
+                    builder.Append(Util.calculateStdev(pressures).ToString("F6") + ",");
+                }
+                else
+                {
+                    builder.Append(0.0.ToString("F6") + ",");
+                    builder.Append(0.0.ToString("F6") + ",");
+                }
                 
+
+                foreach(var p in pressures)
+                {
+                    builder.Append(p.ToString("F6") + ",");
+                }
 
                 builder.AppendLine("");
             }
@@ -222,10 +248,16 @@ namespace MIDAS_BAT.Utils
 
         private async Task SaveMinMaxCsv(StorageFolder storageFolder, int testOrder, string testName, List<List<Point>> orgLines, List<List<BATPoint>> drawLines)
         {
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(TestExec.TesterId);
+
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Encoding encoding = Encoding.GetEncoding("euc-kr");
             
-            string file_name = String.Format("{0}_{1}_{2}_minmax_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            string file_name = String.Format("{0}_{1}_MinMax.csv", tester.GetTesterName(TestExec.Datetime), testName);
+            if (testOrder.Equals(TestPage.TEST_ORDER))
+                file_name = String.Format("{0}_{1}_{2}_{3}_MinMax.csv", tester.GetTesterName(TestExec.Datetime), testName, TestSetItem.Number, TestSetItem.Word);
+
             StorageFile minmax_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
             StringBuilder builder = new StringBuilder();
             builder.Clear();
@@ -279,6 +311,10 @@ namespace MIDAS_BAT.Utils
 
         private async Task SaveDiffCsv(StorageFolder storageFolder, int testOrder, string testName, List<List<Point>> orgLines, List<List<BATPoint>> drawPoints, List<List<DiffData>> diffResults)
         {
+            // 글자쓰기는 diff가 없다. 
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(TestExec.TesterId);
+
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Encoding encoding = Encoding.GetEncoding("euc-kr");
 
@@ -289,7 +325,8 @@ namespace MIDAS_BAT.Utils
                     flattenDiff.Add(diffItem);
             }
 
-            string file_name = String.Format("{0}_{1}_{2}_diff_{3}.csv", TestExec.TesterId.ToString(), testOrder, testName, TestSetItem.Number);
+            string file_name = String.Format("{0}_{1}_차이.csv", tester.GetTesterName(TestExec.Datetime), testName);
+
             StorageFile diff_file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
             StringBuilder builder = new StringBuilder();
             builder.Clear();

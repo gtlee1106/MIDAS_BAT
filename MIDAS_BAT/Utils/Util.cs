@@ -229,13 +229,13 @@ namespace MIDAS_BAT
             TestExec testExec = dbManager.GetTestExec(testExecId);
             Tester tester = dbManager.GetTester(testExec.TesterId);
 
-            string testerName = tester.GetTesterName(true, true, true);
+            string testerName = tester.GetTesterName(testExec.Datetime);
             StorageFile resultFile = await targetFolder.CreateFileAsync(testerName + "_결과.csv", CreationCollisionOption.ReplaceExisting);
 
             List<TestSetItem> testSetItems = dbManager.GetTestSetItems(testExec.TestSetId);
 
             StringBuilder builder = new StringBuilder();
-            builder.Append(tester.GetTesterName(true, true, true) + ",");
+            builder.Append(tester.GetTesterName(testExec.Datetime) + ",");
             builder.AppendLine("검사일 : " + ParsePrettyDateTimeForm(testExec.Datetime));
             builder.AppendLine("단어, 한글자, 초성시간(ms), 간격(ms), 중성시간(ms), 간격(ms), 종성시간(ms), 간격(ms), " +
                 "초성평균압력(0~1), 중성평균압력(0~1), 종성평균압력(0~1)");
@@ -275,209 +275,13 @@ namespace MIDAS_BAT
 
         private static async void ExportRawResultItem(StorageFolder orgFolder, StorageFolder targetFolder, string testerId, string testerName, List<TestSetItem> testSetItems)
         {
-            string[,] testNames = new string[,] {
-                { String.Format("{0}_{1}", HorizontalLineTestPage.TEST_ORDER, HorizontalLineTestPage.TEST_NAME) ,
-                    String.Format("{0}_{1}", HorizontalLineTestPage.TEST_ORDER, HorizontalLineTestPage.TEST_NAME_KR) },
-                { String.Format("{0}_{1}", VerticalLineTestPage.TEST_ORDER, VerticalLineTestPage.TEST_NAME) ,
-                    String.Format("{0}_{1}", VerticalLineTestPage.TEST_ORDER, VerticalLineTestPage.TEST_NAME_KR) },
-                { String.Format("{0}_{1}", CounterClockWiseSpiralTestPage.TEST_ORDER, CounterClockWiseSpiralTestPage.TEST_NAME) ,
-                    String.Format("{0}_{1}", CounterClockWiseSpiralTestPage.TEST_ORDER, CounterClockWiseSpiralTestPage.TEST_NAME_KR) },
-                { String.Format("{0}_{1}", ClockWiseSpiralTestPage.TEST_ORDER, ClockWiseSpiralTestPage.TEST_NAME) ,
-                    String.Format("{0}_{1}", ClockWiseSpiralTestPage.TEST_ORDER, ClockWiseSpiralTestPage.TEST_NAME_KR) },
-                { String.Format("{0}_{1}", CounterClockWiseFreeSpiralTestPage.TEST_ORDER, CounterClockWiseFreeSpiralTestPage.TEST_NAME) ,
-                    String.Format("{0}_{1}", CounterClockWiseFreeSpiralTestPage.TEST_ORDER, CounterClockWiseFreeSpiralTestPage.TEST_NAME_KR) },
-                { String.Format("{0}_{1}", ClockWiseFreeSpiralTestPage.TEST_ORDER, ClockWiseFreeSpiralTestPage.TEST_NAME) ,
-                    String.Format("{0}_{1}", ClockWiseFreeSpiralTestPage.TEST_ORDER, ClockWiseFreeSpiralTestPage.TEST_NAME_KR) }
-            };
-
-            for (int i = 0; i < testNames.GetLength(0); i++)
+            IReadOnlyList<StorageFile> allFiles = await orgFolder.GetFilesAsync();
+            foreach (var file in allFiles)
             {
-                string gifFileName = String.Format("{0}_{1}_{2}.gif", testerId, testNames[i, 0], 0);
-                if (await orgFolder.TryGetItemAsync(gifFileName) != null)
-                {
-                    string newGifName = String.Format("{0}_{1}.gif", testerName, testNames[i, 1]);
-                    StorageFile charGifFile = await orgFolder.GetFileAsync(gifFileName);
-                    await charGifFile.CopyAsync(targetFolder, newGifName, NameCollisionOption.ReplaceExisting);
-                }
+                if (file.Name.EndsWith("_canvas.gif"))
+                    continue;
 
-                string orgPngName = String.Format("{0}_{1}_{2}_last.png", testerId, testNames[i, 0], 0);
-                if (await orgFolder.TryGetItemAsync(orgPngName) != null)
-                {
-                    string newPngName = String.Format("{0}_{1}_최종.png", testerName, testNames[i, 1]);
-                    StorageFile charPngFile = await orgFolder.GetFileAsync(orgPngName);
-                    await charPngFile.CopyAsync(targetFolder, newPngName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // ink
-                string orgInkName = String.Format("{0}_{1}_{2}_ink.png", testerId, testNames[i, 0], 0);
-                if (await orgFolder.TryGetItemAsync(orgInkName) != null)
-                {
-                    string newInkName = String.Format("{0}_{1}_잉크.png", testerName, testNames[i, 1]);
-
-                    StorageFile pressureFile = await orgFolder.GetFileAsync(orgInkName);
-                    await pressureFile.CopyAsync(targetFolder, newInkName, NameCollisionOption.ReplaceExisting);
-                }
-
-
-                {
-                    List<string> fileTypeFilter = new List<string>();
-                    fileTypeFilter.Add(".png");
-                    var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, fileTypeFilter);
-
-                    // Create query and retrieve files
-                    var query = orgFolder.CreateFileQueryWithOptions(queryOptions);
-                    IReadOnlyList<StorageFile> fileList = await query.GetFilesAsync();
-                    string pngFileFormat = String.Format("{0}_{1}_{2}_diff_", testerId, testNames[i, 0], 0);
-                    foreach (StorageFile file in fileList)
-                    {
-                        if (!file.Name.StartsWith(pngFileFormat))
-                            continue;
-
-                        string newPngName = file.Name.Replace(pngFileFormat, String.Format("{0}_{1}_차이_", testerName, testNames[i, 1]));
-                        await file.CopyAsync(targetFolder, newPngName, NameCollisionOption.ReplaceExisting);
-                    }
-                }
-                /*
-                string diffPngName = String.Format("{0}_{1}_{2}_diff.png", testerId, testNames[i, 0], 0);
-                if (await orgFolder.TryGetItemAsync(diffPngName) != null)
-                {
-                    string newDiffPngName = String.Format("{0}_{1}_차이.png", testerName, testNames[i, 1]);
-                    StorageFile charPngFile = await orgFolder.GetFileAsync(diffPngName);
-                    await charPngFile.CopyAsync(targetFolder, newDiffPngName, NameCollisionOption.ReplaceExisting);
-                }
-                */
-
-                // time
-                string orgTimeName = String.Format("{0}_{1}_raw_time_{2}.csv", testerId, testNames[i, 0], 0);
-                if (await orgFolder.TryGetItemAsync(orgTimeName) != null)
-                {
-                    string newTimeName = String.Format("{0}_{1}_time.csv", testerName, testNames[i, 1]);
-
-                    StorageFile tiimeFile = await orgFolder.GetFileAsync(orgTimeName);
-                    await tiimeFile.CopyAsync(targetFolder, newTimeName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // pressure
-                string orgPressureName = String.Format("{0}_{1}_raw_pressure_{2}.csv", testerId, testNames[i, 0], 0);
-                if (await orgFolder.TryGetItemAsync(orgPressureName) != null)
-                {
-                    string newPressureName = String.Format("{0}_{1}_pressure.csv", testerName, testNames[i, 1]);
-
-                    StorageFile pressureFile = await orgFolder.GetFileAsync(orgPressureName);
-                    await pressureFile.CopyAsync(targetFolder, newPressureName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // minmax
-                string orgMinmaxName = String.Format("{0}_{1}_minmax_{2}.csv", testerId, testNames[i, 0], 0);
-                if (await orgFolder.TryGetItemAsync(orgMinmaxName) != null)
-                {
-                    string newMinmaxName = String.Format("{0}_{1}_MinMax.csv", testerName, testNames[i, 1]);
-
-                    StorageFile pressureFile = await orgFolder.GetFileAsync(orgMinmaxName);
-                    await pressureFile.CopyAsync(targetFolder, newMinmaxName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // difference
-                string orgDiffName = String.Format("{0}_{1}_diff_{2}.csv", testerId, testNames[i, 0], 0);
-                if (await orgFolder.TryGetItemAsync(orgDiffName) != null)
-                {
-                    string newDiffName = String.Format("{0}_{1}_차이.csv", testerName, testNames[i, 1]);
-
-                    StorageFile pressureFile = await orgFolder.GetFileAsync(orgDiffName);
-                    await pressureFile.CopyAsync(targetFolder, newDiffName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // pngs
-                {
-                    // 이건 몇 장이 될 지 알 수가 없어서...
-                    List<string> fileTypeFilter = new List<string>();
-                    fileTypeFilter.Add(".png");
-                    var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, fileTypeFilter);
-
-                    // Create query and retrieve files
-                    var query = orgFolder.CreateFileQueryWithOptions(queryOptions);
-                    IReadOnlyList<StorageFile> fileList = await query.GetFilesAsync();
-                    string pngFileFormat = String.Format("{0}_{1}_{2}_stroke_", testerId, testNames[i, 0], 0);
-                    foreach (StorageFile file in fileList)
-                    {
-                        if (!file.Name.StartsWith(pngFileFormat))
-                            continue;
-
-                        string newPngName = file.Name.Replace(pngFileFormat, String.Format("{0}_{1}_획순_", testerName, testNames[i, 1]));
-                        await file.CopyAsync(targetFolder, newPngName, NameCollisionOption.ReplaceExisting);
-                    }
-                }
-            }
-
-            string[] charTestNames = { String.Format("{0}_{1}", TestPage.TEST_ORDER, TestPage.TEST_NAME),
-                    String.Format("{0}_{1}", TestPage.TEST_ORDER, TestPage.TEST_NAME_KR) };
-
-            foreach (var item in testSetItems)
-            {
-                string gifFileName = String.Format("{0}_{1}_{2}.gif", testerId, charTestNames[0], item.Number);
-                if (await orgFolder.TryGetItemAsync(gifFileName) != null)
-                {
-                    string newGifName = String.Format("{0}_{1}_{2}_{3}.gif", testerName, charTestNames[1], item.Number, item.Word);
-                    StorageFile charGifFile = await orgFolder.GetFileAsync(gifFileName);
-                    await charGifFile.CopyAsync(targetFolder, newGifName, NameCollisionOption.ReplaceExisting);
-                }
-
-                string orgPngName = String.Format("{0}_{1}_{2}_last.png", testerId, charTestNames[0], item.Number);
-                if (await orgFolder.TryGetItemAsync(orgPngName) != null)
-                {
-                    string newPngName = String.Format("{0}_{1}_{2}_{3}_최종.png", testerName, charTestNames[1], item.Number, item.Word);
-                    StorageFile charPngFile = await orgFolder.GetFileAsync(orgPngName);
-                    await charPngFile.CopyAsync(targetFolder, newPngName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // time
-                string orgTimeName = String.Format("{0}_{1}_raw_time_{2}.csv", testerId, charTestNames[0], item.Number);
-                if (await orgFolder.TryGetItemAsync(orgTimeName) != null)
-                {
-                    string newTimeName = String.Format("{0}_{1}_{2}_{3}_time.csv", testerName, charTestNames[1], item.Number, item.Word);
-
-                    StorageFile tiimeFile = await orgFolder.GetFileAsync(orgTimeName);
-                    await tiimeFile.CopyAsync(targetFolder, newTimeName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // pressure
-                string orgPressureName = String.Format("{0}_{1}_raw_pressure_{2}.csv", testerId, charTestNames[0], item.Number);
-                if (await orgFolder.TryGetItemAsync(orgPressureName) != null)
-                {
-                    string newPressureName = String.Format("{0}_{1}_{2}_{3}_pressure.csv", testerName, charTestNames[1], item.Number, item.Word);
-
-                    StorageFile pressureFile = await orgFolder.GetFileAsync(orgPressureName);
-                    await pressureFile.CopyAsync(targetFolder, newPressureName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // minmax
-                string orgMinmaxName = String.Format("{0}_{1}_minmax_{2}.csv", testerId, charTestNames[0], item.Number);
-                if (await orgFolder.TryGetItemAsync(orgMinmaxName) != null)
-                {
-                    string newMinmaxName = String.Format("{0}_{1}_{2}_{3}_MinMax.csv", testerName, charTestNames[1], item.Number, item.Word);
-
-                    StorageFile minmaxFile = await orgFolder.GetFileAsync(orgMinmaxName);
-                    await minmaxFile.CopyAsync(targetFolder, newMinmaxName, NameCollisionOption.ReplaceExisting);
-                }
-
-                // pngs
-                // 이건 몇 장이 될 지 알 수가 없어서...
-                List<string> fileTypeFilter = new List<string>();
-                fileTypeFilter.Add(".png");
-                var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, fileTypeFilter);
-
-                // Create query and retrieve files
-                var query = orgFolder.CreateFileQueryWithOptions(queryOptions);
-                IReadOnlyList<StorageFile> fileList = await query.GetFilesAsync();
-                string pngFileFormat = String.Format("{0}_{1}_{2}_stroke_", testerId, charTestNames[0], item.Number);
-                foreach (StorageFile file in fileList)
-                {
-                    if (!file.Name.StartsWith(pngFileFormat))
-                        continue;
-
-                    string newPngName = file.Name.Replace(pngFileFormat, String.Format("{0}_{1}_{2}_{3}_획순_", testerName, charTestNames[1], item.Number, item.Word));
-                    await file.CopyAsync(targetFolder, newPngName, NameCollisionOption.ReplaceExisting);
-                }
+                await file.CopyAsync(targetFolder, file.Name, NameCollisionOption.ReplaceExisting);
             }
         }
 
@@ -514,7 +318,7 @@ namespace MIDAS_BAT
             Tester tester = dbManager.GetTester(testExec.TesterId);
 
             List<TestSetItem> testSetItems = dbManager.GetTestSetItems(testExec.TestSetId);
-            string testerName = tester.GetTesterName(true, true, true);
+            string testerName = tester.GetTesterName(testExec.Datetime);
 
             ExportRawResultItem(orgFolder, targetFolder, tester.Id.ToString(), testerName, testSetItems);
 
@@ -557,7 +361,13 @@ namespace MIDAS_BAT
 
         public static async Task SaveInkPng(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, TestExec testExec, TestSetItem setItem)
         {
-            string file_name = String.Format("{0}_{1}_{2}_{3}_ink.png", testExec.TesterId, testOrder, testName, setItem.Number);
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(testExec.TesterId);
+
+            string file_name = String.Format("{0}_{1}_잉크.png", tester.GetTesterName(testExec.Datetime), testName);
+            if(testOrder.Equals(TestPage.TEST_ORDER))
+                file_name = String.Format("{0}_{1}_{2}_{3}_잉크.png", tester.GetTesterName(testExec.Datetime), testName, setItem.Number, setItem.Word);
+
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
             StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
@@ -598,7 +408,13 @@ namespace MIDAS_BAT
 
         public static async Task SaveLastDrawLinePng(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, TestExec testExec, TestSetItem setItem)
         {
-            string file_name = String.Format("{0}_{1}_{2}_{3}_last.png", testExec.TesterId, testOrder, testName, setItem.Number);
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(testExec.TesterId);
+
+            string file_name = String.Format("{0}_{1}_최종.png", tester.GetTesterName(testExec.Datetime), testName);
+            if (testOrder.Equals(TestPage.TEST_ORDER))
+                file_name = String.Format("{0}_{1}_{2}_{3}_최종.png", tester.GetTesterName(testExec.Datetime), testName, setItem.Number, setItem.Word);
+
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
             StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
@@ -636,7 +452,13 @@ namespace MIDAS_BAT
 
         public static async Task SaveLastDrawLinePngForSpiral(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, TestExec testExec, TestSetItem setItem, bool counterClockWise)
         {
-            string file_name = String.Format("{0}_{1}_{2}_{3}_last.png", testExec.TesterId, testOrder, testName, setItem.Number);
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(testExec.TesterId);
+
+            string file_name = String.Format("{0}_{1}_최종.png", tester.GetTesterName(testExec.Datetime), testName);
+            if(testOrder.Equals(TestPage.TEST_ORDER))
+                file_name = String.Format("{0}_{1}_{2}_{3}_최종.png", tester.GetTesterName(testExec.Datetime), testName, setItem.Number, setItem.Word);
+
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
             StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
@@ -705,13 +527,17 @@ namespace MIDAS_BAT
 
         public static async Task SaveDiffResult(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawLines, List<List<DiffData>> diffResults, TestExec testExec, TestSetItem setItem)
         {
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(testExec.TesterId);
+
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
             CanvasDevice device = CanvasDevice.GetSharedDevice();
             CanvasRenderTarget rtb = new CanvasRenderTarget(device, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight, 96); // 96 쓰는게 맞나? or dpi 받아서 써야되나?
             var displayInformation = DisplayInformation.GetForCurrentView();
             for (int i = 0; i < diffResults.Count; i++)
             {
-                string file_name = String.Format("{0}_{1}_{2}_{3}_diff_{4}.png", testExec.TesterId, testOrder, testName, setItem.Number, i);
+                string file_name = String.Format("{0}_{1}_차이_{2}.png", tester.GetTesterName(testExec.Datetime), testName, i);
+                //String.Format("{0}_{1}_{2}_{3}_diff_{4}.png", testExec.TesterId, testOrder, testName, setItem.Number, i);
                 StorageFile calcFile = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
                 var calcStream = await calcFile.OpenAsync(FileAccessMode.ReadWrite);
@@ -800,7 +626,9 @@ namespace MIDAS_BAT
 
         public static async Task<bool> CaptureInkCanvasForStroke(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, TestExec testExec, TestSetItem setItem)
         {
-            // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(testExec.TesterId);
+
             string file_name = String.Format("{0}_{1}_{2}_{3}.gif", testExec.TesterId, testOrder, testName, setItem.Number);
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
             StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
@@ -938,7 +766,7 @@ namespace MIDAS_BAT
                         DrawGuideLineInImage(borderUI, ds);
                 }
                 pixelBuffer = rtb.GetPixelBytes();
-                string filename = String.Format("{0}_{1}_{2}_{3}_stroke_{4}.png", testExec.TesterId, testOrder, testName, setItem.Number.ToString(), newStrokeList.Count());
+                string filename = String.Format("{0}_{1}_{2}_획순_{3}.png", tester.GetTesterName(testExec.Datetime), testName, setItem.Number.ToString(), newStrokeList.Count());
 
                 await SaveStrokeAsImage(storageFolder, filename, pixelBuffer, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight);
             }
@@ -975,8 +803,10 @@ namespace MIDAS_BAT
 
         public static async Task<bool> CaptureInkCanvasForStroke2(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawPoints, TestExec testExec, TestSetItem setItem)
         {
-            // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
-            string file_name = String.Format("{0}_{1}_{2}_{3}.gif", testExec.TesterId, testOrder, testName, setItem.Number);
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(testExec.TesterId);
+
+            string file_name = String.Format("{0}_{1}_{2}.gif", tester.GetTesterName(testExec.Datetime), testName, setItem.Number);
             StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
             StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
 
@@ -1101,7 +931,7 @@ namespace MIDAS_BAT
                         DrawGuideLineInImage(borderUI, ds);
                 }
                 pixelBuffer = rtb.GetPixelBytes();
-                string filename = String.Format("{0}_{1}_{2}_{3}_stroke_{4}.png", testExec.TesterId, testOrder, testName, setItem.Number.ToString(), newStrokeList.Count());
+                string filename = String.Format("{0}_{1}_{2}_획순_{3}.png", tester.GetTesterName(testExec.Datetime), testName, setItem.Number.ToString(), newStrokeList.Count());
 
                 await SaveStrokeAsImage(storageFolder, filename, pixelBuffer, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight);
             }
@@ -1446,10 +1276,7 @@ namespace MIDAS_BAT
                 splitDrawLines.RemoveAt(1);
             }
 
-            if (splitDrawLines.Count <= 3)
-                splitDrawLines.Add(splitDrawLine);
-            else
-                splitDrawLines.Last().AddRange(splitDrawLine);
+            splitDrawLines.Add(splitDrawLine);
 
             return splitDrawLines;
         }
@@ -1474,5 +1301,12 @@ namespace MIDAS_BAT
 
             return angle;
         }
+
+        public static double calculateStdev(IEnumerable<double> values)
+        {
+            double avg = values.Average();
+            return Math.Sqrt(values.Average(v => Math.Pow(v - avg, 2)));
+        }
+
     }
 }

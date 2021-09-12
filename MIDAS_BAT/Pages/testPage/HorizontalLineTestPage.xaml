@@ -17,13 +17,6 @@
                 RelativePanel.AlignHorizontalCenterWithPanel= "True" 
                 Margin="10"
                 FontSize="36"/>
-            <InkCanvas 
-                x:Name="inkCanvas" 
-                RelativePanel.AlignHorizontalCenterWithPanel="True" 
-                RelativePanel.AlignVerticalCenterWithPanel="True"
-                Width="1000"
-                Height="1000"
-                />
             <Grid
                 x:Name="content"
                 Width="1000"
@@ -41,6 +34,13 @@
                     Grid.Column="0"
                     />
             </Grid>
+            <InkCanvas 
+                x:Name="inkCanvas" 
+                RelativePanel.AlignHorizontalCenterWithPanel="True" 
+                RelativePanel.AlignVerticalCenterWithPanel="True"
+                Width="1000"
+                Height="1000"
+                />
             <Button 
                 x:Name="nextBtn" 
                 Content="다음" 
