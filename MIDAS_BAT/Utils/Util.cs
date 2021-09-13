@@ -1213,6 +1213,39 @@ namespace MIDAS_BAT
             return edu;
         }
 
+        public static List<List<BATPoint>> splitDrawingToHalfSpiral(Point orgCenter, List<BATPoint> drawLine, bool counterClockwise)
+        {
+            List<List<BATPoint>> splitDrawLines = new List<List<BATPoint>>();
+            Point endPoint = orgCenter;
+            if (counterClockwise)
+                endPoint.X -= 100000;
+            else
+                endPoint.X += 100000;
+
+            int targetIdx = -1;
+            for(int i = 0; i < drawLine.Count - 1; i++)
+            {
+                Util.FindIntersection(orgCenter, endPoint, drawLine[i].point, drawLine[i + 1].point, out bool isIntersected, out Point intersectedPt);
+                if (isIntersected)
+                {
+                    targetIdx = i + 1;
+                    break;
+                }
+            }
+
+            if( targetIdx != -1)
+            {
+                splitDrawLines.Add(drawLine.GetRange(0, targetIdx + 1));
+                splitDrawLines.Add(drawLine.GetRange(targetIdx, drawLine.Count - targetIdx));
+            }
+            else
+            {
+                splitDrawLines.Add(drawLine);
+            }
+
+            return splitDrawLines;
+        }
+
         public static List<List<BATPoint>> splitDrawing(Point orgCenter, List<List<BATPoint>> drawLines, bool cutSmallFirst, bool counterClockwise)
         {
             List<List<BATPoint>> splitDrawLines = new List<List<BATPoint>>();
