@@ -215,11 +215,11 @@ namespace MIDAS_BAT.Pages
             }
         }
 
-        private List<List<BATPoint>> getSplitDrawing()
+        private List<List<BATPoint>> getSplitDrawing(bool cutSmallFirst)
         {
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
-            List<List<BATPoint>> drawSplits = Util.splitDrawing(orgCenter, m_drawLines, true, false);
+            List<List<BATPoint>> drawSplits = Util.splitDrawing(orgCenter, m_drawLines, cutSmallFirst, false);
             return drawSplits;
         }
 
@@ -230,7 +230,7 @@ namespace MIDAS_BAT.Pages
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             double radiusStep = Util.mmToPixels(15.0f);
 
-            List<List<BATPoint>> drawSplits = getSplitDrawing();
+            List<List<BATPoint>> drawSplits = getSplitDrawing(true);
 
             Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
             for (int i = 0; i < m_orgLines.Count; i++)
@@ -408,7 +408,7 @@ namespace MIDAS_BAT.Pages
                 await Util.CaptureInkCanvasForSpiral(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, false);
 
                 await m_saveUtil.saveStroke(TEST_ORDER, testName, inkCanvas);
-                await m_saveUtil.saveRawData2(TEST_ORDER, testName, m_orgLines, getSplitDrawing(), diffResults, inkCanvas);
+                await m_saveUtil.saveRawData2(TEST_ORDER, testName, m_orgLines, getSplitDrawing(false), diffResults, inkCanvas);
                 m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
 
                 //ResizeCanvas();

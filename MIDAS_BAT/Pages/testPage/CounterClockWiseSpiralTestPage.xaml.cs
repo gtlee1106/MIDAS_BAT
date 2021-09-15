@@ -211,13 +211,15 @@ namespace MIDAS_BAT.Pages
             ClearInkData();
         }
 
-        private List<List<BATPoint>> getSplitDrawing()
+        
+        private List<List<BATPoint>> getSplitDrawing(bool cutSmallFirst)
         {
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
 
-            return Util.splitDrawing(orgCenter, m_drawLines, true, true);
+            return Util.splitDrawing(orgCenter, m_drawLines, cutSmallFirst, true);
         }
+       
 
         private List<List<DiffData>> calculateDifference()
         {
@@ -228,8 +230,8 @@ namespace MIDAS_BAT.Pages
 
             Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
 
-            List<List<BATPoint>> drawSplits = getSplitDrawing();
-            
+            List<List<BATPoint>> drawSplits = getSplitDrawing(true);
+
             for (int i = 0; i < m_orgLines.Count; i++)
             {
                 List<DiffData> result = new List<DiffData>();
@@ -384,138 +386,6 @@ namespace MIDAS_BAT.Pages
             return results;
         }
 
-        private List<List<DiffData>> calculateDifference2()
-        {
-            List<List<DiffData>> results = new List<List<DiffData>>();
-
-            var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
-            double radiusStep = Util.mmToPixels(15.0f);
-
-            List<List<BATPoint>> drawSplits = getSplitDrawing();
-
-            Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
-            for (int i = 0; i < m_orgLines.Count; i++)
-            {
-                List<DiffData> result = new List<DiffData>();
-                int drawIdx = 0;
-                SortedDictionary<int, Point> orgResult = new SortedDictionary<int, Point>();
-                for (int angle = 360; angle > 0; angle -= 1)
-                {
-                    Point center = orgCenter;
-                    if (angle >= 180)
-                        center.X = orgCenter.X - radiusStep / 2;
-                    double radian = Math.PI * angle / 180;
-                    Point targetPt = new Point(center.X + bounds.Width * Math.Cos(radian), center.Y + bounds.Width * Math.Sin(radian));
-
-                    for (int j = 0; j < m_orgLines[i].Count - 1; j++)
-                    {
-                        Util.FindIntersection(center, targetPt, m_orgLines[i][j], m_orgLines[i][j + 1], out bool isIntersected, out Point intersectedPt);
-
-                        if (isIntersected)
-                        {
-                            // 최초 한 점은 뺄 것 
-                            if (Util.getDistance(intersectedPt, center) < 0.000001)
-                                continue;
-
-                            orgResult.Add(angle, intersectedPt);
-                            break;
-                        }
-                    }
-                }
-
-                SortedDictionary<int, Point> drawResult = new SortedDictionary<int, Point>();
-                if (i < drawSplits.Count)
-                {
-                    List<List<BATPoint>> halfDrawLines = Util.splitDrawingToHalfSpiral(orgCenter, drawSplits[i], true);
-                    List<BATPoint> targetLine = halfDrawLines[0];
-                    Rect box = Util.getBoundingBox(targetLine).Value;
-                    Point center = new Point(box.X + box.Width / 2, box.Y + box.Height);
-
-                    for (int angle = 360; angle > 180; angle -= 1)
-                    {
-                        double radian = Math.PI * angle / 180;
-                        Point targetPt = new Point(center.X + bounds.Width * Math.Cos(radian), center.Y + bounds.Width * Math.Sin(radian));
-
-                        int prevDrawIdx = drawIdx;
-                        bool found = false;
-                        for (int j = drawIdx; j < targetLine.Count - 1; j++)
-                        {
-                            if (targetLine[j].isEnd)
-                                continue;
-
-                            Util.FindIntersection(center, targetPt, targetLine[j].point, targetLine[j + 1].point, out bool isIntersected, out Point intersectedPt);
-                            if (isIntersected && !(angle == 360 && j == targetLine.Count - 1 - 1)) // 나선 한 바퀴의 가장 마지막에 제일 첫 각도가 걸릴 수 있어서 이를 배제하기 위한 조건
-                            {
-                                drawIdx = j; // 다음 각도는 j 부터 시작
-                                drawResult.Add(angle, intersectedPt);
-                                found = true;
-
-                                break;
-                            }
-                        }
-
-                        if (!found)
-                        {
-                            drawIdx = prevDrawIdx;
-                        }
-                    }
-
-
-                    // 아래바퀴는 없을 수도 있음
-                    if( halfDrawLines.Count > 1)
-                    {
-                        targetLine = halfDrawLines[1];
-                        box = Util.getBoundingBox(targetLine).Value;
-                        center = new Point(box.X + box.Width / 2, box.Y);
-                        for (int angle = 180; angle > 0; angle -= 1)
-                        {
-
-                            double radian = Math.PI * angle / 180;
-                            Point targetPt = new Point(center.X + bounds.Width * Math.Cos(radian), center.Y + bounds.Width * Math.Sin(radian));
-
-                            int prevDrawIdx = drawIdx;
-                            bool found = false;
-                            for (int j = drawIdx; j < targetLine.Count - 1; j++)
-                            {
-                                if (targetLine[j].isEnd)
-                                    continue;
-
-                                Util.FindIntersection(center, targetPt, targetLine[j].point, targetLine[j + 1].point, out bool isIntersected, out Point intersectedPt);
-                                if (isIntersected)
-                                {
-                                    drawIdx = j; // 다음 각도는 j 부터 시작
-                                    drawResult.Add(angle, intersectedPt);
-                                    found = true;
-                                    break;
-                                }
-                            }
-
-                            if (!found)
-                                drawIdx = prevDrawIdx;
-                        }
-                    }
-                }
-
-                for(int angle = 360; angle > 0; angle -= 1)
-                {
-                    bool hasOrg = orgResult.TryGetValue(angle, out Point orgPoint);
-                    bool hasDraw = drawResult.TryGetValue(angle, out Point drawPoint);
-
-                    if (hasOrg && hasDraw)
-                    {
-                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgPoint, drawPoint));
-                    }
-                    else
-                    {
-                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgPoint));
-                    }
-                }
-
-                results.Add(result);
-            }
-            return results;
-        }
-
         private async Task nextHandling()
         {
             try
@@ -534,13 +404,12 @@ namespace MIDAS_BAT.Pages
 
                 string testName = String.Format("{0}_{1}", TEST_ORDER, TEST_NAME_KR);
 
-                //List<List<DiffData>> diffResults = calculateDifference();
                 List<List<DiffData>> diffResults = calculateDifference();
                 await Util.CaptureInkCanvasForStroke2(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
                 await Util.CaptureInkCanvasForSpiral(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, true);
 
                 await m_saveUtil.saveStroke(TEST_ORDER, testName, inkCanvas);
-                await m_saveUtil.saveRawData2(TEST_ORDER, testName, m_orgLines, getSplitDrawing(), diffResults, inkCanvas);
+                await m_saveUtil.saveRawData2(TEST_ORDER, testName, m_orgLines, getSplitDrawing(false), diffResults, inkCanvas);
                 m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
             }
             catch (Exception e)
