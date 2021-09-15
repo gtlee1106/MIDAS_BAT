@@ -107,7 +107,7 @@ namespace MIDAS_BAT.Pages
                 m_testExec = e.Parameter as TestExec;
                 m_saveUtil.TestExec = m_testExec;
 
-                await Util.deleteFiles(m_testExec.TesterId, TEST_ORDER, TEST_NAME);
+                await Util.deleteFiles(m_testExec.TesterId, TEST_ORDER, TEST_NAME_KR);
             }
         }
 
@@ -283,6 +283,28 @@ namespace MIDAS_BAT.Pages
                                 drawIdx = j; // 다음 각도는 j 부터 시작
                                 found = true;
                                 break;
+                            }
+                        }
+
+                        // 첫번째 바퀴에서만 못찾는 경우, 가장 가까운 점을 선택하도록 한다.
+                        if (!found && i == 0 && orgIntersected.HasValue)
+                        {
+                            drawIdx = prevDrawIdx;
+                            double minDist = 10000000;
+
+                            for (int j = drawIdx; j < drawSplits[i].Count - 1; j++)
+                            {
+                                if (drawSplits[i][j].isEnd)
+                                    continue;
+
+                                double dist = Util.getDistance(orgIntersected.Value, drawSplits[i][j].point);
+                                if (minDist > dist)
+                                {
+                                    drawIntersected = drawSplits[i][j].point;
+                                    drawIdx = j;
+                                    minDist = dist;
+                                    found = true;
+                                }
                             }
                         }
 

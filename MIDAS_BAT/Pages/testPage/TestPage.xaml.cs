@@ -191,14 +191,21 @@ namespace MIDAS_BAT
 
             m_curIdx--;
 
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(m_testExec.TesterId);
+
+            string testerName = tester.GetTesterName(m_testExec.Datetime);
+            
+            string prefix = String.Format("{0}_{1}_{2}", testerName, TEST_ORDER, TEST_NAME_KR);
+
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
             string[] file_names = {
-                m_testExec.TesterId + "_char_" + m_wordList[m_curIdx].Number.ToString() + ".gif",
-                m_testExec.TesterId + "_char_" + m_wordList[m_curIdx].Number + "_last.png",
-                m_testExec.TesterId + "_" + m_wordList[m_curIdx].Number + ".gif",
-                m_testExec.TesterId + "_raw_time_" + m_wordList[m_curIdx].Number + ".txt",
-                m_testExec.TesterId + "_raw_time_" + m_wordList[m_curIdx].Number + ".csv",
-                m_testExec.TesterId + "_raw_pressure_" + m_wordList[m_curIdx].Number + ".csv"
+                String.Format("{0}_{1}_{2}_{3}.gif", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number),
+                String.Format("{0}_{1}_{2}_{3}_{4}_최종.png", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number, m_wordList[m_curIdx].Word),
+                String.Format("{0}_{1}_{2}_{3}_{4}_잉크.png", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number, m_wordList[m_curIdx].Word),
+                String.Format("{0}_{1}_{2}_{3}_{4}_time.png", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number, m_wordList[m_curIdx].Word),
+                String.Format("{0}_{1}_{2}_{3}_{4}_pressure.png", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number, m_wordList[m_curIdx].Word),
+                String.Format("{0}_{1}_{2}_{3}_{4}_MinMax.png", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number, m_wordList[m_curIdx].Word),
             };
 
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;

@@ -107,7 +107,7 @@ namespace MIDAS_BAT.Pages
                 m_testExec = e.Parameter as TestExec;
                 m_saveUtil.TestExec = m_testExec;
 
-                await Util.deleteFiles(m_testExec.TesterId, TEST_ORDER, TEST_NAME);
+                await Util.deleteFiles(m_testExec.TesterId, TEST_ORDER, TEST_NAME_KR);
             }
 
         }

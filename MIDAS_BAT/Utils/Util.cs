@@ -212,8 +212,7 @@ namespace MIDAS_BAT
 
                 StorageFolder orgSourceFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(tester.Id.ToString(), CreationCollisionOption.OpenIfExists);
 
-                string newFolderName = String.Format("{0}({1}, {2}, 만 {3}세, 교육년수 {4}년)", tester.Name, tester.Gender, tester.birthday,
-                    Util.calculateAge(tester.birthday, testExec.Datetime), Util.calculateEducation(tester.Education));
+                string newFolderName = tester.GetTesterName(testExec.Datetime);
 
                 StorageFolder subFolder = await rootFolder.CreateFolderAsync(newFolderName, CreationCollisionOption.OpenIfExists);
                 await SaveResult(orgSourceFolder, subFolder, testExecId);
@@ -300,10 +299,9 @@ namespace MIDAS_BAT
             // Create query and retrieve files
             var query = orgSourceFolder.CreateFileQueryWithOptions(queryOptions);
             IReadOnlyList<StorageFile> fileList = await query.GetFilesAsync();
-            string fileFormat = String.Format("{0}_{1}_{2}_", testerId, testOrder, testName);
             foreach (StorageFile file in fileList)
             {
-                if (!file.Name.StartsWith(fileFormat))
+                if (!file.Name.Contains(testName))
                     continue;
 
                 await file.DeleteAsync();
@@ -481,13 +479,11 @@ namespace MIDAS_BAT
                 Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
                 if (counterClockWise)
                 {
-                    splitDrawLines = Util.splitDrawing(orgCenter, drawLines, false, true);
-                    //splitDrawLines = Util.splitDrawing(orgCenter, drawLines, true, true);
+                    splitDrawLines = Util.splitDrawing(orgCenter, drawLines, true, true);
                 }
                 else
                 {
-                    splitDrawLines = Util.splitDrawing(orgCenter, drawLines, false, false);
-                    //splitDrawLines = Util.splitDrawing(orgCenter, drawLines, true, false);
+                    splitDrawLines = Util.splitDrawing(orgCenter, drawLines, true, false);
                 }
 
                 Color[] colors = { Color.FromArgb(255, 255, 0, 0), Color.FromArgb(255, 255, 255, 73), Color.FromArgb(255, 73, 73, 255), Color.FromArgb(255, 0, 255, 0), Color.FromArgb(255, 255, 0, 255) };
@@ -1052,7 +1048,7 @@ namespace MIDAS_BAT
                 await stream.WriteAsync(bytes, 0, bytes.Length);
             }
 
-            StorageFile file = await folder.CreateFileAsync(filename, CreationCollisionOption.GenerateUniqueName);
+            StorageFile file = await folder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
             using (IRandomAccessStream outputStream = await file.OpenAsync(FileAccessMode.ReadWrite))
             {
                 using (MemoryStream imageStream = new MemoryStream())
@@ -1216,17 +1212,15 @@ namespace MIDAS_BAT
         public static List<List<BATPoint>> splitDrawingToHalfSpiral(Point orgCenter, List<BATPoint> drawLine, bool counterClockwise)
         {
             List<List<BATPoint>> splitDrawLines = new List<List<BATPoint>>();
-            Point endPoint = orgCenter;
-            if (counterClockwise)
-                endPoint.X -= 100000;
-            else
-                endPoint.X += 100000;
+            Point pt1 = new Point(0, orgCenter.Y);
+            Point pt2 = new Point(100000, orgCenter.Y);
 
             int targetIdx = -1;
             for(int i = 0; i < drawLine.Count - 1; i++)
             {
-                Util.FindIntersection(orgCenter, endPoint, drawLine[i].point, drawLine[i + 1].point, out bool isIntersected, out Point intersectedPt);
-                if (isIntersected)
+                Vector2 vec = Util.toVector(drawLine[i + 1].point) - Util.toVector(drawLine[i].point);
+                Util.FindIntersection(pt1, pt2, drawLine[i].point, drawLine[i + 1].point, out bool isIntersected, out Point intersectedPt);
+                if (isIntersected && vec.Y > 0)
                 {
                     targetIdx = i + 1;
                     break;
@@ -1246,6 +1240,7 @@ namespace MIDAS_BAT
             return splitDrawLines;
         }
 
+        /*
         public static List<List<BATPoint>> splitDrawing(Point orgCenter, List<List<BATPoint>> drawLines, bool cutSmallFirst, bool counterClockwise)
         {
             List<List<BATPoint>> splitDrawLines = new List<List<BATPoint>>();
@@ -1253,6 +1248,8 @@ namespace MIDAS_BAT
             List<BATPoint> splitDrawLine = new List<BATPoint>();
 
             Point endPoint = orgCenter;
+            Point pt1 = new Point(0, orgCenter.Y);
+            Point pt2 = new Point(100000, orgCenter.Y);
             if (counterClockwise)
                 endPoint.X += 100000;
             else
@@ -1308,6 +1305,71 @@ namespace MIDAS_BAT
                 splitDrawLines[0].AddRange(splitDrawLines[1]);
                 splitDrawLines.RemoveAt(1);
             }
+
+            splitDrawLines.Add(splitDrawLine);
+
+            return splitDrawLines;
+        }
+        */
+
+        public static List<List<BATPoint>> splitDrawing(Point orgCenter, List<List<BATPoint>> drawLines, bool cutSmallFirst, bool counterClockwise)
+        {
+            List<List<BATPoint>> splitDrawLines = new List<List<BATPoint>>();
+
+            List<BATPoint> splitDrawLine = new List<BATPoint>();
+
+            Point pt1 = new Point(0, orgCenter.Y);
+            Point pt2 = new Point(100000, orgCenter.Y);
+
+            int cycleCnt = 0;
+            bool firstFound = false;
+            double prevVec = 1.0;
+            foreach (var drawLine in drawLines)
+            {
+                for (int i = 0; i < drawLine.Count - 1; i++)
+                {
+                    splitDrawLine.Add(drawLine[i]);
+
+                    Vector2 vec = Util.toVector(drawLine[i+1].point) - Util.toVector(drawLine[i].point);
+                    Util.FindIntersection(pt1, pt2, drawLine[i].point, drawLine[i + 1].point, out bool isIntersected, out Point intersectedPt);
+                    if (isIntersected)
+                    {
+                        if ( vec.Y < 0.0 && prevVec > 0.0)
+                        {
+                            BATPoint point = new BATPoint(intersectedPt, (drawLine[i].pressure + drawLine[i + 1].pressure) / 2, (drawLine[i].timestamp + drawLine[i + 1].timestamp) / 2);
+                            // 여기 들어왔는데 firstFound == false인 경우, 화면 기준 위에서 선이 위에서 아래로 내려가는 지점을 지나지 않고 들어온 케이스(최소 반바퀴 이상은 안 돈 케이스)
+                            // cutSmallFirst == true 인 경우, 이전 점들은 다 날리도록 함. cutSmallFirst == false인 경우에는 그냥 놔둠. 
+                            if ( !firstFound ) 
+                            {
+                                if(cutSmallFirst)
+                                    splitDrawLine.Clear();
+                            }
+                            else
+                            {
+                                splitDrawLine.Add(point);
+                                splitDrawLines.Add(splitDrawLine);
+
+                                splitDrawLine = new List<BATPoint>();
+                            }
+                            splitDrawLine.Add(point);
+                        }
+
+                        firstFound = true;
+                        prevVec = vec.Y;
+                    }
+                }
+                splitDrawLine.Add(drawLine.Last());
+
+                cycleCnt += 1;
+            }
+
+            /*
+            if (!cutSmallFirst && hasSmallFirst && splitDrawLines.Count >= 2)
+            {
+                splitDrawLines[0].AddRange(splitDrawLines[1]);
+                splitDrawLines.RemoveAt(1);
+            }
+            */
 
             splitDrawLines.Add(splitDrawLine);
 
