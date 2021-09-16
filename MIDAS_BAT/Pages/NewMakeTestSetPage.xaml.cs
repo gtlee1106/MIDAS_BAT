@@ -17,9 +17,9 @@ namespace MIDAS_BAT
     /// </summary>
     public sealed partial class NewMakeTestSetPage : Page
     {
-        private const int MAX_ITEM_NUM = 45;
+        private const int MAX_ITEM_NUM = 100;
         private bool m_updateMode = false;
-        private TestSet m_targetTestSet;
+        private TestSet m_targetTestSet = new TestSet();
         private ObservableCollection<TestSetItem> m_testSetItemList = new ObservableCollection<TestSetItem>();
         private ObservableCollection<TestSetItem> TestSetItemList
         {
@@ -62,6 +62,14 @@ namespace MIDAS_BAT
                     TestSetItemList.ElementAt(item.Number - 1).Word = item.Word;
 
                 add.Content = "수정하기";
+
+                checkHorizontalLineTest.IsChecked = m_targetTestSet.HorizontalLineTest;
+                checkVerticalLineTest.IsChecked = m_targetTestSet.VerticalLineTest;
+                checkCounterClockwiseSpiralTest.IsChecked = m_targetTestSet.CounterClockwiseSpiralTest;
+                checkClockwiseSpiralTest.IsChecked = m_targetTestSet.ClockwiseSpiralTest;
+                checkCounterClockwiseFreeSpiralTest.IsChecked = m_targetTestSet.CounterClockwiseFreeSpiralTest;
+                checkClockwiseFreeSpiralTest.IsChecked = m_targetTestSet.ClockwiseFreeSpiralTest;
+                checkTextWriting.IsChecked = m_targetTestSet.TextWritingTest;
             }
             base.OnNavigatedTo(e);
         }
@@ -88,6 +96,20 @@ namespace MIDAS_BAT
                 return;
             }
 
+            int writingItemCount = 0;
+            foreach (var item in TestSetItemList)
+            {
+                if (item.Word.Length == 0)
+                    continue;
+                writingItemCount += 1;
+            }
+            if ( checkTextWriting.IsChecked == true && writingItemCount == 0 )
+            {
+                var dialog = new MessageDialog("글자 쓰기 테스트를 활성화했으나, 단어가 없습니다. 확인해주십시오.");
+                var res = await dialog.ShowAsync();
+                return;
+            }
+
             itemList.CompleteViewChange();
             itemList.UpdateLayout();
 
@@ -110,7 +132,19 @@ namespace MIDAS_BAT
             }
             else
             {
-                curSet = new TestSet() { SetName = testSetName.Text.Trim(), Active = false };
+                m_targetTestSet.SetName = testSetName.Text.Trim();
+                m_targetTestSet.Active = false;
+
+                m_targetTestSet.HorizontalLineTest = (bool)checkHorizontalLineTest.IsChecked;
+                m_targetTestSet.VerticalLineTest = (bool)checkVerticalLineTest.IsChecked;
+                m_targetTestSet.CounterClockwiseSpiralTest = (bool)checkCounterClockwiseSpiralTest.IsChecked;
+                m_targetTestSet.ClockwiseSpiralTest = (bool)checkClockwiseSpiralTest.IsChecked;
+                m_targetTestSet.CounterClockwiseFreeSpiralTest = (bool)checkCounterClockwiseFreeSpiralTest.IsChecked;
+                m_targetTestSet.ClockwiseFreeSpiralTest = (bool)checkClockwiseFreeSpiralTest.IsChecked;
+                m_targetTestSet.TextWritingTest = (bool)checkTextWriting.IsChecked;
+
+                curSet = m_targetTestSet;
+                
                 databaseManager.InsertTestSet(curSet);
             }
 
@@ -143,6 +177,62 @@ namespace MIDAS_BAT
         {
             this.Frame.GoBack();
         }
-    }
 
+        private void checkHorizontalLineTest_Checked(object sender, RoutedEventArgs e)
+        {
+            if (checkHorizontalLineTest == null)
+                return;
+
+            m_targetTestSet.HorizontalLineTest = (bool)checkHorizontalLineTest.IsChecked;
+        }
+
+        private void checkVerticalLineTest_Checked(object sender, RoutedEventArgs e)
+        {
+            if (checkVerticalLineTest == null)
+                return;
+
+            m_targetTestSet.VerticalLineTest = (bool)checkVerticalLineTest.IsChecked;
+        }
+
+        private void checkCounterClockwiseSpiralTest_Checked(object sender, RoutedEventArgs e)
+        {
+            if (checkCounterClockwiseSpiralTest == null)
+                return;
+
+            m_targetTestSet.CounterClockwiseSpiralTest = (bool)checkCounterClockwiseSpiralTest.IsChecked;
+        }
+
+        private void checkClockwiseSpiralTest_Checked(object sender, RoutedEventArgs e)
+        {
+            if (checkClockwiseSpiralTest == null)
+                return;
+
+            m_targetTestSet.ClockwiseSpiralTest = (bool)checkClockwiseSpiralTest.IsChecked;
+        }
+
+        private void checkCounterClockwiseFreeSpiralTest_Checked(object sender, RoutedEventArgs e)
+        {
+            if (checkCounterClockwiseFreeSpiralTest == null )
+                return;
+
+            m_targetTestSet.CounterClockwiseFreeSpiralTest = (bool)checkCounterClockwiseFreeSpiralTest.IsChecked;
+        }
+
+        private void checkClockwiseFreeSpiralTest_Checked(object sender, RoutedEventArgs e)
+        {
+            if ( checkClockwiseFreeSpiralTest == null )
+                return;
+
+            m_targetTestSet.ClockwiseFreeSpiralTest = (bool)checkClockwiseFreeSpiralTest.IsChecked;
+        }
+
+        private void checkTextWriting_Checked(object sender, RoutedEventArgs e)
+        {
+            if (checkTextWriting == null || itemList == null )
+                return;
+
+            m_targetTestSet.TextWritingTest = (bool)checkTextWriting.IsChecked;
+            itemList.Visibility = m_targetTestSet.TextWritingTest ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
 }

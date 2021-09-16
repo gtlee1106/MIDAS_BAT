@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MIDAS_BAT.Pages;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -14,6 +15,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
 // 빈 페이지 항목 템플릿에 대한 설명은 http://go.microsoft.com/fwlink/?LinkId=234238에 나와 있습니다.
@@ -92,8 +94,7 @@ namespace MIDAS_BAT
             };
             dbManager.InsertTestExec(testExec);
 
-            //this.Frame.Navigate(typeof(TestPage), testExec);
-            this.Frame.Navigate(typeof(PreTestPage), testExec);
+            this.Frame.Navigate(Util.getNextTest(testSet, -1), testExec, new SuppressNavigationTransitionInfo());
         }
 
         private void backBtn_Click(object sender, RoutedEventArgs e)

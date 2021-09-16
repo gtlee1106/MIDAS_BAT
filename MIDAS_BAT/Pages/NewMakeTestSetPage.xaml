@@ -29,9 +29,23 @@
                 <Button x:Name="cancel" Content="취소" Click="cancel_Click" Margin="5" />
             </StackPanel>
 
+            <StackPanel
+                Orientation="Vertical"
+                x:Name="checkTestList"
+                RelativePanel.Below="btnPanel"
+                Margin="10">
+                <CheckBox x:Name="checkHorizontalLineTest" IsChecked="True" Checked="checkHorizontalLineTest_Checked"  Unchecked="checkHorizontalLineTest_Checked">직선 따라그리기(가로선)</CheckBox>
+                <CheckBox x:Name="checkVerticalLineTest" IsChecked="True" Checked="checkVerticalLineTest_Checked" Unchecked="checkVerticalLineTest_Checked">직선 따라그리기(세로선)</CheckBox>
+                <CheckBox x:Name="checkCounterClockwiseSpiralTest" IsChecked="True" Checked="checkCounterClockwiseSpiralTest_Checked" Unchecked="checkCounterClockwiseSpiralTest_Checked">나선 따라그리기(반시계방향)</CheckBox>
+                <CheckBox x:Name="checkClockwiseSpiralTest" IsChecked="True" Checked="checkClockwiseSpiralTest_Checked" Unchecked="checkClockwiseSpiralTest_Checked">나선 따라그리기(시계방향)</CheckBox>
+                <CheckBox x:Name="checkCounterClockwiseFreeSpiralTest" IsChecked="True" Checked="checkCounterClockwiseFreeSpiralTest_Checked" Unchecked="checkCounterClockwiseFreeSpiralTest_Checked">자유 나선그리기(반시계방향)</CheckBox>
+                <CheckBox x:Name="checkClockwiseFreeSpiralTest" IsChecked="True" Checked="checkClockwiseFreeSpiralTest_Checked" Unchecked="checkClockwiseFreeSpiralTest_Checked">자유 나선그리기(시계방향)</CheckBox>
+                <CheckBox x:Name="checkTextWriting" IsChecked="True" Checked="checkTextWriting_Checked" Unchecked="checkTextWriting_Checked">글자 쓰기</CheckBox>
+            </StackPanel>
+
             <ListView 
                 x:Name="itemList" 
-                RelativePanel.Below="btnPanel"
+                RelativePanel.Below="checkTestList"
                 ItemsSource="{x:Bind TestSetItemList}" 
                 IsItemClickEnabled="True" 
                 Margin="5"

@@ -10,7 +10,7 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel x:Name="main" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Image x:Name="image" HorizontalAlignment="Center" Height="100" VerticalAlignment="Top" Width="100" Source="ms-appx:///Assets/logo_1.png"/>
-            <TextBlock Text="Brief Agaphia Test" FontSize="36" Margin="10"/>
+            <TextBlock Text="Brief Agraphia Test" FontSize="36" Margin="10"/>
             <Button Name="startTest" Content="실험 시작" Margin ="10" Width="150" HorizontalAlignment="Center" Click="startTest_Click"/>
             <Button Name="viewResult" Content="결과 보기" Margin = "10" Width="150" HorizontalAlignment="Center" Click="viewResult_Click"/>
             <Button Name="configTest" Content="실험셋 설정하기" Margin = "10" Width="150" HorizontalAlignment="Center" Click="configTest_Click"/>

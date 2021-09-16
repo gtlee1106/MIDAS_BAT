@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="MIDASBAT-alpha" Publisher="CN=MIDASIT" Version="1.0.15.0" />
-  <mp:PhoneIdentity PhoneProductId="395905f7-b436-4afb-b7a1-2c7319d58aba" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Identity Name="11075GTLEE.MIDASBAT" Publisher="CN=3513A916-047B-4979-ACEA-E8D3D4CAD65A" Version="1.0.16.0" />
+  <mp:PhoneIdentity PhoneProductId="b722fd6c-5cc4-4cef-b2c5-212c8edfc27a" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>MIDAS_BAT</DisplayName>
-    <PublisherDisplayName>MIDASIT</PublisherDisplayName>
+    <PublisherDisplayName>GTLEE</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Dependencies>

@@ -1,4 +1,6 @@
 ﻿using Microsoft.Graphics.Canvas;
+using MIDAS_BAT.Data;
+using MIDAS_BAT.Pages;
 using MIDAS_BAT.Utils;
 using System;
 using System.Collections.Generic;
@@ -20,6 +22,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Shapes;
 
@@ -34,8 +37,13 @@ namespace MIDAS_BAT
 
         // 획 시작 - 끝 시간 기록
         List<double> m_Times = new List<double>();
+        List<List<BATPoint>> m_drawLines = new List<List<BATPoint>>();
 
         SaveUtil m_saveUtil = SaveUtil.Instance;
+
+        public static string TEST_NAME = "characterTest";
+        public static string TEST_NAME_KR = "글자 쓰기";
+        public static int TEST_ORDER = 6;
 
         public TestPage()
         {
@@ -48,12 +56,14 @@ namespace MIDAS_BAT
 
             CoreInkIndependentInputSource core = CoreInkIndependentInputSource.Create(inkCanvas.InkPresenter);
             core.PointerPressing += Core_PointerPressing;
+            core.PointerMoving += Core_PointerMoving;
             core.PointerReleasing += Core_PointerReleasing;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            Window.Current.SizeChanged += Current_SizeChanged;
 
             if (e.Parameter is TestExec)
             {
@@ -72,20 +82,62 @@ namespace MIDAS_BAT
             }
         }
 
+        private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
+        {
+            ResizeCanvas();
+        }
+
         /////// events ////////
         private void Core_PointerReleasing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
-            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
+            if (nextLock)
+                return;
+
+            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+            if (m_drawLines.Count() > 0)
+            {
+                BATPoint point = new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp);
+                point.isEnd = true;
+                m_drawLines.Last().Add(point);
+            }
+        }
+        private void Core_PointerMoving(CoreInkIndependentInputSource sender, PointerEventArgs args)
+        {
+            if (nextLock)
+                return;
+
+            m_drawLines.Last().Add(new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp));
         }
 
         private void Core_PointerPressing(CoreInkIndependentInputSource sender, PointerEventArgs args)
         {
-            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond );
+            if (nextLock)
+                return;
+
+            m_Times.Add((double)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond);
+
+            // 최초의 point 
+            List<BATPoint> list = new List<BATPoint>();
+            list.Add(new BATPoint(args.CurrentPoint.Position, args.CurrentPoint.Properties.Pressure, args.CurrentPoint.Timestamp));
+            m_drawLines.Add(list);
         }
 
         private void InkPresenter_StrokesCollected(InkPresenter sender, InkStrokesCollectedEventArgs args)
         {
             //RecognizeCurrentCanvas();
+        }
+
+        private void enableInkCanvas(bool enable)
+        {
+            if (enable)
+            {
+                inkCanvas.InkPresenter.InputDeviceTypes = CoreInputDeviceTypes.Mouse
+                                                        | CoreInputDeviceTypes.Pen;
+            }
+            else
+            {
+                inkCanvas.InkPresenter.InputDeviceTypes = CoreInputDeviceTypes.None;
+            }
         }
 
         private static bool nextLock = false;
@@ -94,7 +146,9 @@ namespace MIDAS_BAT
             if (nextLock == false)
             {
                 nextLock = true;
+                enableInkCanvas(false);
                 await nextHandling();
+                enableInkCanvas(true);
                 nextLock = false;
             }
         }
@@ -125,28 +179,44 @@ namespace MIDAS_BAT
 
             if( m_curIdx == 0 )
             {
-                this.Frame.Navigate(typeof(PreTestPage), m_testExec);
+                Type prevTest = Util.getPrevTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
+                if (prevTest == null)
+                    await Util.ShowCannotGoBackAlertDlg();
+                else
+                {
+                    this.Frame.Navigate(prevTest, m_testExec, new SuppressNavigationTransitionInfo());
+                }
                 return;
             }
 
             m_curIdx--;
 
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(m_testExec.TesterId);
+
+            string testerName = tester.GetTesterName(m_testExec.Datetime);
+            
+            string prefix = String.Format("{0}_{1}_{2}", testerName, TEST_ORDER, TEST_NAME_KR);
+
             // 음.............. ㅋㅋㅋㅋㅋㅋㅋㅋ
             string[] file_names = {
-                m_testExec.TesterId + "_char_" + m_wordList[m_curIdx].Number.ToString() + ".gif",
-                m_testExec.TesterId + "_char_" + m_wordList[m_curIdx].Number + "_last.png",
-                m_testExec.TesterId + "_" + m_wordList[m_curIdx].Number + ".gif",
-                m_testExec.TesterId + "_raw_time_" + m_wordList[m_curIdx].Number + ".txt",
-                m_testExec.TesterId + "_raw_time_" + m_wordList[m_curIdx].Number + ".csv",
-                m_testExec.TesterId + "_raw_pressure_" + m_wordList[m_curIdx].Number + ".csv"
+                String.Format("{0}_{1}_{2}_{3}.gif", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number),
+                String.Format("{0}_{1}_{2}_{3}_{4}_최종.png", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number, m_wordList[m_curIdx].Word),
+                String.Format("{0}_{1}_{2}_{3}_{4}_잉크.png", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number, m_wordList[m_curIdx].Word),
+                String.Format("{0}_{1}_{2}_{3}_{4}_time.png", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number, m_wordList[m_curIdx].Word),
+                String.Format("{0}_{1}_{2}_{3}_{4}_pressure.png", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number, m_wordList[m_curIdx].Word),
+                String.Format("{0}_{1}_{2}_{3}_{4}_MinMax.png", testerName, TEST_ORDER, TEST_NAME_KR, m_wordList[m_curIdx].Number, m_wordList[m_curIdx].Word),
             };
 
             StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
             foreach( var file_name in file_names )
             {
-                StorageFile targetFile = await storageFolder.GetFileAsync(file_name);
-                if( targetFile != null )
-                    await targetFile.DeleteAsync();
+                if (await storageFolder.TryGetItemAsync(file_name) != null)
+                {
+                    StorageFile targetFile = await storageFolder.GetFileAsync(file_name);
+                    if (targetFile != null)
+                        await targetFile.DeleteAsync();
+                }
             }
 
             m_saveUtil.deleteResultFromDB(m_testExec, m_wordList[m_curIdx]);
@@ -172,6 +242,7 @@ namespace MIDAS_BAT
             inkCanvas.Width = bounds.Width;
             inkCanvas.Height = bounds.Height;
 
+            ClearInkData();
 
             if (m_testExec.ShowBorder)
             {
@@ -221,38 +292,58 @@ namespace MIDAS_BAT
 
         private async Task nextHandling()
         {
-            TestUtil testUtil = TestUtil.Instance;
-            if( ! await testUtil.IsCorrectWriting( m_targetWord, inkCanvas ) )
+            try
             {
-                await Util.ShowWrongWritingAlertDlg();
-                ClearInkData();
 
-                return;
+                TestUtil testUtil = TestUtil.Instance;
+                if (!await testUtil.IsCorrectWriting(m_targetWord, inkCanvas))
+                {
+                    await Util.ShowWrongWritingAlertDlg();
+                    ClearInkData();
+
+                    return;
+                }
+
+                string testName = String.Format("{0}_{1}", TEST_ORDER, TEST_NAME_KR);
+
+                await Util.CaptureInkCanvasForStroke2(TEST_ORDER, testName, inkCanvas, borderCanvas, null, m_drawLines, m_testExec, m_wordList[m_curIdx]);
+                await Util.CaptureInkCanvas(TEST_ORDER, testName, inkCanvas, borderCanvas, null, m_drawLines, new List<List<DiffData>>(), m_testExec, m_wordList[m_curIdx]);
+
+                await m_saveUtil.saveStroke(TEST_ORDER, testName, inkCanvas);
+                await m_saveUtil.saveRawData2(TEST_ORDER, testName, null, m_drawLines, new List<List<DiffData>>(), inkCanvas);
+                m_saveUtil.saveResultIntoDB(m_Times, inkCanvas);
+
+                // index 증가
+                if (AvailableToGoToNext())
+                {
+                    m_curIdx++;
+
+                    // 새로운 단어 지정 및 전체 초기화.
+                    UpdateCurrnetStatus();
+                    ResizeCanvas();
+                    ClearInkData();
+                }
+                else
+                {
+                    var dialog = new MessageDialog("검사가 끝났습니다. 수고하셨습니다.");
+                    await dialog.ShowAsync();
+                    this.Frame.Navigate(typeof(MainPage));
+                    return;
+                }
             }
-
-            await Util.CaptureInkCanvasForStroke(inkCanvas, borderCanvas, m_testExec, m_wordList[m_curIdx]);
-            await Util.CaptureInkCanvas(inkCanvas, borderCanvas, m_testExec, m_wordList[m_curIdx]);
-            
-            await m_saveUtil.saveStroke( inkCanvas);
-            await m_saveUtil.saveRawData( m_Times, inkCanvas );
-            m_saveUtil.saveResultIntoDB( m_Times, inkCanvas );
-
-            // index 증가
-            if( AvailableToGoToNext() )
+            catch (Exception e)
             {
-                m_curIdx++;
+                StringBuilder builder = new StringBuilder();
+                builder.Append(e.ToString());
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                Encoding encoding = Encoding.GetEncoding("euc-kr");
 
-                // 새로운 단어 지정 및 전체 초기화.
-                UpdateCurrnetStatus();
-                ResizeCanvas();
-                ClearInkData();
-            }
-            else
-            {
-                var dialog = new MessageDialog("검사가 끝났습니다. 수고하셨습니다.");
-                await dialog.ShowAsync();
-                this.Frame.Navigate(typeof(MainPage));
-                return;
+                string logFileName = String.Format("log_{0}_{1}.txt", TEST_NAME, DateTime.Now.ToString());
+
+                byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+                StorageFolder orgFolder = ApplicationData.Current.LocalFolder;
+                StorageFile resultFile = await orgFolder.CreateFileAsync(logFileName, CreationCollisionOption.ReplaceExisting);
+                await FileIO.WriteBytesAsync(resultFile, fileBytes);
             }
         }
 
@@ -267,6 +358,7 @@ namespace MIDAS_BAT
         {
             inkCanvas.InkPresenter.StrokeContainer.Clear();
             m_Times.Clear();
+            m_drawLines.Clear();
         }
 
     }

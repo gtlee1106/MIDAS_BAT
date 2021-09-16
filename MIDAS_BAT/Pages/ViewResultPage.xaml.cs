@@ -6,8 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -44,33 +47,53 @@ namespace MIDAS_BAT
         {
             this.InitializeComponent();
 
-            DatabaseManager dbManager = DatabaseManager.Instance;
-            List<TestExec> list = dbManager.GetTextExecs(true);
-            foreach( var item in list)
+            try
             {
-                Tester tester = dbManager.GetTester(item.TesterId);
-                string testerStr = tester.Name + "(" + tester.Gender + ", " + tester.birthday + ")";
-                string execDatetime = item.Datetime.Substring(0, 4) + "." +
-                                      item.Datetime.Substring(4, 2) + "." +
-                                      item.Datetime.Substring(6, 2) + " " +
-                                      item.Datetime.Substring(9, 2) + ":" +
-                                      item.Datetime.Substring(11, 2) + ":" +
-                                      item.Datetime.Substring(13, 2);
-
-                TestExecData data = new TestExecData()
+                DatabaseManager dbManager = DatabaseManager.Instance;
+                List<TestExec> list = dbManager.GetTextExecs(true);
+                foreach (var item in list)
                 {
-                    Id = item.Id,
-                    TesterName = testerStr,
-                    TesterId = item.TesterId,
-                    TestSetId = item.TestSetId,
-                    ExecDatetime = execDatetime,
-                    Selected = false
-                };
+                    Tester tester = dbManager.GetTester(item.TesterId);
+                    string execDatetime = item.Datetime.Substring(0, 4) + "." +
+                                          item.Datetime.Substring(4, 2) + "." +
+                                          item.Datetime.Substring(6, 2) + " " +
+                                          item.Datetime.Substring(9, 2) + ":" +
+                                          item.Datetime.Substring(11, 2) + ":" +
+                                          item.Datetime.Substring(13, 2);
 
-                testExecList.Add(data);
+                    string testerStr = String.Format("{0}({1}, {2}, 만 {3}세, 교육년수 {4}년)", tester.Name, tester.Gender, tester.birthday,
+                        Util.calculateAge(tester.birthday, item.Datetime), Util.calculateEducation(tester.Education));
+
+                    TestExecData data = new TestExecData()
+                    {
+                        Id = item.Id,
+                        TesterName = testerStr,
+                        TesterId = item.TesterId,
+                        TestSetId = item.TestSetId,
+                        ExecDatetime = execDatetime,
+                        Selected = false
+                    };
+
+                    testExecList.Add(data);
+                }
+
+                NotifyPropertyChanged();
             }
+            catch (Exception e)
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.Append(e.ToString());
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                Encoding encoding = Encoding.GetEncoding("euc-kr");
 
-            NotifyPropertyChanged();
+                string logFileName = String.Format("log_{0}_{1}.txt", "ViewResultPage", DateTime.Now.ToString());
+
+                byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
+                StorageFolder orgFolder = ApplicationData.Current.LocalFolder;
+                IAsyncOperation<StorageFile> resultFile = orgFolder.CreateFileAsync(logFileName, CreationCollisionOption.ReplaceExisting);
+
+                FileIO.WriteBytesAsync(resultFile.GetResults(), fileBytes);
+            }
         }
 
         private async void deleteBtn_Click(object sender, RoutedEventArgs e)
