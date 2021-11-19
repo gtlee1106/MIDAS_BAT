@@ -232,7 +232,7 @@ namespace MIDAS_BAT.Pages
 
             List<List<BATPoint>> drawSplits = getSplitDrawing(true);
 
-            for (int i = 0; i < m_orgLines.Count; i++)
+            for (int i = 0; i < Math.Max(m_orgLines.Count, drawSplits.Count); i++)
             {
                 List<DiffData> result = new List<DiffData>();
                 int orgIdx = 0;
@@ -246,19 +246,22 @@ namespace MIDAS_BAT.Pages
                     Point targetPt = new Point(center.X + bounds.Width * Math.Cos(radian), center.Y + bounds.Width * Math.Sin(radian));
 
                     Point? orgIntersected = null;
-                    for (int j = 0; j < m_orgLines[i].Count - 1; j++)
+                    if( i < m_orgLines.Count)
                     {
-                        Util.FindIntersection(center, targetPt, m_orgLines[i][j], m_orgLines[i][j + 1], out bool isIntersected, out Point intersectedPt);
-
-                        if (isIntersected)
+                        for (int j = 0; j < m_orgLines[i].Count - 1; j++)
                         {
-                            // 최초 한 점은 뺄 것 
-                            if (Util.getDistance(intersectedPt, center) < 0.000001)
-                                continue;
+                            Util.FindIntersection(center, targetPt, m_orgLines[i][j], m_orgLines[i][j + 1], out bool isIntersected, out Point intersectedPt);
 
-                            orgIntersected = intersectedPt;
-                            orgIdx = j + 1; // 다음 각도는 j 부터 시작
-                            break;
+                            if (isIntersected)
+                            {
+                                // 최초 한 점은 뺄 것 
+                                if (Util.getDistance(intersectedPt, center) < 0.000001)
+                                    continue;
+
+                                orgIntersected = intersectedPt;
+                                orgIdx = j + 1; // 다음 각도는 j 부터 시작
+                                break;
+                            }
                         }
                     }
 
@@ -317,13 +320,17 @@ namespace MIDAS_BAT.Pages
                     {
                         result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value, drawIntersected.Value));
                     }
-                    else
+                    else if (orgIntersected != null)
                     {
-                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value)); // 설마 이게 없으려나... 
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value));
+                    }
+                    else if(drawIntersected != null)
+                    {
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), null, drawIntersected.Value));
                     }
                 }
 
-                if( i == m_orgLines.Count - 1 ) // 마지막 바퀴인 경우 제일 끝에 360 도를 한 번 더 체크
+                if( i == m_orgLines.Count - 1 && drawSplits.Count < m_orgLines.Count) // 마지막 바퀴인 경우 제일 끝에 360 도를 한 번 더 체크
                 {
                     int angle = 360;
 
@@ -374,9 +381,13 @@ namespace MIDAS_BAT.Pages
                     {
                         result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value, drawIntersected.Value));
                     }
-                    else
+                    else if(orgIntersected != null)
                     {
-                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value)); // 설마 이게 없으려나... 
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), orgIntersected.Value));
+                    }
+                    else if (drawIntersected != null)
+                    {
+                        result.Add(new DiffData(String.Format("Cycle: {0} / Angle: {1}", i + 1, 360 - angle), null, drawIntersected.Value));
                     }
                 }
 

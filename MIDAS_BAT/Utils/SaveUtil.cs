@@ -334,10 +334,20 @@ namespace MIDAS_BAT.Utils
             builder.AppendLine("Index,위치,템플릿X,템플릿Y,그린점X,그린점Y,거리차이");
             for (int i = 0; i < flattenDiff.Count; ++i)
             {
-                builder.Append(String.Format("{0},", i + 1));
-                builder.Append(String.Format("{0},{1},{2},", flattenDiff[i].name, flattenDiff[i].org.X, flattenDiff[i].org.Y));
-                if (flattenDiff[i].hasValue)
-                    builder.Append(String.Format("{0},{1},{2}", flattenDiff[i].drawn.X, flattenDiff[i].drawn.Y, flattenDiff[i].getDistance()));
+                builder.Append(String.Format("{0},{1},", i + 1, flattenDiff[i].name));
+                if (flattenDiff[i].hasValueOrg)
+                    builder.Append(String.Format("{0},{1},", flattenDiff[i].org.Value.X, flattenDiff[i].org.Value.Y));
+                else
+                    builder.Append(String.Format(",,"));
+
+                if (flattenDiff[i].hasValueDrawn)
+                    builder.Append(String.Format("{0},{1},", flattenDiff[i].drawn.Value.X, flattenDiff[i].drawn.Value.Y));
+                else
+                    builder.Append(String.Format(",,"));
+
+                if (flattenDiff[i].hasValueOrg && flattenDiff[i].hasValueDrawn)
+                    builder.Append(String.Format("{0},", flattenDiff[i].getDistance()));
+
 
                 builder.AppendLine("");
             }

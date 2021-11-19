@@ -551,10 +551,12 @@ namespace MIDAS_BAT
                     {
                         foreach (var item in diffResults[i])
                         {
-                            if (item.hasValue)
-                                ds.DrawLine(toVector(item.org), toVector(item.drawn), Colors.Red);
-                            else
-                                ds.DrawCircle(toVector(item.org), 2, Colors.Red);
+                            if (item.hasValueOrg && item.hasValueDrawn)
+                                ds.DrawLine(toVector(item.org.Value), toVector(item.drawn.Value), Colors.Red);
+                            else if( item.hasValueOrg)
+                                ds.DrawCircle(toVector(item.org.Value), 2, Colors.Red);
+                            else if (item.hasValueDrawn)
+                                ds.DrawCircle(toVector(item.drawn.Value), 2, Colors.Red);
                         }
                     }
 
