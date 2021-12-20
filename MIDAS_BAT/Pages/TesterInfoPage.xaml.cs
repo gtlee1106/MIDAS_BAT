@@ -65,11 +65,36 @@ namespace MIDAS_BAT
                 education += "(" + m_dropYear + "년 재학)";
             }
 
+            int yearInt = Convert.ToInt32(year.Text);
+            int monthInt = Convert.ToInt32(month.Text);
+            int dayInt = Convert.ToInt32(day.Text);
+
+            if(yearInt > 2500 || yearInt < 1500)
+            {
+                var dialog = new MessageDialog("\"생일 - 연\"이 잘못되었습니다.");
+                dialog.ShowAsync();
+                return;
+            }
+            
+            if (monthInt > 12 || monthInt < 1)
+            {
+                var dialog = new MessageDialog("\"생일 - 월\"이 잘못되었습니다.");
+                dialog.ShowAsync();
+                return;
+            }
+
+            if (dayInt > 31 || dayInt < 1)
+            {
+                var dialog = new MessageDialog("\"생일 - 일\"이 잘못되었습니다.");
+                dialog.ShowAsync();
+                return;
+            }
+
             Tester tester = new Tester()
             {
                 Name = name.Text,
                 Gender = gender,
-                birthday = year.Text + month.Text + day.Text,
+                birthday = yearInt.ToString("0000") + monthInt.ToString("00") + dayInt.ToString("00"),
                 Education = education,
             };
             dbManager.InsertTester(tester);
@@ -81,6 +106,7 @@ namespace MIDAS_BAT
                 dialog.ShowAsync();
                 return;
             }
+            
 
             TestExec testExec = new TestExec()
             {

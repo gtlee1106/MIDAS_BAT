@@ -83,17 +83,20 @@ namespace MIDAS_BAT
             {
                 StringBuilder builder = new StringBuilder();
                 builder.Append(e.ToString());
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                Encoding encoding = Encoding.GetEncoding("euc-kr");
-
-                string logFileName = String.Format("log_{0}_{1}.txt", "ViewResultPage", DateTime.Now.ToString());
-
-                byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
-                StorageFolder orgFolder = ApplicationData.Current.LocalFolder;
-                IAsyncOperation<StorageFile> resultFile = orgFolder.CreateFileAsync(logFileName, CreationCollisionOption.ReplaceExisting);
-
-                FileIO.WriteBytesAsync(resultFile.GetResults(), fileBytes);
+                writeLog(builder.ToString());
             }
+        }
+
+        private async void writeLog(string str)
+        {
+            string logFileName = String.Format("log_{0}_{1}.txt", "ViewResultPage", DateTime.Now.ToString());
+
+            Encoding encoding = Encoding.GetEncoding("euc-kr");
+            byte[] fileBytes = encoding.GetBytes(str.ToCharArray());
+            StorageFolder orgFolder = ApplicationData.Current.LocalFolder;
+            IAsyncOperation<StorageFile> resultFile = orgFolder.CreateFileAsync(logFileName, CreationCollisionOption.ReplaceExisting);
+
+            await FileIO.WriteBytesAsync(resultFile.GetResults(), fileBytes);
         }
 
         private async void deleteBtn_Click(object sender, RoutedEventArgs e)
