@@ -65,6 +65,27 @@ namespace MIDAS_BAT
                 education += "(" + m_dropYear + "년 재학)";
             }
 
+            if( year.Text.Trim().Length == 0)
+            {
+                var dialog = new MessageDialog("\"생일 - 연\"을 입력하십시오.");
+                dialog.ShowAsync();
+                return;
+            }
+
+            if (month.Text.Trim().Length == 0)
+            {
+                var dialog = new MessageDialog("\"생일 - 월\"을 입력하십시오.");
+                dialog.ShowAsync();
+                return;
+            }
+
+            if (day.Text.Trim().Length == 0)
+            {
+                var dialog = new MessageDialog("\"생일 - 일\"을 입력하십시오.");
+                dialog.ShowAsync();
+                return;
+            }
+
             int yearInt = Convert.ToInt32(year.Text);
             int monthInt = Convert.ToInt32(month.Text);
             int dayInt = Convert.ToInt32(day.Text);
