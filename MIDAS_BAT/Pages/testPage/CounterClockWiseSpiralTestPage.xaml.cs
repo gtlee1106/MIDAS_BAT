@@ -430,7 +430,7 @@ namespace MIDAS_BAT.Pages
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                 Encoding encoding = Encoding.GetEncoding("euc-kr");
 
-                string logFileName = String.Format("log_{0}_{1}.txt", TEST_NAME, DateTime.Now.ToString());
+                string logFileName = String.Format("log_{0}_{1}.txt", TEST_NAME, DateTime.Now.ToString("yyyyMMddHHmmss"));
 
                 byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
                 StorageFolder orgFolder = ApplicationData.Current.LocalFolder;

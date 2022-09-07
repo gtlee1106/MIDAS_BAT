@@ -89,7 +89,7 @@ namespace MIDAS_BAT
 
         private async void writeLog(string str)
         {
-            string logFileName = String.Format("log_{0}_{1}.txt", "ViewResultPage", DateTime.Now.ToString());
+            string logFileName = String.Format("log_{0}_{1}.txt", "ViewResultPage", DateTime.Now.ToString("yyyyMMddHHmmss"));
 
             Encoding encoding = Encoding.GetEncoding("euc-kr");
             byte[] fileBytes = encoding.GetBytes(str.ToCharArray());
