@@ -162,17 +162,18 @@ namespace MIDAS_BAT.Utils
             builder.Append(TestSetItem.Word);
             builder.AppendLine("( 총 " + drawLines.Count.ToString() + " 획)");
 
-            builder.AppendLine("Index,Pressed(ms),Released(ms),Duration(ms),Transition(ms),획 길이,");
+            builder.AppendLine("Index,Pressed(ms),Released(ms),Duration(ms),Transition(ms),획 길이,속도");
             for (int i = 0; i < drawLines.Count; i++)
             {
                 if (drawLines[i].Count() == 0)
                     continue;
 
-                builder.Append(String.Format("{0},", i + 1));
-                builder.Append(BATPoint.getTimeDiffMs(drawLines[i][0], drawLines[0][0]).ToString("F3") + ",");
-                builder.Append(BATPoint.getTimeDiffMs(drawLines[i].Last(), drawLines[0][0]).ToString("F3") + ",");
-                builder.Append(BATPoint.getTimeDiffMs(drawLines[i].Last(), drawLines[i][0]).ToString("F3") + ",");
-                if (i < drawLines.Count - 1 && drawLines[i + 1].Count != 0 )
+                builder.Append(String.Format("{0},", i + 1)); // index
+                builder.Append(BATPoint.getTimeDiffMs(drawLines[i][0], drawLines[0][0]).ToString("F3") + ","); // pressed(ms)
+                builder.Append(BATPoint.getTimeDiffMs(drawLines[i].Last(), drawLines[0][0]).ToString("F3") + ","); // released(ms)
+                double duration = BATPoint.getTimeDiffMs(drawLines[i].Last(), drawLines[i][0]); // 아래에서 써야되서 별도로 저장
+                builder.Append(duration.ToString("F3") + ","); // duration(ms)
+                if (i < drawLines.Count - 1 && drawLines[i + 1].Count != 0 ) // transition(ms)
                 {
                     builder.Append(BATPoint.getTimeDiffMs(drawLines[i + 1][0], drawLines[i].Last()).ToString("F3") + ",");
                 }
@@ -181,10 +182,11 @@ namespace MIDAS_BAT.Utils
                     builder.Append(",");
                 }
 
-                builder.Append(Util.getLength(drawLines[i]).ToString("F6") + ",");
+                double lineLength = Util.getLength(drawLines[i]);
+                builder.Append(lineLength.ToString("F6") + ",");
+                builder.Append((lineLength / duration).ToString("F6") + ",");
 
                 builder.AppendLine("");
-                
             }
 
             byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
@@ -209,10 +211,13 @@ namespace MIDAS_BAT.Utils
             builder.Append(TestSetItem.Word);
             builder.AppendLine("( 총 " + drawLines.Count.ToString() + " 획)");
             builder.AppendLine("Index,총 샘플링 수,필압 평균,필압 표준편차,raw pressure");
+
+            List<double> pressureAvgs = new List<double>(); // "각 획의 필압 평균"의 평균을 계산하기 위한 리스트
+            List<double> pressureStds = new List<double>(); // "각 획의 필압 평균"의 평균을 계산하기 위한 리스트
             for (int i = 0; i < drawLines.Count; ++i)
             {
-                builder.Append(String.Format("{0},", i + 1));
-                builder.Append(drawLines[i].Count.ToString() + ", ");
+                builder.Append(String.Format("{0},", i + 1)); // index
+                builder.Append(drawLines[i].Count.ToString() + ", "); // 총 샘플링 수
 
                 List<double> pressures = new List<double>();
                 foreach (var pt in drawLines[i])
@@ -224,15 +229,18 @@ namespace MIDAS_BAT.Utils
                 }
                 if( pressures.Count > 0 )
                 {
-                    builder.Append(pressures.Average().ToString("F6") + ",");
-                    builder.Append(Util.calculateStdev(pressures).ToString("F6") + ",");
+                    double avg = pressures.Average();
+                    double std = Util.calculateStdev(pressures);
+                    pressureAvgs.Add(avg);
+                    pressureStds.Add(std);
+                    builder.Append(avg.ToString("F6") + ","); // 필압 평균
+                    builder.Append(std.ToString("F6") + ","); // 필압 표준편차
                 }
                 else
                 {
                     builder.Append(0.0.ToString("F6") + ",");
                     builder.Append(0.0.ToString("F6") + ",");
                 }
-                
 
                 foreach(var p in pressures)
                 {
@@ -241,6 +249,16 @@ namespace MIDAS_BAT.Utils
 
                 builder.AppendLine("");
             }
+            // 가장 마지막 줄에 전체 획의 필압 평균의 평균 및 표준 편차의 평균을 제일 하단에 넣어줌
+            double totalAvg = 0.0; 
+            double totalStdAvg = 0.0; 
+            if(pressureAvgs.Count > 0)
+            {
+                totalAvg = pressureAvgs.Average();
+                totalStdAvg = pressureStds.Average();
+            }
+            builder.Append(",평균 및 표준편차," + totalAvg.ToString("F6") + "," + totalStdAvg.ToString("F6"));
+            builder.AppendLine("");
 
             byte[] fileBytes = encoding.GetBytes(builder.ToString().ToCharArray());
             await FileIO.WriteBytesAsync(pressure_file, fileBytes);
@@ -319,10 +337,27 @@ namespace MIDAS_BAT.Utils
             Encoding encoding = Encoding.GetEncoding("euc-kr");
 
             List<DiffData> flattenDiff = new List<DiffData>();
-            foreach(var diffResult in diffResults)
+            // csv 상에서 제일 위에 전체 결과에 대한 차이 평균을 넣어둬야 해서 미리 계산함
+            List<double> diffAvgs = new List<double>(); 
+            List<double> diffStds = new List<double>(); 
+            foreach (var diffResult in diffResults)
             {
-                foreach(var diffItem in diffResult)
+                List<double> diffs = new List<double>();
+                foreach (var diffItem in diffResult)
+                {
                     flattenDiff.Add(diffItem);
+                    if (diffItem.hasValueOrg && diffItem.hasValueDrawn)
+                        diffs.Add(diffItem.getDistance());
+                }
+                double diffAvg = 0.0;
+                double diffStd = 0.0;
+                if (diffs.Count != 0)
+                {
+                    diffAvg = diffs.Average();
+                    diffStd = Util.calculateStdev(diffs);
+                }
+                diffAvgs.Add(diffAvg);
+                diffStds.Add(diffStd);
             }
 
             string file_name = String.Format("{0}_{1}_차이.csv", tester.GetTesterName(TestExec.Datetime), testName);
@@ -331,7 +366,7 @@ namespace MIDAS_BAT.Utils
             StringBuilder builder = new StringBuilder();
             builder.Clear();
             builder.Append(testName);
-            builder.AppendLine("Index,위치,템플릿X,템플릿Y,그린점X,그린점Y,거리차이");
+            builder.AppendLine("Index,위치,템플릿X,템플릿Y,그린점X,그린점Y,거리차이,,평균,표준편차,");
             for (int i = 0; i < flattenDiff.Count; ++i)
             {
                 builder.Append(String.Format("{0},{1},", i + 1, flattenDiff[i].name));
@@ -348,6 +383,13 @@ namespace MIDAS_BAT.Utils
                 if (flattenDiff[i].hasValueOrg && flattenDiff[i].hasValueDrawn)
                     builder.Append(String.Format("{0},", flattenDiff[i].getDistance()));
 
+                // 가장 첫 줄에 거리 차이의 평균 및 표준 편차를 기록해둠
+                // 차이 값이 있는 경우에 한해서만 다룸 
+                if(i < diffAvgs.Count)
+                {
+                    string name = String.Format("{0}번째 획", i + 1);
+                    builder.Append(String.Format("{0},{1},{2},", name, diffAvgs[i], diffStds[i]));
+                }
 
                 builder.AppendLine("");
             }
