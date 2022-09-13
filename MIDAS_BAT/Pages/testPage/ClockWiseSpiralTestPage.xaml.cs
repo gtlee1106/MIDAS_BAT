@@ -417,6 +417,7 @@ namespace MIDAS_BAT.Pages
                 string testName = String.Format("{0}_{1}", TEST_ORDER, TEST_NAME_KR);
 
                 await Util.CaptureInkCanvasForStroke2(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
+                await Util.CaptureInkCanvasForStroke3(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
                 await Util.CaptureInkCanvasForSpiral(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, false);
 
                 await m_saveUtil.saveStroke(TEST_ORDER, testName, inkCanvas);

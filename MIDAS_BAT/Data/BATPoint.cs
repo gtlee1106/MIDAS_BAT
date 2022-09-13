@@ -24,7 +24,7 @@ namespace MIDAS_BAT.Data
 
         public static double getTimeDiffMs(BATPoint a, BATPoint b)
         {
-            return Convert.ToDouble((a.timestamp - b.timestamp)) / 1000.0;
+            return Convert.ToDouble(Math.Abs((double)a.timestamp - (double)b.timestamp)) / 1000.0;
         }
     }
 }

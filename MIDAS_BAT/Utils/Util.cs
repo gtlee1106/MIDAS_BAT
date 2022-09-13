@@ -937,6 +937,129 @@ namespace MIDAS_BAT
             return true;
         }
 
+        public static async Task<bool> CaptureInkCanvasForStroke3(int testOrder, string testName, InkCanvas inkCanvas, Border borderUI, List<List<Point>> orgLines, List<List<BATPoint>> drawPoints, TestExec testExec, TestSetItem setItem)
+        {
+            DatabaseManager databaseManager = DatabaseManager.Instance;
+            Tester tester = databaseManager.GetTester(testExec.TesterId);
+
+            string file_name = String.Format("{0}_{1}_{2}_detail.gif", tester.GetTesterName(testExec.Datetime), testName, setItem.Number);
+            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync(testExec.TesterId.ToString(), CreationCollisionOption.OpenIfExists);
+            StorageFile file = await storageFolder.CreateFileAsync(file_name, CreationCollisionOption.ReplaceExisting);
+
+            var displayInformation = DisplayInformation.GetForCurrentView();
+            var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.GifEncoderId, stream);
+
+            CanvasDevice device = CanvasDevice.GetSharedDevice();
+            CanvasRenderTarget rtb = new CanvasRenderTarget(device, (int)inkCanvas.ActualWidth, (int)inkCanvas.ActualHeight, 96); // 96 쓰는게 맞나? or dpi 받아서 써야되나?
+            //IReadOnlyList<InkStroke> strokeList = inkCanvas.InkPresenter.StrokeContainer.GetStrokes();
+            List<List<BATPoint>> newStrokeList = new List<List<BATPoint>>();
+
+            var propertySet = new BitmapPropertySet();
+            var propertyValue = new BitmapTypedValue(
+                40, // multiple of 10ms. 1/2배 느리게 그린다
+                PropertyType.UInt16
+                );
+            propertySet.Add("/grctlext/Delay", propertyValue);
+
+            // 초기화면
+            // 한프레임...?
+            using (var ds = rtb.CreateDrawingSession())
+            {
+                ds.Clear(Colors.White);
+                drawOrgLine(ds, orgLines);
+                // ds.DrawInk(newStrokeList);
+            }
+
+            var pixelBuffer = rtb.GetPixelBytes();
+            var pixels = pixelBuffer.ToArray();
+
+            encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                 BitmapAlphaMode.Premultiplied,
+                                 (uint)inkCanvas.ActualWidth,
+                                 (uint)inkCanvas.ActualHeight,
+                                 displayInformation.RawDpiX,
+                                 displayInformation.RawDpiY,
+                                 pixels);
+            await encoder.BitmapProperties.SetPropertiesAsync(propertySet);
+            await encoder.GoToNextFrameAsync();
+
+            // 중간
+            for( int i = 0; i < drawPoints.Count; i++) 
+            {
+                var drawPoint = drawPoints[i];
+                newStrokeList.Add(new List<BATPoint>());
+
+                if (drawPoint.Count == 0)
+                    continue;
+
+                BATPoint timeCheckPt = drawPoint[0];
+                for (int j = 0; j < drawPoint.Count; j++)
+                {
+                    newStrokeList[i].Add(drawPoint[j]);
+
+                    // 0.2 초 단위로 잘라서 그리는 것을 의도함
+                    // 점 간의 시간 차이가 0.2초를 넘겼거나, 마지막 점인 경우에 그려줌
+                    if ((BATPoint.getTimeDiffMs(timeCheckPt, drawPoint[j]) > 200) || (j == drawPoint.Count - 1) ) 
+                    {
+                        // 한프레임...?
+                        using (var ds = rtb.CreateDrawingSession())
+                        {
+                            ds.Clear(Colors.White);
+                            drawOrgLine(ds, orgLines);
+                            drawDrawLine(ds, newStrokeList);
+                        }
+
+                        pixelBuffer = rtb.GetPixelBytes();
+                        pixels = pixelBuffer.ToArray();
+
+                        encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                                BitmapAlphaMode.Premultiplied,
+                                                (uint)inkCanvas.ActualWidth,
+                                                (uint)inkCanvas.ActualHeight,
+                                                displayInformation.RawDpiX,
+                                                displayInformation.RawDpiY,
+                                                pixels);
+                        await encoder.BitmapProperties.SetPropertiesAsync(propertySet);
+                        await encoder.GoToNextFrameAsync();
+                        
+                        timeCheckPt = drawPoint[j];
+                    }
+                }
+            }
+
+            // 마지막 샷 
+            using (var ds = rtb.CreateDrawingSession())
+            {
+                ds.Clear(Colors.White);
+                drawOrgLine(ds, orgLines);
+                drawDrawLine(ds, newStrokeList);
+            }
+
+            pixelBuffer = rtb.GetPixelBytes();
+            pixels = pixelBuffer.ToArray();
+
+            encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                BitmapAlphaMode.Premultiplied,
+                                (uint)inkCanvas.ActualWidth,
+                                (uint)inkCanvas.ActualHeight,
+                                displayInformation.RawDpiX,
+                                displayInformation.RawDpiY,
+                                pixels);
+            var lastPropertySet = new BitmapPropertySet();
+            var lastPropertyValue = new BitmapTypedValue(
+                500, // multiple of 10ms
+                Windows.Foundation.PropertyType.UInt16
+                );
+            lastPropertySet.Add("/grctlext/Delay", lastPropertyValue);
+            await encoder.BitmapProperties.SetPropertiesAsync(lastPropertySet);
+
+            await encoder.FlushAsync();
+            stream.Dispose();
+
+            return true;
+        }
+
         public static Rect? getBoundingBox(List<Point> points)
         {
             if (points.Count == 0 )

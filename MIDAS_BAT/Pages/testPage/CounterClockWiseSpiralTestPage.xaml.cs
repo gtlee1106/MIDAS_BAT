@@ -417,6 +417,7 @@ namespace MIDAS_BAT.Pages
 
                 List<List<DiffData>> diffResults = calculateDifference();
                 await Util.CaptureInkCanvasForStroke2(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
+                await Util.CaptureInkCanvasForStroke3(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, m_testExec, testSetItem);
                 await Util.CaptureInkCanvasForSpiral(TEST_ORDER, testName, inkCanvas, null, m_orgLines, m_drawLines, diffResults, m_testExec, testSetItem, true);
 
                 await m_saveUtil.saveStroke(TEST_ORDER, testName, inkCanvas);

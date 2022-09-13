@@ -307,6 +307,7 @@ namespace MIDAS_BAT
                 string testName = String.Format("{0}_{1}", TEST_ORDER, TEST_NAME_KR);
 
                 await Util.CaptureInkCanvasForStroke2(TEST_ORDER, testName, inkCanvas, borderCanvas, null, m_drawLines, m_testExec, m_wordList[m_curIdx]);
+                await Util.CaptureInkCanvasForStroke3(TEST_ORDER, testName, inkCanvas, borderCanvas, null, m_drawLines, m_testExec, m_wordList[m_curIdx]);
                 await Util.CaptureInkCanvas(TEST_ORDER, testName, inkCanvas, borderCanvas, null, m_drawLines, new List<List<DiffData>>(), m_testExec, m_wordList[m_curIdx]);
 
                 await m_saveUtil.saveStroke(TEST_ORDER, testName, inkCanvas);
