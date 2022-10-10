@@ -65,6 +65,8 @@ namespace MIDAS_BAT
 
                 checkHorizontalLineTest.IsChecked = m_targetTestSet.HorizontalLineTest;
                 checkVerticalLineTest.IsChecked = m_targetTestSet.VerticalLineTest;
+                checkRightCrossLineTest.IsChecked = m_targetTestSet.RightCrossLineTest;
+                checkLeftCrossLineTest.IsChecked = m_targetTestSet.LeftCrossLineTest;
                 checkCounterClockwiseSpiralTest.IsChecked = m_targetTestSet.CounterClockwiseSpiralTest;
                 checkClockwiseSpiralTest.IsChecked = m_targetTestSet.ClockwiseSpiralTest;
                 checkCounterClockwiseFreeSpiralTest.IsChecked = m_targetTestSet.CounterClockwiseFreeSpiralTest;
@@ -137,6 +139,8 @@ namespace MIDAS_BAT
 
                 m_targetTestSet.HorizontalLineTest = (bool)checkHorizontalLineTest.IsChecked;
                 m_targetTestSet.VerticalLineTest = (bool)checkVerticalLineTest.IsChecked;
+                m_targetTestSet.RightCrossLineTest = (bool)checkRightCrossLineTest.IsChecked;
+                m_targetTestSet.LeftCrossLineTest = (bool)checkLeftCrossLineTest.IsChecked;
                 m_targetTestSet.CounterClockwiseSpiralTest = (bool)checkCounterClockwiseSpiralTest.IsChecked;
                 m_targetTestSet.ClockwiseSpiralTest = (bool)checkClockwiseSpiralTest.IsChecked;
                 m_targetTestSet.CounterClockwiseFreeSpiralTest = (bool)checkCounterClockwiseFreeSpiralTest.IsChecked;
@@ -192,6 +196,20 @@ namespace MIDAS_BAT
                 return;
 
             m_targetTestSet.VerticalLineTest = (bool)checkVerticalLineTest.IsChecked;
+        }
+        private void checkRightCrossLineTest_Checked(object sender, RoutedEventArgs e)
+        {
+            if (checkRightCrossLineTest == null)
+                return;
+
+            m_targetTestSet.RightCrossLineTest = (bool)checkRightCrossLineTest.IsChecked;
+        }
+        private void checkLeftCrossLineTest_Checked(object sender, RoutedEventArgs e)
+        {
+            if (checkLeftCrossLineTest == null)
+                return;
+
+            m_targetTestSet.LeftCrossLineTest = (bool)checkLeftCrossLineTest.IsChecked;
         }
 
         private void checkCounterClockwiseSpiralTest_Checked(object sender, RoutedEventArgs e)

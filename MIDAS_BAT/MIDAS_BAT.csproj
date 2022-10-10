@@ -16,12 +16,12 @@
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PackageCertificateKeyFile>MIDAS_BAT_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>
+    </PackageCertificateKeyFile>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>x64</AppxBundlePlatforms>
-    <PackageCertificateThumbprint>
-    </PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>10BD681ABDFF4C0F1254B2CF9958EA6E5FB16E43</PackageCertificateThumbprint>
     <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
     <RuntimeIdentifiers>win10-arm;win10-arm-aot;win10-x86;win10-x86-aot;win10-x64;win10-x64-aot</RuntimeIdentifiers>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
@@ -124,6 +124,12 @@
     <Compile Include="Pages\testPage\CounterClockWiseSpiralTestPage.xaml.cs">
       <DependentUpon>CounterClockWiseSpiralTestPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\testPage\LeftCrossLineTestPage.xaml.cs">
+      <DependentUpon>LeftCrossLineTestPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\testPage\RightCrossLineTest.xaml.cs">
+      <DependentUpon>RightCrossLineTest.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\testPage\HorizontalLineTestPage.xaml.cs">
       <DependentUpon>HorizontalLineTestPage.xaml</DependentUpon>
     </Compile>
@@ -212,6 +218,14 @@
     <Page Include="Pages\testPage\CounterClockWiseSpiralTestPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\testPage\LeftCrossLineTestPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\testPage\RightCrossLineTest.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\testPage\HorizontalLineTestPage.xaml">
       <SubType>Designer</SubType>

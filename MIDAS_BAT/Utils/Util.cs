@@ -136,6 +136,8 @@ namespace MIDAS_BAT
             {
                 testSet.HorizontalLineTest,
                 testSet.VerticalLineTest,
+                testSet.RightCrossLineTest,
+                testSet.LeftCrossLineTest,
                 testSet.CounterClockwiseSpiralTest,
                 testSet.ClockwiseSpiralTest,
                 testSet.CounterClockwiseFreeSpiralTest,
@@ -147,6 +149,8 @@ namespace MIDAS_BAT
             {
                 typeof(HorizontalLineTestPage),
                 typeof(VerticalLineTestPage),
+                typeof(RightCrossLineTestPage),
+                typeof(LeftCrossLineTestPage),
                 typeof(CounterClockWiseSpiralTestPage),
                 typeof(ClockWiseSpiralTestPage),
                 typeof(CounterClockWiseFreeSpiralTestPage),
@@ -169,6 +173,8 @@ namespace MIDAS_BAT
             {
                 testSet.HorizontalLineTest,
                 testSet.VerticalLineTest,
+                testSet.RightCrossLineTest,
+                testSet.LeftCrossLineTest,
                 testSet.CounterClockwiseSpiralTest,
                 testSet.ClockwiseSpiralTest,
                 testSet.CounterClockwiseFreeSpiralTest,
@@ -180,6 +186,8 @@ namespace MIDAS_BAT
             {
                 typeof(HorizontalLineTestPage),
                 typeof(VerticalLineTestPage),
+                typeof(RightCrossLineTestPage),
+                typeof(LeftCrossLineTestPage),
                 typeof(CounterClockWiseSpiralTestPage),
                 typeof(ClockWiseSpiralTestPage),
                 typeof(CounterClockWiseFreeSpiralTestPage),

@@ -32,6 +32,8 @@ namespace MIDAS_BAT
 
         public bool HorizontalLineTest { get; set; }
         public bool VerticalLineTest { get; set; }
+        public bool RightCrossLineTest { get; set; }
+        public bool LeftCrossLineTest { get; set; }
         public bool CounterClockwiseSpiralTest { get; set; }
         public bool ClockwiseSpiralTest { get; set; }
         public bool CounterClockwiseFreeSpiralTest { get; set; }

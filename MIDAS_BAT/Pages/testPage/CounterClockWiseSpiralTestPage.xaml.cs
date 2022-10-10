@@ -47,7 +47,7 @@ namespace MIDAS_BAT.Pages
 
         public static string TEST_NAME = "counterClockwiseSpiralTest";
         public static string TEST_NAME_KR = "나선 따라그리기(반시계방향)";
-        public static int TEST_ORDER = 2;
+        public static int TEST_ORDER = 4;
         public CounterClockWiseSpiralTestPage()
         {
             this.InitializeComponent();

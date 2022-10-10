@@ -46,7 +46,7 @@ namespace MIDAS_BAT.Pages
 
         public static string TEST_NAME = "clockWiseFreeSpiralTest";
         public static string TEST_NAME_KR = "자유 나선그리기(시계방향)";
-        public static int TEST_ORDER = 5;
+        public static int TEST_ORDER = 7;
 
         public ClockWiseFreeSpiralTestPage()
         {

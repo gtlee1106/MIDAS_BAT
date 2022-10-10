@@ -43,7 +43,7 @@ namespace MIDAS_BAT
 
         public static string TEST_NAME = "characterTest";
         public static string TEST_NAME_KR = "글자 쓰기";
-        public static int TEST_ORDER = 6;
+        public static int TEST_ORDER = 8;
 
         public TestPage()
         {

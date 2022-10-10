@@ -36,6 +36,8 @@
                 Margin="10">
                 <CheckBox x:Name="checkHorizontalLineTest" IsChecked="True" Checked="checkHorizontalLineTest_Checked"  Unchecked="checkHorizontalLineTest_Checked">직선 따라그리기(가로선)</CheckBox>
                 <CheckBox x:Name="checkVerticalLineTest" IsChecked="True" Checked="checkVerticalLineTest_Checked" Unchecked="checkVerticalLineTest_Checked">직선 따라그리기(세로선)</CheckBox>
+                <CheckBox x:Name="checkRightCrossLineTest" IsChecked="True" Checked="checkRightCrossLineTest_Checked" Unchecked="checkRightCrossLineTest_Checked">사선 따라그리기(오른쪽)</CheckBox>
+                <CheckBox x:Name="checkLeftCrossLineTest" IsChecked="True" Checked="checkLeftCrossLineTest_Checked" Unchecked="checkLeftCrossLineTest_Checked">사선 따라그리기(왼쪽)</CheckBox>
                 <CheckBox x:Name="checkCounterClockwiseSpiralTest" IsChecked="True" Checked="checkCounterClockwiseSpiralTest_Checked" Unchecked="checkCounterClockwiseSpiralTest_Checked">나선 따라그리기(반시계방향)</CheckBox>
                 <CheckBox x:Name="checkClockwiseSpiralTest" IsChecked="True" Checked="checkClockwiseSpiralTest_Checked" Unchecked="checkClockwiseSpiralTest_Checked">나선 따라그리기(시계방향)</CheckBox>
                 <CheckBox x:Name="checkCounterClockwiseFreeSpiralTest" IsChecked="True" Checked="checkCounterClockwiseFreeSpiralTest_Checked" Unchecked="checkCounterClockwiseFreeSpiralTest_Checked">자유 나선그리기(반시계방향)</CheckBox>
