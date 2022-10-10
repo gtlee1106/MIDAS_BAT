@@ -171,9 +171,17 @@ namespace MIDAS_BAT.Pages
         }
         private async void prevBtn_Click(object sender, RoutedEventArgs e)
         {
-            Type prevTest = Util.getPrevTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
-            if(prevTest == null)
+           Type prevTest = Util.getPrevTest(DatabaseManager.Instance.GetActiveTestSet(), TEST_ORDER);
+            if (prevTest == null)
                 await Util.ShowCannotGoBackAlertDlg();
+            else
+            {
+                bool goBack = await Util.ShowGoBackAlertDlg();
+                if (!goBack)
+                    return;
+
+                this.Frame.Navigate(prevTest, m_testExec, new SuppressNavigationTransitionInfo());
+            }
         }
         /////// end of events ////////
 
@@ -194,7 +202,10 @@ namespace MIDAS_BAT.Pages
             content.Width = bounds.Width;
             content.Height = bounds.Height;
 
-            leftCrossLine.X2 = lineWidth;
+            leftCrossLine.X1 = Math.Cos(Math.PI / 4) * lineWidth;
+            leftCrossLine.Y1 = 0;
+            leftCrossLine.X2 = 0;
+            leftCrossLine.Y2 = Math.Sin(Math.PI / 4) * lineWidth;
             leftCrossLine.HorizontalAlignment = HorizontalAlignment.Center;
             leftCrossLine.VerticalAlignment = VerticalAlignment.Center;
 
@@ -207,8 +218,14 @@ namespace MIDAS_BAT.Pages
 
             var bounds = ApplicationView.GetForCurrentView().VisibleBounds;
             var ttv = leftCrossLine.TransformToVisual(Window.Current.Content);
-            Point l_s = ttv.TransformPoint(new Point(leftCrossLine.X1, bounds.Height));
-            Point l_e = ttv.TransformPoint(new Point(leftCrossLine.X1, -bounds.Height));
+
+            Point l_s = new Point(leftCrossLine.X1 + Math.Cos(-Math.PI * 3 / 4) * bounds.Height, leftCrossLine.Y1 + Math.Sin(-Math.PI * 3 / 4) * bounds.Height);
+            Point l_e = new Point(leftCrossLine.X1 + Math.Cos(Math.PI / 4) * bounds.Height, leftCrossLine.Y1 + Math.Sin(Math.PI / 4) * bounds.Height);
+            l_s = ttv.TransformPoint(l_s);
+            l_e = ttv.TransformPoint(l_e);
+
+            //Point l_s = ttv.TransformPoint(new Point(leftCrossLine.X1, bounds.Height));
+            //Point l_e = ttv.TransformPoint(new Point(leftCrossLine.X1, -bounds.Height));
             
             Point orgPoint = ttv.TransformPoint(new Point(leftCrossLine.X1, leftCrossLine.Y1));
 
@@ -220,8 +237,10 @@ namespace MIDAS_BAT.Pages
             {
                 Point p1 = l_s;
                 Point p2 = l_e;
-                p1.X += i * unit;
-                p2.X += i * unit;
+                p1.X += Math.Cos(Math.PI * 3 / 4) * i * unit;
+                p1.Y += Math.Sin(Math.PI * 3 / 4) * i * unit;
+                p2.X += Math.Cos(Math.PI * 3 / 4) * i * unit;
+                p2.Y += Math.Sin(Math.PI * 3 / 4) * i * unit;
 
                 bool found = false;
                 Point intersectedPoint;
@@ -241,9 +260,9 @@ namespace MIDAS_BAT.Pages
                 }
 
                 if( found )
-                    results.Add(new DiffData(String.Format("Num: {0}", i), new Point(p1.X, orgPoint.Y), intersectedPoint));
+                    results.Add(new DiffData(String.Format("Num: {0}", i), new Point(orgPoint.X + Math.Cos(Math.PI * 3 / 4) * i * unit, orgPoint.Y + Math.Sin(Math.PI / 4) * i * unit), intersectedPoint));
                 else
-                    results.Add(new DiffData(String.Format("Num: {0}", i), new Point(p1.X, orgPoint.Y)));
+                    results.Add(new DiffData(String.Format("Num: {0}", i), new Point(orgPoint.X + Math.Cos(Math.PI * 3 / 4) * i * unit, orgPoint.Y + Math.Sin(Math.PI / 4) * i * unit)));
             }
 
             return new List<List<DiffData>> { results };
