@@ -11,7 +11,7 @@
         <RelativePanel>
             <TextBlock x:Name="desc" Text="앱 설정" FontSize="30" Margin="10"/>
             <StackPanel x:Name="btnPanel" RelativePanel.Below="desc">
-                <CheckBox x:Name="chkShowTargetWord" Content="실험시 대상 단어 보이기" IsChecked="False" Margin="5" Click="chkShowTargetWord_Click"/>
+                <CheckBox x:Name="chkShowTargetWord" Content="실험시 대상 단어 보이기" IsChecked="True" Margin="5" Click="chkShowTargetWord_Click"/>
                 <CheckBox x:Name="chkUseJamoSeperation" Content="한글 자모 구분하기" IsChecked="False" Margin="5" Click="chkUseJamoSeperation_Click" Visibility="Collapsed"/>
                 <CheckBox x:Name="chkUseHandWritingRecognition"  Content="필기 인식 사용하기" IsEnabled="False" IsChecked="False" Margin="5" Click="chkUseHandWritingRecognition_Click" Visibility="Collapsed"/>
                 <TextBlock Text="기본 글상자 사이즈 " Margin="5"/>
