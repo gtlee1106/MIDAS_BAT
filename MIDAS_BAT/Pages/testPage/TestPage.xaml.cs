@@ -13,6 +13,7 @@ using Windows.Graphics.Display;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.System.Threading;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Input.Inking;
@@ -58,6 +59,8 @@ namespace MIDAS_BAT
             core.PointerPressing += Core_PointerPressing;
             core.PointerMoving += Core_PointerMoving;
             core.PointerReleasing += Core_PointerReleasing;
+
+            
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -79,6 +82,8 @@ namespace MIDAS_BAT
                 UpdateCurrnetStatus();
 
                 ResizeCanvas();
+
+                WordTimeLimitTimer();
             }
         }
 
@@ -294,7 +299,6 @@ namespace MIDAS_BAT
         {
             try
             {
-
                 TestUtil testUtil = TestUtil.Instance;
                 if (!await testUtil.IsCorrectWriting(m_targetWord, inkCanvas))
                 {
@@ -304,7 +308,7 @@ namespace MIDAS_BAT
                     return;
                 }
 
-                string testName = String.Format("{0}_{1}", TEST_ORDER, TEST_NAME_KR);
+                string testName = String.Format("{0}_{1}", TEST_ORDER, TEST_NAME_KR); 
 
                 await Util.CaptureInkCanvasForStroke2(TEST_ORDER, testName, inkCanvas, borderCanvas, null, m_drawLines, m_testExec, m_wordList[m_curIdx]);
                 await Util.CaptureInkCanvasForStroke3(TEST_ORDER, testName, inkCanvas, borderCanvas, null, m_drawLines, m_testExec, m_wordList[m_curIdx]);
@@ -323,6 +327,8 @@ namespace MIDAS_BAT
                     UpdateCurrnetStatus();
                     ResizeCanvas();
                     ClearInkData();
+
+                    WordTimeLimitTimer();
                 }
                 else
                 {
@@ -345,6 +351,33 @@ namespace MIDAS_BAT
                 StorageFolder orgFolder = ApplicationData.Current.LocalFolder;
                 StorageFile resultFile = await orgFolder.CreateFileAsync(logFileName, CreationCollisionOption.ReplaceExisting);
                 await FileIO.WriteBytesAsync(resultFile, fileBytes);
+            }
+        }
+
+        private void WordTimeLimitTimer()
+        {
+            title.Visibility = Visibility.Visible;
+
+            title.FontSize = m_testExec.FontSize;
+            if (m_testExec.FontName != null)
+                title.FontFamily = new FontFamily(m_testExec.FontName);
+
+            if (m_testExec.HasTimeLimit)
+            {
+                TimeSpan delay = TimeSpan.FromSeconds(m_testExec.TimeLimit);
+                ThreadPoolTimer DelayTimer = ThreadPoolTimer.CreateTimer(
+                    (source) =>
+                    {
+                        Dispatcher.RunAsync(
+                                    CoreDispatcherPriority.High,
+                                    () =>
+                                    {
+                                    //
+                                    // UI components can be accessed within this scope.
+                                    //
+                                    title.Visibility = Visibility.Collapsed;
+                                    });
+                    }, delay);
             }
         }
 

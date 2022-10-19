@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MIDAS_BAT</RootNamespace>
     <AssemblyName>MIDAS_BAT</AssemblyName>
-    <DefaultLanguage>ko-KR</DefaultLanguage>
+    <DefaultLanguage>ko-kr</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.17763.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>

@@ -16,6 +16,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -105,13 +107,37 @@
                 <TextBlock Text="높이(mm)" Grid.Row="1" Grid.Column="0" Margin="5,10,5,5"/>
                 <TextBox x:Name="heightBox" Grid.Row="1" Grid.Column="1" Text="40"  Margin="5,5,5,5"/>
             </Grid>
-
-
         </StackPanel>
 
+        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="글자 설정" Margin="5,20,5,10" Grid.Row="6"/>
+        <StackPanel Orientation="Horizontal"  Grid.Row="6" Grid.Column="1">
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="폰트" Margin="5,20,5,10" />
+                <ComboBox
+                    x:Name="fontCombo" Width="115"
+                    SelectedIndex="2"
+                    SelectionChanged="fontCombo_SelectionChanged"
+                    Margin="0,20,0,0"
+                    >
+                </ComboBox>
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="크기" Margin="10,20,10,10" />
+                <TextBox 
+                    x:Name="fontSizeTextBox"
+                    Text="48" InputScope="Digits"
+                    VerticalAlignment="Center"
+                    Margin="0,20,10,10"
+                />
+            </StackPanel>
+        </StackPanel>
 
+        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="단어 제시 시간" Margin="5,10,5,10" Grid.Row="7"/>
+        <StackPanel Orientation="Horizontal"  Grid.Row="7" Grid.Column="1">
+            <CheckBox x:Name="wordTimeLimitChk" Content="제한 시간 있음" IsChecked="True" Margin="5,15,5,5" Click="wordTimeLimitChk_Click"/>
+            <TextBlock Text="제한시간" Margin="10,20,5,5"/>
+            <TextBox x:Name="wordTimeLimit" Text="30" Margin="5,15,5,5"/>
+        </StackPanel>
 
-        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal">
+        <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal">
             <Button x:Name="startTest" Content="검사 시작하기" Margin="10,10,10,10" Click="startTest_Click" />
             <Button x:Name="backBtn" Content="돌아가기"  Margin="10,10,10,10" Click="backBtn_Click" />
         </StackPanel>

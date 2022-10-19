@@ -83,6 +83,10 @@ namespace MIDAS_BAT
         public bool ShowBorder { get; set; }
         public int ScreenWidth { get; set; }
         public int ScreenHeight{ get; set; }
+        public string FontName { get; set; }
+        public int FontSize { get; set; }
+        public bool HasTimeLimit { get; set; }
+        public int TimeLimit { get; set; }
 
         public string getExecDateTimeStr()
         {

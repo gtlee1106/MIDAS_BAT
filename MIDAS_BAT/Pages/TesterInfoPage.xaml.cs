@@ -34,6 +34,7 @@ namespace MIDAS_BAT
 
             initBtn();
             initBoxSize();
+            initFontCombo();
         }
 
         private void initBoxSize()
@@ -111,6 +112,33 @@ namespace MIDAS_BAT
                 return;
             }
 
+            int fontSize;
+            try
+            {
+                fontSize = Convert.ToInt32(fontSizeTextBox.Text);
+            }
+            catch
+            {
+                var dialog = new MessageDialog("폰트 크기에 입력한 값이 적절하지 않습니다.");
+                dialog.ShowAsync();
+                return;
+            }
+
+            int timeLimit;
+            try
+            {
+                if (wordTimeLimitChk.IsChecked == true)
+                    timeLimit = Convert.ToInt32(wordTimeLimit.Text);
+                else
+                    timeLimit = 30;
+            }
+            catch
+            {
+                var dialog = new MessageDialog("시간 제한에 입력한 값이 적절하지 않습니다.");
+                dialog.ShowAsync();
+                return;
+            }
+
             Tester tester = new Tester()
             {
                 Name = name.Text,
@@ -137,7 +165,11 @@ namespace MIDAS_BAT
                 UseJamoSepartaion = (bool)AppConfig.Instance.UseJamoSeperation,
                 ShowBorder = showBoxChk.IsChecked == true ? true : false,
                 ScreenWidth = Int32.Parse(widthBox.Text),
-                ScreenHeight = Int32.Parse(heightBox.Text)
+                ScreenHeight = Int32.Parse(heightBox.Text),
+                FontName = fontCombo.SelectedValue.ToString(),
+                FontSize = fontSize,
+                HasTimeLimit = (bool)wordTimeLimitChk.IsChecked,
+                TimeLimit = timeLimit
             };
             dbManager.InsertTestExec(testExec);
 
@@ -221,6 +253,36 @@ namespace MIDAS_BAT
             dropYear_6.Background = new SolidColorBrush(Windows.UI.Colors.LightGray);
         }
 
+        private void initFontCombo()
+        {
+            List<string> languageList = new List<string>();
+            languageList.Add("ko-kr");
+            string[] fonts = Microsoft.Graphics.Canvas.Text.CanvasTextFormat.GetSystemFontFamilies(languageList);
+
+            List<string> koFonts = new List<string>();
+            foreach(var font in fonts)
+            {
+                if (Util.isKoreanFont(font))
+                    koFonts.Add(font);
+            }
+
+            for(int i = 0; i < koFonts.Count; i++)
+            {
+                if ( koFonts[i].StartsWith("궁서"))
+                {
+                    koFonts.Insert(0, koFonts[i]);
+                    koFonts.RemoveAt(i+1);
+                }
+                else if (koFonts[i].StartsWith("나눔고딕"))
+                {
+                    koFonts.Insert(0, koFonts[i]);
+                    koFonts.RemoveAt(i+1);
+                }
+            }
+
+            fontCombo.ItemsSource = koFonts;
+        }
+
         private void onChangedEducationComb()
         {
             if( dropRadioBtn == null)
@@ -278,6 +340,29 @@ namespace MIDAS_BAT
                 return "";
 
             return m_dropYear;
+        }
+
+        private void fontCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void wordTimeLimitChk_Click(object sender, RoutedEventArgs e)
+        {
+            if (wordTimeLimitChk.IsChecked == true)
+            {
+                if (widthBox != null)
+                {
+                    wordTimeLimit.IsEnabled = true;
+                }
+            }
+            else
+            {
+                if (widthBox != null)
+                {
+                    wordTimeLimit.IsEnabled = false;
+                }
+            }
         }
     }
 }

@@ -1536,5 +1536,19 @@ namespace MIDAS_BAT
             return Math.Sqrt(values.Average(v => Math.Pow(v - avg, 2)));
         }
 
+        public static bool isKoreanFont(string str)
+        {
+            if (str.Length == 0)
+                return false;
+
+            // 첫글자만 테스트한다.
+            char ch = str[0];
+            if ((0xAC00 <= ch && ch <= 0xD7A3) || (0x3131 <= ch && ch <= 0x318E))
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }
