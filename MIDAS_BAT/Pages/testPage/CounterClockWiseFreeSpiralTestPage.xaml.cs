@@ -233,7 +233,7 @@ namespace MIDAS_BAT.Pages
 
             // stroke 전체의 사이즈를 구함 
             //m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Value.Width, drawSplits.Count, true);
-            m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Value.Width, 4, true);
+            m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, Math.Max(bbox.Value.Width, bbox.Value.Height), 4, true);
 
             Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
             for (int i = 0; i < Math.Max(m_orgLines.Count, drawSplits.Count); i++)
