@@ -233,7 +233,12 @@ namespace MIDAS_BAT.Pages
 
             // stroke 전체의 사이즈를 구함 
             //m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, bbox.Value.Width, drawSplits.Count, true);
-            m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, Math.Max(bbox.Value.Width, bbox.Value.Height), 4, true);
+            double spiralWidth = bbox.Value.Width;
+            if (bbox.Value.Width < bbox.Value.Height)
+            {
+                spiralWidth = bbox.Value.Height / 15.0f * 16.0f; // 나선의 가로가 세로보다 미묘하게 김. 그래서 혹시 세로로 길게 잡은 그려졌다면, 이걸 고려해서 나선의 가로 길이를 잡아야 함 
+            }
+            m_orgLines = Util.generateClockWiseSpiralPoints(centerPt, spiralWidth, 4, true);
 
             Point orgCenter = new Point(bounds.Width / 2, bounds.Height / 2);
             for (int i = 0; i < Math.Max(m_orgLines.Count, drawSplits.Count); i++)
