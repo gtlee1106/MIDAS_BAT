@@ -162,7 +162,7 @@ namespace MIDAS_BAT.Utils
             builder.Append(TestSetItem.Word);
             builder.AppendLine("( 총 " + drawLines.Count.ToString() + " 획)");
 
-            builder.AppendLine("Index,Pressed(ms),Released(ms),Duration(ms),Transition(ms),획 길이,속도");
+            builder.AppendLine("Index,Pressed(ms),Released(ms),Duration(ms),Transition(ms),획 길이(pixel),획 길이(mm),속도(pixel/ms),속도(mm/ms)");
             for (int i = 0; i < drawLines.Count; i++)
             {
                 if (drawLines[i].Count() == 0)
@@ -183,8 +183,11 @@ namespace MIDAS_BAT.Utils
                 }
 
                 double lineLength = Util.getLength(drawLines[i]);
+                double lineLength_mm = Util.pixelsTomm(lineLength);
                 builder.Append(lineLength.ToString("F6") + ",");
+                builder.Append(lineLength_mm.ToString("F6") + ",");
                 builder.Append((lineLength / duration).ToString("F6") + ",");
+                builder.Append((lineLength_mm / duration).ToString("F6") + ",");
 
                 builder.AppendLine("");
             }
@@ -281,7 +284,7 @@ namespace MIDAS_BAT.Utils
             builder.Clear();
             builder.Append(TestSetItem.Word);
             builder.AppendLine("( 총 " + drawLines.Count.ToString() + " 획)");
-            builder.AppendLine("Index, 템플릿 Min X, 템플릿 Min Y, 템플릿 Max X, 템플릿 Max Y, Min X,Min Y,Max X,Max Y,획 길이");
+            builder.AppendLine("Index, 템플릿 Min X, 템플릿 Min Y, 템플릿 Max X, 템플릿 Max Y, Min X,Min Y,Max X,Max Y,획 길이(pixel),획 길이(mm),");
             for (int i = 0; i < drawLines.Count; ++i)
             {
                 builder.Append(String.Format("{0},", i + 1));
@@ -319,7 +322,10 @@ namespace MIDAS_BAT.Utils
                 {
                     builder.Append(",,,,");
                 }
-                builder.Append(Util.getLength(drawLines[i]).ToString("F6") + ",");
+                double length = Util.getLength(drawLines[i]);
+                double length_mm = Util.pixelsTomm(length);
+                builder.Append(length.ToString("F6") + ",");
+                builder.Append(length_mm.ToString("F6") + ",");
                 builder.AppendLine("");
             }
 
@@ -366,7 +372,7 @@ namespace MIDAS_BAT.Utils
             StringBuilder builder = new StringBuilder();
             builder.Clear();
             builder.Append(testName);
-            builder.AppendLine("Index,위치,템플릿X,템플릿Y,그린점X,그린점Y,거리차이,,평균,표준편차,");
+            builder.AppendLine("Index,위치,템플릿X,템플릿Y,그린점X,그린점Y,거리차이(pixel),거리차이(mm),,평균,표준편차,");
             for (int i = 0; i < flattenDiff.Count; ++i)
             {
                 builder.Append(String.Format("{0},{1},", i + 1, flattenDiff[i].name));
@@ -381,7 +387,15 @@ namespace MIDAS_BAT.Utils
                     builder.Append(String.Format(",,"));
 
                 if (flattenDiff[i].hasValueOrg && flattenDiff[i].hasValueDrawn)
-                    builder.Append(String.Format("{0},", flattenDiff[i].getDistance()));
+                {
+                    double length = flattenDiff[i].getDistance();
+                    double length_mm = Util.pixelsTomm(length);
+                    builder.Append(String.Format("{0},{1},", length,length_mm));
+                }
+                else
+                {
+                    builder.Append(",,");
+                }
 
                 // 가장 첫 줄에 거리 차이의 평균 및 표준 편차를 기록해둠
                 // 차이 값이 있는 경우에 한해서만 다룸 

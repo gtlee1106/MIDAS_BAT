@@ -1283,6 +1283,12 @@ namespace MIDAS_BAT
             // 1 inch == 25.4 mm
             return di.RawDpiX * (mm / 25.4f) / di.RawPixelsPerViewPixel;
         }
+        public static double pixelsTomm(double pixels)
+        {
+            DisplayInformation di = DisplayInformation.GetForCurrentView();
+            // 1 inch == 25.4 mm
+            return pixels * di.RawPixelsPerViewPixel * 25.4f / di.RawDpiX;
+        }
 
         public static int calculateAge(string birthDate, string execDate)
         {
