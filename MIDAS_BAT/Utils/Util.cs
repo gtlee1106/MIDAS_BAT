@@ -1538,8 +1538,18 @@ namespace MIDAS_BAT
 
         public static double calculateStdev(IEnumerable<double> values)
         {
+            if (values.Count() == 0)
+                return 0.0;
+
             double avg = values.Average();
             return Math.Sqrt(values.Average(v => Math.Pow(v - avg, 2)));
+        }
+        public static double calculateAverage(IEnumerable<double> values)
+        {
+            if (values.Count() == 0)
+                return 0.0;
+
+            return values.Average();
         }
 
         public static bool isKoreanFont(string str)
@@ -1554,6 +1564,20 @@ namespace MIDAS_BAT
                 return true;
             }
 
+            return false;
+        }
+
+        public static bool isTestSpiral(int testOrder)
+        {
+            if (testOrder == 4 || testOrder == 5)
+                return true;
+            return false;
+        }
+
+        public static bool isTestFreeSpiral(int testOrder)
+        {
+            if (testOrder == 6 || testOrder == 7)
+                return true;
             return false;
         }
     }

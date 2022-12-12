@@ -213,10 +213,10 @@ namespace MIDAS_BAT.Pages
             Point orgPoint = ttv.TransformPoint(new Point(horizontalLine.X1, horizontalLine.Y1));
 
             DisplayInformation di = DisplayInformation.GetForCurrentView();
-            double unit = Util.mmToPixels(10.0);
+            double unit = Util.mmToPixels(1.0);
 
-            // 12 + 1 개의 포인트를 구해서 거리를 본다?
-            for (int i = 0; i <= 12; i++)
+            // 121개의 포인트를 구해서 거리를 본다?
+            for (int i = 0; i <= 120; i++)
             {
                 Point p1 = l_s;
                 Point p2 = l_e;
